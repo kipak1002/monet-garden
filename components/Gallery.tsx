@@ -14,8 +14,8 @@ const Gallery: React.FC<GalleryProps> = ({ artworks, onSelectArtwork, isAdminMod
   if (artworks.length === 0) {
     return (
         <div className="text-center py-20">
-            <h2 className="text-2xl font-semibold text-gray-700">No artworks found.</h2>
-            <p className="text-gray-500 mt-2">Try adjusting your search term.</p>
+            <h2 className="text-2xl font-semibold text-gray-700">작품을 찾을 수 없습니다.</h2>
+            <p className="text-gray-500 mt-2">검색어를 확인해주세요.</p>
         </div>
     )
   }

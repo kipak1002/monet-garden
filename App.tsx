@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { Artwork } from './types';
-import { generateArtworkDescription } from './services/geminiService';
+import { supabase, uploadImage } from './services/supabaseClient';
 import Header from './components/Header';
 import Gallery from './components/Gallery';
 import ArtworkDetailModal from './components/ArtworkDetailModal';
@@ -13,30 +13,11 @@ import Icon from './components/Icon';
 import AdminPasswordModal from './components/AdminPasswordModal';
 import ChangePasswordModal from './components/ChangePasswordModal';
 
-const initialArtworks: Artwork[] = [
-    { id: 1, title: 'Echoes of Silence', artist: 'Elena Petrova', year: 2023, imageUrl: 'https://picsum.photos/seed/1/800/600', size: '100cm x 70cm' },
-    { id: 2, title: 'Crimson Cascade', artist: 'Kenji Tanaka', year: 2022, imageUrl: 'https://picsum.photos/seed/2/800/600', size: '80cm x 80cm' },
-    { id: 3, title: 'Urban Dreams', artist: 'Maria Garcia', year: 2024, imageUrl: 'https://picsum.photos/seed/3/800/600', size: '150cm x 100cm' },
-    { id: 4, title: 'Forest\'s Whisper', artist: 'Liam O\'Connell', year: 2021, imageUrl: 'https://picsum.photos/seed/4/800/600', size: '90cm x 120cm' },
-    { id: 5, title: 'Celestial Dance', artist: 'Aisha Khan', year: 2023, imageUrl: 'https://picsum.photos/seed/5/800/600', size: '75cm x 100cm' },
-    { id: 6, title: 'Fragmented Memories', artist: 'Lars Andersen', year: 2022, imageUrl: 'https://picsum.photos/seed/6/800/600', size: '60cm x 90cm' },
-    { id: 7, title: 'Concrete Jungle', artist: 'Sofia Rossi', year: 2024, imageUrl: 'https://picsum.photos/seed/7/800/600', size: '200cm x 120cm' },
-    { id: 8, title: 'Ocean\'s Breath', artist: 'David Chen', year: 2020, imageUrl: 'https://picsum.photos/seed/8/800/600', size: '120cm x 120cm' },
-    { id: 9, title: 'Solar Flare', artist: 'Isabella Dubois', year: 2023, imageUrl: 'https://picsum.photos/seed/9/800/600', size: '50cm x 50cm' },
-    { id: 10, title: 'Midnight Bloom', artist: 'Omar Al-Jamil', year: 2022, imageUrl: 'https://picsum.photos/seed/10/800/600', size: '80cm x 100cm' },
-    { id: 11, title: 'Digital Odyssey', artist: 'Chloe Kim', year: 2024, imageUrl: 'https://picsum.photos/seed/11/800/600', size: '100cm x 150cm' },
-    { id: 12, title: 'Winds of Change', artist: 'Noah Beck', year: 2021, imageUrl: 'https://picsum.photos/seed/12/800/600', size: '70cm x 70cm' },
-];
-
-const DEFAULT_ADMIN_PASSWORD = '000000';
-
 const App: React.FC = () => {
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [filteredArtworks, setFilteredArtworks] = useState<Artwork[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [aiDescription, setAiDescription] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isGalleryEntered, setIsGalleryEntered] = useState(false);
   const [isAdminMode, setIsAdminMode] = useState(false);
@@ -44,40 +25,62 @@ const App: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingArtwork, setEditingArtwork] = useState<Artwork | null>(null);
-  const [galleryTitle, setGalleryTitle] = useState('내 포트폴리오');
+  const [galleryTitle, setGalleryTitle] = useState('김명진 포트폴리오');
   const [artworkToDelete, setArtworkToDelete] = useState<Artwork | null>(null);
-  const [adminPassword, setAdminPassword] = useState(DEFAULT_ADMIN_PASSWORD);
+  const [adminPassword, setAdminPassword] = useState('');
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
 
-
   useEffect(() => {
-    // Load password from local storage
-    const storedPassword = localStorage.getItem('adminPassword');
-    if (storedPassword) {
-      setAdminPassword(storedPassword);
-    }
+    const fetchInitialData = async () => {
+      setIsLoading(true);
+      try {
+        const settingsPromise = supabase.from('settings').select('key, value');
+        const artworksPromise = supabase.from('artworks').select('*').order('created_at', { ascending: false });
 
-    // Simulate fetching data
-    setTimeout(() => {
-      setArtworks(initialArtworks);
-      setFilteredArtworks(initialArtworks);
-      setIsLoading(false);
-    }, 1000);
+        const [
+          { data: settingsData, error: settingsError },
+          { data: artworksData, error: artworksError }
+        ] = await Promise.all([settingsPromise, artworksPromise]);
+        
+        if (settingsError) throw settingsError;
+        if (artworksError) throw artworksError;
+
+        const settingsMap = new Map(settingsData.map(s => [s.key, s.value]));
+        setGalleryTitle(settingsMap.get('galleryTitle') || '김명진 포트폴리오');
+        setAdminPassword(settingsMap.get('adminPassword') || '000000');
+        
+        const loadedArtworks = artworksData as Artwork[];
+        setArtworks(loadedArtworks);
+        setFilteredArtworks(loadedArtworks); // Initially, show all artworks
+
+      } catch (error) {
+        console.error('Error fetching initial data:', error);
+        // You might want to show an error message to the user
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchInitialData();
   }, []);
 
-  const handleSearchChange = (term: string, sourceArtworks: Artwork[] = artworks) => {
-    setSearchTerm(term);
-    if (!term) {
-      setFilteredArtworks(sourceArtworks);
+  useEffect(() => {
+    const lowercasedTerm = searchTerm.toLowerCase();
+    if (!lowercasedTerm) {
+      setFilteredArtworks(artworks);
     } else {
-      const lowercasedTerm = term.toLowerCase();
-      const results = sourceArtworks.filter(
+      const results = artworks.filter(
         (artwork) =>
           artwork.title.toLowerCase().includes(lowercasedTerm) ||
           artwork.artist.toLowerCase().includes(lowercasedTerm)
       );
       setFilteredArtworks(results);
     }
+  }, [searchTerm, artworks]);
+
+
+  const handleSearchChange = (term: string) => {
+    setSearchTerm(term);
   };
 
   const handleSelectArtwork = (artwork: Artwork) => {
@@ -86,24 +89,7 @@ const App: React.FC = () => {
 
   const handleCloseModal = useCallback(() => {
     setSelectedArtwork(null);
-    setAiDescription(null);
   }, []);
-
-  const handleGenerateDescription = useCallback(async () => {
-    if (!selectedArtwork) return;
-
-    setIsGenerating(true);
-    setAiDescription(null);
-    try {
-      const description = await generateArtworkDescription(selectedArtwork.imageUrl);
-      setAiDescription(description);
-    } catch (error) {
-      console.error(error);
-      setAiDescription('Sorry, I couldn\'t generate a description for this artwork.');
-    } finally {
-      setIsGenerating(false);
-    }
-  }, [selectedArtwork]);
 
   const handleEnterGallery = () => {
     setIsGalleryEntered(true);
@@ -138,11 +124,36 @@ const App: React.FC = () => {
     setIsEditModalOpen(false);
   }, []);
   
-  const handleUpdateArtwork = (updatedArtwork: Artwork) => {
-    const updatedArtworks = artworks.map(art => art.id === updatedArtwork.id ? updatedArtwork : art);
-    setArtworks(updatedArtworks);
-    handleSearchChange(searchTerm, updatedArtworks);
-    handleCloseEditModal();
+  const handleUpdateArtwork = async (updatedArtworkData: Artwork) => {
+    let finalImageUrl = updatedArtworkData.image_url;
+
+    // Check if the image is a new upload (data URL)
+    if (finalImageUrl && finalImageUrl.startsWith('data:')) {
+        finalImageUrl = await uploadImage(finalImageUrl);
+    }
+
+    const artworkToUpdate = {
+        ...updatedArtworkData,
+        image_url: finalImageUrl,
+    };
+    // remove id before sending to supabase
+    const { id, created_at, ...updateData } = artworkToUpdate;
+
+    const { data, error } = await supabase
+      .from('artworks')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+        console.error("Error updating artwork:", error);
+        throw error; // Propagate error to the modal
+    } else if (data) {
+        const updatedArtworks = artworks.map(art => art.id === data.id ? data : art);
+        setArtworks(updatedArtworks as Artwork[]);
+        handleCloseEditModal();
+    }
   };
 
   const handleOpenDeleteConfirm = (artwork: Artwork) => {
@@ -153,57 +164,102 @@ const App: React.FC = () => {
     setArtworkToDelete(null);
   }, []);
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!artworkToDelete) return;
-    const updatedArtworks = artworks.filter(art => art.id !== artworkToDelete.id);
-    setArtworks(updatedArtworks);
-    handleSearchChange(searchTerm, updatedArtworks);
-    
-    if (editingArtwork?.id === artworkToDelete.id) {
-        handleCloseEditModal();
+
+    const { error } = await supabase
+        .from('artworks')
+        .delete()
+        .eq('id', artworkToDelete.id);
+
+    if (error) {
+        console.error("Error deleting artwork:", error);
+        alert(`작품 삭제 중 오류가 발생했습니다: ${error.message}`);
+    } else {
+        const updatedArtworks = artworks.filter(art => art.id !== artworkToDelete.id);
+        setArtworks(updatedArtworks);
+        
+        if (editingArtwork?.id === artworkToDelete.id) {
+            handleCloseEditModal();
+        }
+        handleCloseDeleteConfirm();
     }
-    
-    handleCloseDeleteConfirm();
   };
 
   const handleOpenAddModal = () => setIsAddModalOpen(true);
   const handleCloseAddModal = useCallback(() => setIsAddModalOpen(false), []);
 
-  const handleAddNewArtwork = (newArtworkData: Omit<Artwork, 'id'>) => {
-    const newArtwork = {
-      ...newArtworkData,
-      id: artworks.length > 0 ? Math.max(...artworks.map(a => a.id)) + 1 : 1,
-    };
-    const updatedArtworks = [newArtwork, ...artworks];
-    setArtworks(updatedArtworks);
-    handleSearchChange(searchTerm, updatedArtworks);
-    handleCloseAddModal();
+  const handleAddNewArtwork = async (newArtworkData: Omit<Artwork, 'id' | 'created_at'>) => {
+    let finalImageUrl = newArtworkData.image_url;
+
+    if (finalImageUrl && finalImageUrl.startsWith('data:')) {
+        finalImageUrl = await uploadImage(finalImageUrl);
+    }
+
+    const { data, error } = await supabase
+        .from('artworks')
+        .insert([{ ...newArtworkData, image_url: finalImageUrl }])
+        .select()
+        .single();
+    
+    if (error) {
+        console.error("Error adding new artwork:", error);
+        throw error; // Propagate error to the modal
+    } else if (data) {
+        const updatedArtworks = [data, ...artworks];
+        setArtworks(updatedArtworks as Artwork[]);
+        handleCloseAddModal();
+    }
+  };
+
+  const handleTitleChange = async (newTitle: string) => {
+    // Optimistic UI update
+    setGalleryTitle(newTitle);
+    const { error } = await supabase
+      .from('settings')
+      .update({ value: newTitle })
+      .eq('key', 'galleryTitle');
+    
+    if (error) {
+      console.error("Error updating title:", error);
+      // Optional: you could revert the title here and show an error message
+    }
   };
 
   const handleOpenChangePasswordModal = () => setIsChangePasswordModalOpen(true);
   const handleCloseChangePasswordModal = useCallback(() => setIsChangePasswordModalOpen(false), []);
 
-  const handleUpdatePassword = (currentAttempt: string, newPassword: string): { success: boolean, message: string } => {
+  const handleUpdatePassword = async (currentAttempt: string, newPassword: string): Promise<{ success: boolean, message: string }> => {
     if (currentAttempt !== adminPassword) {
-      return { success: false, message: "Current password does not match." };
+      return { success: false, message: "현재 비밀번호가 일치하지 않습니다." };
     }
+
+    const { error } = await supabase
+      .from('settings')
+      .update({ value: newPassword })
+      .eq('key', 'adminPassword');
+
+    if (error) {
+        console.error("Error updating password:", error);
+        return { success: false, message: "데이터베이스에서 비밀번호 업데이트에 실패했습니다." };
+    }
+
     setAdminPassword(newPassword);
-    localStorage.setItem('adminPassword', newPassword);
     handleCloseChangePasswordModal();
-    return { success: true, message: "Password updated successfully!" };
+    return { success: true, message: "비밀번호가 성공적으로 업데이트되었습니다!" };
   };
 
   if (!isGalleryEntered) {
-    return <LandingPage onEnter={handleEnterGallery} galleryTitle={galleryTitle} />;
+    return <LandingPage onEnter={handleEnterGallery} galleryTitle={galleryTitle} subtitle="AI가 생성한 설명으로 아름다운 예술 작품의 세계를 탐험해 보세요." />
   }
   
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
       <Header 
         galleryTitle={galleryTitle}
-        onTitleChange={setGalleryTitle}
+        onTitleChange={handleTitleChange}
         searchTerm={searchTerm} 
-        onSearchChange={(term) => handleSearchChange(term)} 
+        onSearchChange={handleSearchChange} 
         isAdminMode={isAdminMode}
         onToggleAdminMode={handleToggleAdminMode}
         onOpenChangePasswordSettings={handleOpenChangePasswordModal}
@@ -238,9 +294,6 @@ const App: React.FC = () => {
       <ArtworkDetailModal
         artwork={selectedArtwork}
         onClose={handleCloseModal}
-        isGenerating={isGenerating}
-        aiDescription={aiDescription}
-        onGenerateDescription={handleGenerateDescription}
       />
       <EditArtworkModal
         isOpen={isEditModalOpen}

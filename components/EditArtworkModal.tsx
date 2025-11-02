@@ -8,14 +8,15 @@ interface EditArtworkModalProps {
   isOpen: boolean;
   onClose: () => void;
   artworkToEdit: Artwork | null;
-  onUpdate: (updatedArtwork: Artwork) => void;
+  onUpdate: (updatedArtwork: Artwork) => Promise<void>;
   onDelete: (artwork: Artwork) => void;
 }
 
 const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, artworkToEdit, onUpdate, onDelete }) => {
-  const [formData, setFormData] = useState<Omit<Artwork, 'id'>>({ title: '', artist: '', year: 0, imageUrl: '', size: '' });
+  const [formData, setFormData] = useState<Omit<Artwork, 'id' | 'created_at'>>({ title: '', artist: '', year: 0, image_url: '', size: '', memo: '' });
   const [imagePrompt, setImagePrompt] = useState('');
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -24,10 +25,12 @@ const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, ar
         title: artworkToEdit.title,
         artist: artworkToEdit.artist,
         year: artworkToEdit.year,
-        imageUrl: artworkToEdit.imageUrl,
+        image_url: artworkToEdit.image_url,
         size: artworkToEdit.size,
+        memo: artworkToEdit.memo || '',
       });
       setImagePrompt(''); // Reset prompt when modal opens
+      setIsSubmitting(false);
     }
   }, [artworkToEdit]);
 
@@ -45,7 +48,7 @@ const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, ar
     };
   }, [isOpen, onClose]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: name === 'year' ? parseInt(value) || 0 : value }));
   };
@@ -55,10 +58,10 @@ const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, ar
     setIsGeneratingImage(true);
     try {
       const newImageUrl = await generateArtworkImage(imagePrompt);
-      setFormData(prev => ({...prev, imageUrl: newImageUrl}));
+      setFormData(prev => ({...prev, image_url: newImageUrl}));
     } catch (error) {
       console.error("Failed to generate new image:", error);
-      alert("Sorry, we couldn't create your new image. Please try again.");
+      alert("이미지를 생성할 수 없습니다. 다시 시도해주세요.");
     } finally {
       setIsGeneratingImage(false);
     }
@@ -71,16 +74,23 @@ const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, ar
       reader.onload = () => {
         const result = reader.result;
         if (typeof result === 'string') {
-          setFormData(prev => ({ ...prev, imageUrl: result }));
+          setFormData(prev => ({ ...prev, image_url: result }));
         }
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSaveChanges = () => {
+  const handleSaveChanges = async () => {
     if (artworkToEdit) {
-        onUpdate({ ...formData, id: artworkToEdit.id });
+        setIsSubmitting(true);
+        try {
+            await onUpdate({ ...formData, id: artworkToEdit.id, created_at: artworkToEdit.created_at });
+        } catch (error) {
+            console.error("Failed to update artwork", error);
+            alert("변경사항 저장 중 오류가 발생했습니다. 다시 시도해주세요.");
+            setIsSubmitting(false);
+        }
     }
   };
 
@@ -96,7 +106,7 @@ const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, ar
         onClick={(e) => e.stopPropagation()}
       >
         <div className='p-6 md:p-8 border-b'>
-            <h2 className="text-2xl font-bold text-gray-900">Edit Artwork</h2>
+            <h2 className="text-2xl font-bold text-gray-900">작품 편집</h2>
             <button
             onClick={onClose}
             className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 z-10 transition-colors"
@@ -105,57 +115,44 @@ const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, ar
                 <Icon type="close" className="w-8 h-8" />
             </button>
         </div>
-        <div className='p-6 md:p-8 overflow-y-auto space-y-6'>
+        <fieldset disabled={isSubmitting} className='p-6 md:p-8 overflow-y-auto space-y-6 flex-1 min-h-0'>
             <div>
-                <label htmlFor="title" className="block text-sm font-medium text-gray-700">Title</label>
-                <input type="text" name="title" id="title" value={formData.title} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"/>
+                <label htmlFor="title" className="block text-sm font-medium text-gray-700">제목</label>
+                <input type="text" name="title" id="title" value={formData.title} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"/>
             </div>
-            <div className='grid grid-cols-2 gap-4'>
-                <div>
-                    <label htmlFor="artist" className="block text-sm font-medium text-gray-700">Artist</label>
-                    <input type="text" name="artist" id="artist" value={formData.artist} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"/>
-                </div>
-                <div>
-                    <label htmlFor="year" className="block text-sm font-medium text-gray-700">Year</label>
-                    <input type="number" name="year" id="year" value={formData.year} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"/>
-                </div>
-            </div>
-            <div>
-                <label htmlFor="size" className="block text-sm font-medium text-gray-700">Size</label>
-                <input type="text" name="size" id="size" value={formData.size} onChange={handleChange} placeholder="e.g., 100cm x 70cm" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"/>
-            </div>
-            
-            <div className='space-y-4 pt-2'>
-                <h4 className='text-lg font-semibold text-gray-800 border-b pb-2'>Change Image</h4>
+
+            <div className='space-y-4'>
+                <h4 className='text-sm font-medium text-gray-700'>이미지 변경</h4>
                 <div className='w-full aspect-video rounded-md overflow-hidden bg-gray-200'>
                     {isGeneratingImage ? (
                         <div className='w-full h-full flex flex-col items-center justify-center'>
                             <Spinner size='h-10 w-10' />
-                            <p className='mt-2 text-gray-600'>Generating new image...</p>
+                            <p className='mt-2 text-gray-600'>새 이미지 생성 중...</p>
                         </div>
                     ) : (
-                        <img src={formData.imageUrl} alt="Current artwork" className='w-full h-full object-cover'/>
+                        <img src={formData.image_url} alt="Current artwork" className='w-full h-full object-cover'/>
                     )}
                 </div>
                 
                 <div className='p-4 border rounded-md bg-gray-50'>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Generate with AI</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">AI로 생성</label>
                     <div className='flex gap-2'>
                         <input 
                             type="text" 
                             value={imagePrompt} 
                             onChange={e => setImagePrompt(e.target.value)}
-                            placeholder="e.g., A cat wearing a wizard hat"
+                            placeholder="예: 마법사 모자를 쓴 고양이"
                             className="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                            disabled={isGeneratingImage}
+                            disabled={isGeneratingImage || isSubmitting}
                         />
                          <button
+                            type="button"
                             onClick={handleGenerateImage}
-                            disabled={isGeneratingImage || !imagePrompt}
+                            disabled={isGeneratingImage || !imagePrompt || isSubmitting}
                             className="flex-shrink-0 flex items-center justify-center bg-gray-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                         >
                            <Icon type="sparkles" className="w-5 h-5 mr-2"/>
-                            Generate
+                            생성하기
                         </button>
                     </div>
                 </div>
@@ -165,7 +162,7 @@ const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, ar
                         <div className="w-full border-t border-gray-300" />
                     </div>
                     <div className="relative flex justify-center">
-                        <span className="bg-white px-2 text-sm text-gray-500">OR</span>
+                        <span className="bg-white px-2 text-sm text-gray-500">또는</span>
                     </div>
                 </div>
 
@@ -181,29 +178,49 @@ const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, ar
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
                         className="w-full flex items-center justify-center py-2 px-4 border border-dashed border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        disabled={isGeneratingImage}
+                        disabled={isGeneratingImage || isSubmitting}
                     >
                         <Icon type="upload" className="w-5 h-5 mr-2"/>
-                        Upload a new image from your device
+                        기기에서 새 이미지 업로드
                     </button>
                 </div>
             </div>
+            
+            <div className='grid grid-cols-2 gap-4'>
+                <div>
+                    <label htmlFor="artist" className="block text-sm font-medium text-gray-700">아티스트</label>
+                    <input type="text" name="artist" id="artist" value={formData.artist} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"/>
+                </div>
+                <div>
+                    <label htmlFor="year" className="block text-sm font-medium text-gray-700">연도</label>
+                    <input type="number" name="year" id="year" value={formData.year} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"/>
+                </div>
+            </div>
+            <div>
+                <label htmlFor="size" className="block text-sm font-medium text-gray-700">크기</label>
+                <input type="text" name="size" id="size" value={formData.size} onChange={handleChange} placeholder="예: 100cm x 70cm" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"/>
+            </div>
+            <div>
+                <label htmlFor="memo" className="block text-sm font-medium text-gray-700">메모</label>
+                <textarea name="memo" id="memo" value={formData.memo || ''} onChange={handleChange} placeholder="작품에 대한 추가적인 메모를 남겨보세요." rows={3} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"/>
+            </div>
 
-        </div>
+        </fieldset>
         <div className="p-6 bg-gray-50 border-t flex justify-between items-center">
           <button 
             onClick={() => onDelete(artworkToEdit)} 
-            className="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+            disabled={isSubmitting}
+            className="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors disabled:bg-gray-100 disabled:text-gray-400"
             >
                 <Icon type="trash" className="w-5 h-5 inline-block mr-2 -mt-1" />
-                Delete Artwork
+                작품 삭제
           </button>
           <div className='flex gap-3'>
-            <button onClick={onClose} className="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                Cancel
+            <button onClick={onClose} disabled={isSubmitting} className="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:bg-gray-100">
+                취소
             </button>
-            <button onClick={handleSaveChanges} className="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                Save Changes
+            <button onClick={handleSaveChanges} disabled={isSubmitting} className="w-36 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300 flex justify-center items-center">
+                {isSubmitting ? <Spinner size="h-5 w-5" /> : '변경사항 저장'}
             </button>
           </div>
         </div>

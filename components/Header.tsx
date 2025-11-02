@@ -82,7 +82,7 @@ const Header: React.FC<HeaderProps> = ({
                 <button
                     onClick={() => setIsEditingTitle(true)}
                     className="flex items-center gap-2 group"
-                    title="Edit gallery title"
+                    title="갤러리 제목 편집"
                 >
                     <h1 className="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight group-hover:text-blue-600 transition-colors">
                         {galleryTitle}
@@ -101,7 +101,7 @@ const Header: React.FC<HeaderProps> = ({
             <div className="relative w-full max-w-xs">
               <input
                 type="text"
-                placeholder="Search artworks..."
+                placeholder="작품 검색..."
                 value={searchTerm}
                 onChange={(e) => onSearchChange(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
@@ -114,11 +114,11 @@ const Header: React.FC<HeaderProps> = ({
                 <div className="relative" ref={adminMenuRef}>
                     <button
                         onClick={() => setIsAdminMenuOpen(prev => !prev)}
-                        title="Admin Settings"
+                        title="관리자 설정"
                         className="p-2 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 transition-colors"
                         aria-haspopup="true"
                         aria-expanded={isAdminMenuOpen}
-                        aria-label="Admin Settings"
+                        aria-label="관리자 설정"
                     >
                         <Icon type="cog" className="w-6 h-6" />
                     </button>
@@ -132,7 +132,7 @@ const Header: React.FC<HeaderProps> = ({
                                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
                             >
                                 <Icon type="key" className="w-5 h-5 text-gray-500" />
-                                <span>Change Admin Password</span>
+                                <span>관리자 비밀번호 변경</span>
                             </button>
                         </div>
                     )}
@@ -140,7 +140,7 @@ const Header: React.FC<HeaderProps> = ({
             )}
             <button
               onClick={onToggleAdminMode}
-              title={isAdminMode ? "Exit Admin Mode" : "Enter Admin Mode"}
+              title={isAdminMode ? "관리자 모드 종료" : "관리자 모드 시작"}
               className={`p-2 rounded-full transition-colors duration-300 ${isAdminMode ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}
             >
               <Icon type="shield-check" className="w-6 h-6" />

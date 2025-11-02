@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { Artwork } from '../types';
 import Icon from './Icon';
 
@@ -11,6 +11,35 @@ interface ArtworkCardProps {
 }
 
 const ArtworkCard: React.FC<ArtworkCardProps> = ({ artwork, onSelect, isAdminMode, onEdit, onDelete }) => {
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const [isIntersecting, setIsIntersecting] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsIntersecting(true);
+          observer.unobserve(entry.target);
+        }
+      },
+      {
+        rootMargin: '0px 0px 200px 0px', // Pre-load images 200px before they enter the viewport
+      }
+    );
+
+    const currentRef = cardRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, []);
+
+
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onEdit(artwork);
@@ -23,6 +52,7 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ artwork, onSelect, isAdminMod
 
   return (
     <div
+      ref={cardRef}
       className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer group transform hover:-translate-y-1 transition-all duration-300 relative"
       onClick={() => onSelect(artwork)}
     >
@@ -31,27 +61,31 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ artwork, onSelect, isAdminMod
           <button 
             onClick={handleEditClick}
             className="bg-white/80 backdrop-blur-sm p-2 rounded-full text-gray-700 hover:bg-blue-500 hover:text-white transition-all"
-            aria-label="Edit Artwork"
-            title="Edit Artwork"
+            aria-label="작품 편집"
+            title="작품 편집"
           >
             <Icon type="edit" className="w-5 h-5" />
           </button>
           <button 
             onClick={handleDeleteClick}
             className="bg-white/80 backdrop-blur-sm p-2 rounded-full text-gray-700 hover:bg-red-500 hover:text-white transition-all"
-            aria-label="Delete Artwork"
-            title="Delete Artwork"
+            aria-label="작품 삭제"
+            title="작품 삭제"
           >
             <Icon type="trash" className="w-5 h-5" />
           </button>
         </div>
       )}
-      <div className="overflow-hidden">
-        <img
-          src={artwork.imageUrl}
-          alt={artwork.title}
-          className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
-        />
+      <div className="w-full h-64 bg-gray-200 overflow-hidden">
+        {isIntersecting ? (
+          <img
+            src={artwork.image_url}
+            alt={artwork.title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 animate-fade-in"
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-300 animate-pulse"></div>
+        )}
       </div>
       <div className="p-4">
         <h3 className="text-lg font-semibold text-gray-800 truncate">{artwork.title}</h3>

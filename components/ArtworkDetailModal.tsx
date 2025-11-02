@@ -1,22 +1,15 @@
 import React, { useEffect } from 'react';
 import type { Artwork } from '../types';
-import Spinner from './Spinner';
 import Icon from './Icon';
 
 interface ArtworkDetailModalProps {
   artwork: Artwork | null;
   onClose: () => void;
-  isGenerating: boolean;
-  aiDescription: string | null;
-  onGenerateDescription: () => void;
 }
 
 const ArtworkDetailModal: React.FC<ArtworkDetailModalProps> = ({
   artwork,
   onClose,
-  isGenerating,
-  aiDescription,
-  onGenerateDescription,
 }) => {
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
@@ -38,46 +31,30 @@ const ArtworkDetailModal: React.FC<ArtworkDetailModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col md:flex-row overflow-hidden relative transform animate-slide-up"
+        className="bg-white rounded-lg shadow-2xl w-full max-w-7xl max-h-[90vh] flex flex-col md:flex-row overflow-hidden relative transform animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 z-10 transition-colors"
-          aria-label="Close"
+          aria-label="닫기"
         >
           <Icon type="close" className="w-8 h-8" />
         </button>
-        <div className="w-full md:w-1/2 h-64 md:h-auto">
-          <img src={artwork.imageUrl} alt={artwork.title} className="w-full h-full object-cover" />
+        <div className="w-full md:w-2/3 h-96 md:h-auto bg-gray-100">
+          <img src={artwork.image_url} alt={artwork.title} className="w-full h-full object-contain" />
         </div>
-        <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col overflow-y-auto">
+        <div className="w-full md:w-1/3 p-6 md:p-8 flex flex-col overflow-y-auto">
           <h2 className="text-3xl font-bold text-gray-900">{artwork.title}</h2>
           <p className="text-lg text-gray-600 mt-1">{artwork.artist}, {artwork.year}</p>
-          <p className="text-md text-gray-500 mt-2"><strong>Size:</strong> {artwork.size}</p>
-          <div className="mt-4 border-t pt-6 flex-grow">
-            <h4 className="text-xl font-semibold text-gray-800 mb-3">AI Curator's Notes</h4>
-            {isGenerating ? (
-              <div className="flex flex-col items-center justify-center h-full text-center">
-                <Spinner size="h-12 w-12" />
-                <p className="mt-4 text-gray-600 animate-pulse">Generating insights...</p>
-              </div>
-            ) : aiDescription ? (
-              <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{aiDescription}</p>
-            ) : (
-              <div className="flex flex-col items-center justify-center text-center py-8">
-                  <p className="text-gray-600 mb-4">Click the button to get an AI-powered analysis of this artwork.</p>
-                  <button
-                    onClick={onGenerateDescription}
-                    disabled={isGenerating}
-                    className="flex items-center justify-center bg-blue-600 text-white font-semibold py-2 px-6 rounded-full hover:bg-blue-700 disabled:bg-blue-300 transition-all duration-300 transform hover:scale-105"
-                  >
-                    <Icon type="sparkles" className="w-5 h-5 mr-2"/>
-                    Generate Description
-                  </button>
-              </div>
-            )}
-          </div>
+          <p className="text-md text-gray-500 mt-2"><strong>크기:</strong> {artwork.size}</p>
+          
+          {artwork.memo && (
+            <div className="mt-4 pt-4 border-t">
+              <h4 className="text-md font-semibold text-gray-800">메모:</h4>
+              <p className="text-gray-700 whitespace-pre-wrap leading-relaxed bg-gray-50 p-3 rounded-md mt-1">{artwork.memo}</p>
+            </div>
+           )}
         </div>
       </div>
       <style>{`

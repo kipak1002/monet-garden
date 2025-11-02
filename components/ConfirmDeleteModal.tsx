@@ -34,9 +34,9 @@ const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({ isOpen, onClose
         className="bg-white rounded-lg shadow-2xl w-full max-w-md p-6 md:p-8 relative transform animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Confirm Deletion</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">삭제 확인</h2>
         <p className="text-gray-600 mb-6">
-          Are you sure you want to delete the artwork "<strong>{artworkTitle}</strong>"? This action cannot be undone.
+          정말로 "<strong>{artworkTitle}</strong>" 작품을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
         </p>
 
         <div className="mt-6 flex justify-end gap-3">
@@ -44,14 +44,14 @@ const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({ isOpen, onClose
             onClick={onClose} 
             className="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
           >
-            Cancel
+            취소
           </button>
           <button
             onClick={onConfirm}
             className="flex items-center justify-center bg-red-600 text-white font-semibold py-2 px-6 rounded-md hover:bg-red-700 disabled:bg-red-300 transition-colors"
           >
             <Icon type="trash" className="w-5 h-5 mr-2"/>
-            Delete
+            삭제
           </button>
         </div>
       </div>
