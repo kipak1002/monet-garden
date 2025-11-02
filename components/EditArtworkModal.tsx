@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { Artwork } from '../types';
-import { generateArtworkImage } from '../services/geminiService';
 import Icon from './Icon';
 import Spinner from './Spinner';
 
@@ -14,8 +13,6 @@ interface EditArtworkModalProps {
 
 const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, artworkToEdit, onUpdate, onDelete }) => {
   const [formData, setFormData] = useState<Omit<Artwork, 'id' | 'created_at'>>({ title: '', artist: '', year: 0, image_url: '', size: '', memo: '' });
-  const [imagePrompt, setImagePrompt] = useState('');
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -29,7 +26,6 @@ const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, ar
         size: artworkToEdit.size,
         memo: artworkToEdit.memo || '',
       });
-      setImagePrompt(''); // Reset prompt when modal opens
       setIsSubmitting(false);
     }
   }, [artworkToEdit]);
@@ -53,20 +49,6 @@ const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, ar
     setFormData(prev => ({ ...prev, [name]: name === 'year' ? parseInt(value) || 0 : value }));
   };
   
-  const handleGenerateImage = async () => {
-    if (!imagePrompt || isGeneratingImage) return;
-    setIsGeneratingImage(true);
-    try {
-      const newImageUrl = await generateArtworkImage(imagePrompt);
-      setFormData(prev => ({...prev, image_url: newImageUrl}));
-    } catch (error) {
-      console.error("Failed to generate new image:", error);
-      alert("이미지를 생성할 수 없습니다. 다시 시도해주세요.");
-    } finally {
-      setIsGeneratingImage(false);
-    }
-  };
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -124,48 +106,9 @@ const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, ar
             <div className='space-y-4'>
                 <h4 className='text-sm font-medium text-gray-700'>이미지 변경</h4>
                 <div className='w-full aspect-video rounded-md overflow-hidden bg-gray-200'>
-                    {isGeneratingImage ? (
-                        <div className='w-full h-full flex flex-col items-center justify-center'>
-                            <Spinner size='h-10 w-10' />
-                            <p className='mt-2 text-gray-600'>새 이미지 생성 중...</p>
-                        </div>
-                    ) : (
-                        <img src={formData.image_url} alt="Current artwork" className='w-full h-full object-cover'/>
-                    )}
+                    <img src={formData.image_url} alt="Current artwork" className='w-full h-full object-cover'/>
                 </div>
                 
-                <div className='p-4 border rounded-md bg-gray-50'>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">AI로 생성</label>
-                    <div className='flex gap-2'>
-                        <input 
-                            type="text" 
-                            value={imagePrompt} 
-                            onChange={e => setImagePrompt(e.target.value)}
-                            placeholder="예: 마법사 모자를 쓴 고양이"
-                            className="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                            disabled={isGeneratingImage || isSubmitting}
-                        />
-                         <button
-                            type="button"
-                            onClick={handleGenerateImage}
-                            disabled={isGeneratingImage || !imagePrompt || isSubmitting}
-                            className="flex-shrink-0 flex items-center justify-center bg-gray-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                        >
-                           <Icon type="sparkles" className="w-5 h-5 mr-2"/>
-                            생성하기
-                        </button>
-                    </div>
-                </div>
-                
-                <div className="relative">
-                    <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                        <div className="w-full border-t border-gray-300" />
-                    </div>
-                    <div className="relative flex justify-center">
-                        <span className="bg-white px-2 text-sm text-gray-500">또는</span>
-                    </div>
-                </div>
-
                 <div>
                     <input
                         type="file"
@@ -178,7 +121,7 @@ const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, ar
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
                         className="w-full flex items-center justify-center py-2 px-4 border border-dashed border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        disabled={isGeneratingImage || isSubmitting}
+                        disabled={isSubmitting}
                     >
                         <Icon type="upload" className="w-5 h-5 mr-2"/>
                         기기에서 새 이미지 업로드

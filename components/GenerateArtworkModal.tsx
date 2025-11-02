@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { Artwork } from '../types';
-import { generateArtworkImage } from '../services/geminiService';
 import Icon from './Icon';
 import Spinner from './Spinner';
 
@@ -14,22 +13,19 @@ const DEFAULT_FORM_DATA: Omit<Artwork, 'id' | 'created_at'> = {
   title: '',
   artist: '',
   year: new Date().getFullYear(),
-  image_url: 'https://storage.googleapis.com/proudcity/mebanenc/uploads/2021/03/placeholder-image.png',
+  image_url: '',
   size: '',
   memo: '',
 };
 
 const GenerateArtworkModal: React.FC<GenerateArtworkModalProps> = ({ isOpen, onClose, onAdd }) => {
   const [formData, setFormData] = useState<Omit<Artwork, 'id' | 'created_at'>>(DEFAULT_FORM_DATA);
-  const [imagePrompt, setImagePrompt] = useState('');
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
         setFormData(DEFAULT_FORM_DATA);
-        setImagePrompt('');
         setIsSubmitting(false);
     }
   }, [isOpen]);
@@ -52,20 +48,6 @@ const GenerateArtworkModal: React.FC<GenerateArtworkModalProps> = ({ isOpen, onC
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: name === 'year' ? parseInt(value) || 0 : value }));
   };
-  
-  const handleGenerateImage = async () => {
-    if (!imagePrompt || isGeneratingImage) return;
-    setIsGeneratingImage(true);
-    try {
-      const newImageUrl = await generateArtworkImage(imagePrompt);
-      setFormData(prev => ({...prev, image_url: newImageUrl}));
-    } catch (error) {
-      console.error("Failed to generate new image:", error);
-      alert("이미지를 생성할 수 없습니다. 다시 시도해주세요.");
-    } finally {
-      setIsGeneratingImage(false);
-    }
-  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -81,8 +63,8 @@ const GenerateArtworkModal: React.FC<GenerateArtworkModalProps> = ({ isOpen, onC
   };
 
   const handleAddArtwork = async () => {
-    if (!formData.title || !formData.artist || !formData.year || !formData.size) {
-        alert("모든 필드를 입력해주세요.");
+    if (!formData.title || !formData.artist || !formData.year || !formData.size || !formData.image_url) {
+        alert("이미지를 포함한 모든 필수 필드를 입력해주세요.");
         return;
     }
     setIsSubmitting(true);
@@ -124,49 +106,17 @@ const GenerateArtworkModal: React.FC<GenerateArtworkModalProps> = ({ isOpen, onC
             
             <div className='space-y-4'>
                 <h4 className='text-sm font-medium text-gray-700'>작품 이미지</h4>
-                <div className='w-full aspect-video rounded-md overflow-hidden bg-gray-200'>
-                    {isGeneratingImage ? (
-                        <div className='w-full h-full flex flex-col items-center justify-center'>
-                            <Spinner size='h-10 w-10' />
-                            <p className='mt-2 text-gray-600'>새 이미지 생성 중...</p>
-                        </div>
+                <div className='w-full aspect-video rounded-md overflow-hidden bg-gray-200 flex items-center justify-center'>
+                    {formData.image_url ? (
+                        <img src={formData.image_url} alt="새 작품 미리보기" className='w-full h-full object-cover'/>
                     ) : (
-                        <img src={formData.image_url} alt="New artwork" className='w-full h-full object-cover'/>
+                        <div className="text-center text-gray-500">
+                            <Icon type="upload" className="w-12 h-12 mx-auto text-gray-400" />
+                            <p className="mt-2 text-sm">아래 버튼을 눌러 이미지를 업로드하세요.</p>
+                        </div>
                     )}
                 </div>
                 
-                <div className='p-4 border rounded-md bg-gray-50'>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">AI로 생성</label>
-                    <div className='flex gap-2'>
-                        <input 
-                            type="text" 
-                            value={imagePrompt} 
-                            onChange={e => setImagePrompt(e.target.value)}
-                            placeholder="예: 해질녘의 미래 도시"
-                            className="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                            disabled={isGeneratingImage || isSubmitting}
-                        />
-                         <button
-                            type="button"
-                            onClick={handleGenerateImage}
-                            disabled={isGeneratingImage || !imagePrompt || isSubmitting}
-                            className="flex-shrink-0 flex items-center justify-center bg-gray-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                        >
-                           <Icon type="sparkles" className="w-5 h-5 mr-2"/>
-                            생성하기
-                        </button>
-                    </div>
-                </div>
-                
-                <div className="relative">
-                    <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                        <div className="w-full border-t border-gray-300" />
-                    </div>
-                    <div className="relative flex justify-center">
-                        <span className="bg-white px-2 text-sm text-gray-500">또는</span>
-                    </div>
-                </div>
-
                 <div>
                     <input
                         type="file"
@@ -179,7 +129,7 @@ const GenerateArtworkModal: React.FC<GenerateArtworkModalProps> = ({ isOpen, onC
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
                         className="w-full flex items-center justify-center py-2 px-4 border border-dashed border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        disabled={isGeneratingImage || isSubmitting}
+                        disabled={isSubmitting}
                     >
                         <Icon type="upload" className="w-5 h-5 mr-2"/>
                         기기에서 이미지 업로드

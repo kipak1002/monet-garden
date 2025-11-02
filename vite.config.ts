@@ -14,12 +14,4 @@ export default defineConfig({
       ],
     }
   },
-  server: {
-    proxy: {
-      '/.netlify/functions': {
-        target: 'http://localhost:9999', // Default Netlify dev server port
-        changeOrigin: true,
-      },
-    },
-  },
 })
