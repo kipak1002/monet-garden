@@ -250,7 +250,7 @@ const App: React.FC = () => {
   };
 
   if (!isGalleryEntered) {
-    return <LandingPage onEnter={handleEnterGallery} galleryTitle={galleryTitle} subtitle="당신의 특별한 작품들을 모아 전시하는 개인 갤러리입니다." />
+    return <LandingPage onEnter={handleEnterGallery} galleryTitle={galleryTitle} subtitle="김명진 작가의 개인 갤러리입니다." />
   }
   
   return (
