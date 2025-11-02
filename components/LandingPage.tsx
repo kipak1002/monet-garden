@@ -4,21 +4,15 @@ import Icon from './Icon';
 interface LandingPageProps {
   onEnter: () => void;
   galleryTitle: string;
-  subtitle?: string;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onEnter, galleryTitle, subtitle }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onEnter, galleryTitle }) => {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4 font-sans">
       <div className="text-center transform transition-all duration-500 animate-slide-up-fade-in">
         <h1 className="text-4xl md:text-6xl font-extrabold text-gray-800 tracking-tight">
           {galleryTitle}
         </h1>
-        {subtitle && (
-          <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
-            {subtitle}
-          </p>
-        )}
         <button
           onClick={onEnter}
           className="mt-8 inline-flex items-center justify-center bg-blue-600 text-white font-semibold py-3 px-8 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-105"
