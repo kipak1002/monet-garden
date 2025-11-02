@@ -103,58 +103,59 @@ const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, ar
                 <Icon type="close" className="w-8 h-8" />
             </button>
         </div>
-        <fieldset disabled={isSubmitting} className='p-6 md:p-8 overflow-y-auto space-y-6 flex-1 min-h-0'>
-            <div>
-                <label htmlFor="title" className="block text-sm font-medium text-gray-700">제목</label>
-                <input type="text" name="title" id="title" value={formData.title} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"/>
-            </div>
+        <div className='p-6 md:p-8 overflow-y-auto flex-1 min-h-0'>
+            <fieldset disabled={isSubmitting} className='space-y-6'>
+                <div>
+                    <label htmlFor="title" className="block text-sm font-medium text-gray-700">제목</label>
+                    <input type="text" name="title" id="title" value={formData.title} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"/>
+                </div>
 
-            <div className='space-y-4'>
-                <h4 className='text-sm font-medium text-gray-700'>이미지 변경</h4>
-                <div className='w-full aspect-video rounded-md overflow-hidden bg-gray-200'>
-                    <img src={formData.image_url} alt="Current artwork" className='w-full h-full object-cover'/>
+                <div className='space-y-4'>
+                    <h4 className='text-sm font-medium text-gray-700'>이미지 변경</h4>
+                    <div className='w-full aspect-video rounded-md overflow-hidden bg-gray-200'>
+                        <img src={formData.image_url} alt="Current artwork" className='w-full h-full object-cover'/>
+                    </div>
+                    
+                    <div>
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                            accept="image/png, image/jpeg, image/webp"
+                            className="hidden"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="w-full flex items-center justify-center py-2 px-4 border border-dashed border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            disabled={isSubmitting}
+                        >
+                            <Icon type="upload" className="w-5 h-5 mr-2"/>
+                            기기에서 새 이미지 업로드
+                        </button>
+                    </div>
                 </div>
                 
-                <div>
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleFileChange}
-                        accept="image/png, image/jpeg, image/webp"
-                        className="hidden"
-                    />
-                    <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="w-full flex items-center justify-center py-2 px-4 border border-dashed border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        disabled={isSubmitting}
-                    >
-                        <Icon type="upload" className="w-5 h-5 mr-2"/>
-                        기기에서 새 이미지 업로드
-                    </button>
-                </div>
-            </div>
-            
-            <div className='grid grid-cols-2 gap-4'>
-                <div>
-                    <label htmlFor="artist" className="block text-sm font-medium text-gray-700">아티스트</label>
-                    <input type="text" name="artist" id="artist" value={formData.artist} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"/>
+                <div className='grid grid-cols-2 gap-4'>
+                    <div>
+                        <label htmlFor="artist" className="block text-sm font-medium text-gray-700">아티스트</label>
+                        <input type="text" name="artist" id="artist" value={formData.artist} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"/>
+                    </div>
+                    <div>
+                        <label htmlFor="year" className="block text-sm font-medium text-gray-700">연도</label>
+                        <input type="number" name="year" id="year" value={formData.year} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"/>
+                    </div>
                 </div>
                 <div>
-                    <label htmlFor="year" className="block text-sm font-medium text-gray-700">연도</label>
-                    <input type="number" name="year" id="year" value={formData.year} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"/>
+                    <label htmlFor="size" className="block text-sm font-medium text-gray-700">크기</label>
+                    <input type="text" name="size" id="size" value={formData.size} onChange={handleChange} placeholder="예: 100cm x 70cm" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"/>
                 </div>
-            </div>
-            <div>
-                <label htmlFor="size" className="block text-sm font-medium text-gray-700">크기</label>
-                <input type="text" name="size" id="size" value={formData.size} onChange={handleChange} placeholder="예: 100cm x 70cm" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"/>
-            </div>
-            <div>
-                <label htmlFor="memo" className="block text-sm font-medium text-gray-700">메모</label>
-                <textarea name="memo" id="memo" value={formData.memo || ''} onChange={handleChange} placeholder="작품에 대한 추가적인 메모를 남겨보세요." rows={3} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"/>
-            </div>
-
-        </fieldset>
+                <div>
+                    <label htmlFor="memo" className="block text-sm font-medium text-gray-700">메모</label>
+                    <textarea name="memo" id="memo" value={formData.memo || ''} onChange={handleChange} placeholder="작품에 대한 추가적인 메모를 남겨보세요." rows={3} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"/>
+                </div>
+            </fieldset>
+        </div>
         <div className="p-6 bg-gray-50 border-t flex justify-between items-center">
           <button 
             onClick={() => onDelete(artworkToEdit)} 
