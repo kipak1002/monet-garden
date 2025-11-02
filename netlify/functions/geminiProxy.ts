@@ -22,7 +22,7 @@ async function imageToGenerativePart(base64: string, mimeType: string) {
   };
 }
 
-const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
+const handler: Handler = async (event: HandlerEvent, _context: HandlerContext) => {
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,

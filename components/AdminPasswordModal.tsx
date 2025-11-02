@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import Icon from './Icon';
 
 interface AdminPasswordModalProps {
   isOpen: boolean;
@@ -70,7 +69,7 @@ const AdminPasswordModal: React.FC<AdminPasswordModalProps> = ({ isOpen, onClose
               if (error) setError('');
             }}
             maxLength={6}
-            className={`w-full text-center text-2xl tracking-[0.5em] p-3 border ${error ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-2 ${error ? 'focus:ring-red-500' : 'focus:ring-blue-500'}`}
+            className={`w-full text-center text-2xl tracking-[0.5em] p-3 border ${error ? 'border-red-500' : 'border-red-500'} rounded-md shadow-sm focus:outline-none focus:ring-2 ${error ? 'focus:ring-red-500' : 'focus:ring-blue-500'}`}
             placeholder="●●●●●●"
             autoComplete="off"
             inputMode="numeric"
