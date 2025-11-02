@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import type { Artwork } from '../types';
 import Icon from './Icon';
 import Spinner from './Spinner';
 

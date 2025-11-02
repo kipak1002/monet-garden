@@ -11,8 +11,10 @@ interface EditArtworkModalProps {
   onDelete: (artwork: Artwork) => void;
 }
 
+type ArtworkEditData = Omit<Artwork, 'id' | 'created_at'>;
+
 const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, artworkToEdit, onUpdate, onDelete }) => {
-  const [formData, setFormData] = useState<Omit<Artwork, 'id' | 'created_at'>>({ title: '', artist: '', year: 0, image_url: '', size: '', memo: '' });
+  const [formData, setFormData] = useState<ArtworkEditData>({ title: '', artist: '', year: 0, image_url: '', size: '', memo: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
