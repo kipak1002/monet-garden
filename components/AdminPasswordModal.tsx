@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import Icon from './Icon';
 
 interface AdminPasswordModalProps {
   isOpen: boolean;
