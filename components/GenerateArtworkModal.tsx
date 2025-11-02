@@ -3,13 +3,23 @@ import type { Artwork } from '../types';
 import Icon from './Icon';
 import Spinner from './Spinner';
 
+// FIX: Replaced Omit<Artwork, 'id' | 'created_at'> with an explicit type to resolve a TypeScript error.
+type NewArtworkData = {
+    title: string;
+    artist: string;
+    year: number;
+    image_url: string;
+    size: string;
+    memo?: string | null;
+};
+
 interface GenerateArtworkModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (newArtworkData: Omit<Artwork, 'id' | 'created_at'>) => Promise<void>;
+  onAdd: (newArtworkData: NewArtworkData) => Promise<void>;
 }
 
-const DEFAULT_FORM_DATA: Omit<Artwork, 'id' | 'created_at'> = {
+const DEFAULT_FORM_DATA: NewArtworkData = {
   title: '',
   artist: '',
   year: new Date().getFullYear(),
@@ -19,7 +29,7 @@ const DEFAULT_FORM_DATA: Omit<Artwork, 'id' | 'created_at'> = {
 };
 
 const GenerateArtworkModal: React.FC<GenerateArtworkModalProps> = ({ isOpen, onClose, onAdd }) => {
-  const [formData, setFormData] = useState<Omit<Artwork, 'id' | 'created_at'>>(DEFAULT_FORM_DATA);
+  const [formData, setFormData] = useState<NewArtworkData>(DEFAULT_FORM_DATA);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 

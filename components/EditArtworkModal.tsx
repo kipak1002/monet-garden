@@ -65,6 +65,10 @@ const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, ar
 
   const handleSaveChanges = async () => {
     if (artworkToEdit) {
+        if (!formData.title || !formData.artist || !formData.year || !formData.size || !formData.image_url) {
+            alert("모든 필수 필드를 입력해주세요.");
+            return;
+        }
         setIsSubmitting(true);
         try {
             await onUpdate({ ...formData, id: artworkToEdit.id, created_at: artworkToEdit.created_at });

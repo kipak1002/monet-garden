@@ -250,7 +250,7 @@ const App: React.FC = () => {
   };
 
   if (!isGalleryEntered) {
-    return <LandingPage onEnter={handleEnterGallery} galleryTitle={galleryTitle} subtitle="AI가 생성한 설명으로 아름다운 예술 작품의 세계를 탐험해 보세요." />
+    return <LandingPage onEnter={handleEnterGallery} galleryTitle={galleryTitle} subtitle="당신의 특별한 작품들을 모아 전시하는 개인 갤러리입니다." />
   }
   
   return (
