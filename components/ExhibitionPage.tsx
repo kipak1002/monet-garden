@@ -213,7 +213,9 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
                         </button>
                     </div>
                   )}
-                  <img src={ex.image_url} alt={ex.title} className="w-full h-80 object-cover" />
+                  <div className="w-full h-80 bg-gray-200">
+                    <img src={ex.image_url} alt={ex.title} className="w-full h-full object-contain" />
+                  </div>
                   <div className="p-6">
                     <h3 className="text-2xl font-bold text-gray-800">{ex.title}</h3>
                   </div>
