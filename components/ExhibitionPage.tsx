@@ -213,7 +213,7 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
                         </button>
                     </div>
                   )}
-                  <div className="w-full h-80 bg-gray-200">
+                  <div className="w-full h-80 md:h-[30rem] lg:h-[40rem] bg-gray-200">
                     <img src={ex.image_url} alt={ex.title} className="w-full h-full object-contain" />
                   </div>
                   <div className="p-6">
