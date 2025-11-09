@@ -5,10 +5,13 @@ interface ConfirmDeleteModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  artworkTitle: string;
+  // FIX: Renamed 'artworkTitle' to 'itemNameToDelete' to make the component more generic.
+  itemNameToDelete: string;
+  // FIX: Added 'itemType' prop to specify what is being deleted (e.g., '작품' or '전시회').
+  itemType: string;
 }
 
-const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({ isOpen, onClose, onConfirm, artworkTitle }) => {
+const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({ isOpen, onClose, onConfirm, itemNameToDelete, itemType }) => {
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -36,7 +39,8 @@ const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({ isOpen, onClose
       >
         <h2 className="text-2xl font-bold text-gray-900 mb-4">삭제 확인</h2>
         <p className="text-gray-600 mb-6">
-          정말로 "<strong>{artworkTitle}</strong>" 작품을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+          {/* FIX: Updated the confirmation message to be generic using itemNameToDelete and itemType. */}
+          정말로 "<strong>{itemNameToDelete}</strong>" {itemType}을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
         </p>
 
         <div className="mt-6 flex justify-end gap-3">

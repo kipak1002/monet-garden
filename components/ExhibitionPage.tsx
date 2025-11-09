@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { supabase, uploadImage } from '../services/supabaseClient';
+import React, { useState, useRef } from 'react';
 import type { Exhibition } from '../types';
 import Spinner from './Spinner';
 import Icon from './Icon';
@@ -7,34 +6,25 @@ import Icon from './Icon';
 interface ExhibitionPageProps {
   onNavigateHome: () => void;
   isAdminMode: boolean;
+  exhibitions: Exhibition[];
+  onAddExhibition: (title: string, imageFile: File) => Promise<void>;
+  onEditExhibition: (exhibition: Exhibition) => void;
+  onDeleteExhibition: (exhibition: Exhibition) => void;
+  isLoading: boolean;
 }
 
-const ExhibitionPage: React.FC<ExhibitionPageProps> = ({ onNavigateHome, isAdminMode }) => {
-  const [exhibitions, setExhibitions] = useState<Exhibition[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+const ExhibitionPage: React.FC<ExhibitionPageProps> = ({ 
+  onNavigateHome, 
+  isAdminMode,
+  exhibitions,
+  onAddExhibition,
+  onEditExhibition,
+  onDeleteExhibition,
+  isLoading 
+}) => {
   const [isUploading, setIsUploading] = useState(false);
   const [newExhibition, setNewExhibition] = useState<{ title: string, image: File | null, previewUrl: string }>({ title: '', image: null, previewUrl: '' });
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const fetchExhibitions = async () => {
-      setIsLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('exhibitions')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        setExhibitions(data as Exhibition[]);
-      } catch (error) {
-        console.error('Error fetching exhibitions:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchExhibitions();
-  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -53,16 +43,9 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({ onNavigateHome, isAdmin
 
     setIsUploading(true);
     try {
-      const imageUrl = await uploadImage(newExhibition.image);
-      const { data, error } = await supabase
-        .from('exhibitions')
-        .insert({ title: newExhibition.title, image_url: imageUrl })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      setExhibitions([data as Exhibition, ...exhibitions]);
+      await onAddExhibition(newExhibition.title, newExhibition.image);
       setNewExhibition({ title: '', image: null, previewUrl: '' }); // Reset form
+      if(fileInputRef.current) fileInputRef.current.value = "";
     } catch (error) {
       console.error('Error adding exhibition:', error);
       alert('전시회 정보 추가 중 오류가 발생했습니다.');
@@ -87,70 +70,105 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({ onNavigateHome, isAdmin
         </div>
       </header>
       <main className="container mx-auto p-6 md:p-8">
-        {isAdminMode && (
-          <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 className="text-xl font-bold mb-4">새 전시회 추가</h2>
-            <form onSubmit={handleAddExhibition} className="space-y-4">
-              <div>
-                <label htmlFor="ex-title" className="block text-sm font-medium text-gray-700">전시회 제목</label>
-                <input
-                  id="ex-title"
-                  type="text"
-                  value={newExhibition.title}
-                  onChange={(e) => setNewExhibition(prev => ({...prev, title: e.target.value}))}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="전시회 제목을 입력하세요"
-                  disabled={isUploading}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">포스터 이미지</label>
-                <div className="mt-1 flex items-center gap-4">
-                  <div className="w-32 h-32 bg-gray-200 rounded-md overflow-hidden flex-shrink-0">
-                    {newExhibition.previewUrl ? (
-                       <img src={newExhibition.previewUrl} alt="미리보기" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400">
-                        <Icon type="upload" className="w-10 h-10" />
-                      </div>
-                    )}
-                  </div>
-                  <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
-                  <button type="button" onClick={() => fileInputRef.current?.click()} className="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                    파일 선택
-                  </button>
-                </div>
-              </div>
-              <div className="text-right">
-                <button type="submit" disabled={isUploading} className="w-36 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300 flex justify-center items-center">
-                  {isUploading ? <Spinner size="h-5 w-5" /> : '추가하기'}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-        
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
             <Spinner size="h-12 w-12" />
           </div>
-        ) : exhibitions.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {exhibitions.map((ex) => (
-              <div key={ex.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
-                <div className="w-full h-80 bg-gray-200">
-                  <img src={ex.image_url} alt={ex.title} className="w-full h-full object-cover" />
-                </div>
-                <div className="p-4">
-                  <h3 className="text-lg font-bold text-gray-800">{ex.title}</h3>
-                </div>
-              </div>
-            ))}
-          </div>
         ) : (
-          <div className="text-center py-16">
-            <h2 className="text-2xl font-semibold text-gray-700">등록된 전시회가 없습니다.</h2>
-            {isAdminMode && <p className="text-gray-500 mt-2">관리자 모드에서 새 전시회를 추가해보세요.</p>}
+          <div>
+            {isAdminMode && (
+              <div className="mb-8 p-6 bg-white rounded-lg shadow-md">
+                <h2 className="text-xl font-bold text-gray-800 mb-4">새 전시회 추가</h2>
+                <form onSubmit={handleAddExhibition} className="space-y-4">
+                  <div>
+                    <label htmlFor="ex-title" className="block text-sm font-medium text-gray-700">전시회 제목</label>
+                    <input
+                      type="text"
+                      id="ex-title"
+                      value={newExhibition.title}
+                      onChange={(e) => setNewExhibition(prev => ({ ...prev, title: e.target.value }))}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      required
+                      disabled={isUploading}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">대표 이미지</label>
+                    <div className="mt-1 flex items-center gap-4">
+                      <div className="w-32 h-32 rounded-md bg-gray-200 overflow-hidden flex-shrink-0">
+                        {newExhibition.previewUrl ? (
+                          <img src={newExhibition.previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400">
+                            <Icon type="upload" className="w-10 h-10" />
+                          </div>
+                        )}
+                      </div>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        accept="image/png, image/jpeg, image/webp"
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        disabled={isUploading}
+                      >
+                        이미지 선택
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={isUploading || !newExhibition.title || !newExhibition.image}
+                      className="w-32 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300 flex justify-center items-center"
+                    >
+                      {isUploading ? <Spinner size="h-5 w-5" /> : '추가하기'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+            
+            <div className="space-y-8">
+              {exhibitions.length > 0 ? exhibitions.map(ex => (
+                <div key={ex.id} className="bg-white rounded-lg shadow-md overflow-hidden group relative">
+                   {isAdminMode && (
+                    <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <button 
+                            onClick={() => onEditExhibition(ex)}
+                            className="bg-white/80 backdrop-blur-sm p-2 rounded-full text-gray-700 hover:bg-blue-500 hover:text-white transition-all"
+                            aria-label="전시회 편집"
+                            title="전시회 편집"
+                        >
+                            <Icon type="edit" className="w-5 h-5" />
+                        </button>
+                        <button 
+                            onClick={() => onDeleteExhibition(ex)}
+                            className="bg-white/80 backdrop-blur-sm p-2 rounded-full text-gray-700 hover:bg-red-500 hover:text-white transition-all"
+                            aria-label="전시회 삭제"
+                            title="전시회 삭제"
+                        >
+                            <Icon type="trash" className="w-5 h-5" />
+                        </button>
+                    </div>
+                  )}
+                  <img src={ex.image_url} alt={ex.title} className="w-full h-80 object-cover" />
+                  <div className="p-6">
+                    <h3 className="text-2xl font-bold text-gray-800">{ex.title}</h3>
+                  </div>
+                </div>
+              )) : (
+                <div className="text-center py-20">
+                    <h2 className="text-2xl font-semibold text-gray-700">전시회가 없습니다.</h2>
+                    <p className="text-gray-500 mt-2">관리자 모드에서 새 전시회를 추가해주세요.</p>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </main>
@@ -158,4 +176,5 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({ onNavigateHome, isAdmin
   );
 };
 
+// FIX: Added missing default export to resolve module import error.
 export default ExhibitionPage;
