@@ -1,17 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../services/supabaseClient';
 import Spinner from './Spinner';
+import Icon from './Icon';
 
 interface ArtistProfilePageProps {
   onNavigateHome: () => void;
   isAdminMode: boolean;
+  onToggleAdminMode: () => void;
+  onOpenChangePasswordSettings: () => void;
 }
 
-const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({ onNavigateHome, isAdminMode }) => {
+const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({ 
+  onNavigateHome, 
+  isAdminMode,
+  onToggleAdminMode,
+  onOpenChangePasswordSettings
+}) => {
   const [profileText, setProfileText] = useState('');
   const [editText, setEditText] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
+  const adminMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -40,6 +50,19 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({ onNavigateHome, i
     };
     fetchProfile();
   }, []);
+  
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (adminMenuRef.current && !adminMenuRef.current.contains(event.target as Node)) {
+        setIsAdminMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleSaveChanges = async () => {
     setIsSaving(true);
@@ -66,12 +89,49 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({ onNavigateHome, i
           <h1 className="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">
             작가 프로필
           </h1>
-          <button
-            onClick={onNavigateHome}
-            className="font-semibold text-blue-600 hover:text-blue-800 transition-colors"
-          >
-            HOME
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={onNavigateHome}
+              className="font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+            >
+              HOME
+            </button>
+            {isAdminMode && (
+                <div className="relative" ref={adminMenuRef}>
+                    <button
+                        onClick={() => setIsAdminMenuOpen(prev => !prev)}
+                        title="관리자 설정"
+                        className="p-2 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 transition-colors"
+                        aria-haspopup="true"
+                        aria-expanded={isAdminMenuOpen}
+                        aria-label="관리자 설정"
+                    >
+                        <Icon type="cog" className="w-6 h-6" />
+                    </button>
+                    {isAdminMenuOpen && (
+                        <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-20 ring-1 ring-black ring-opacity-5">
+                            <button
+                                onClick={() => {
+                                    onOpenChangePasswordSettings();
+                                    setIsAdminMenuOpen(false);
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
+                            >
+                                <Icon type="key" className="w-5 h-5 text-gray-500" />
+                                <span>관리자 비밀번호 변경</span>
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
+            <button
+              onClick={onToggleAdminMode}
+              title={isAdminMode ? "관리자 모드 종료" : "관리자 모드 시작"}
+              className={`p-2 rounded-full transition-colors duration-300 ${isAdminMode ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}
+            >
+              <Icon type="shield-check" className="w-6 h-6" />
+            </button>
+          </div>
         </div>
       </header>
       <main className="container mx-auto p-6 md:p-8">

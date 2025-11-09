@@ -274,7 +274,12 @@ const App: React.FC = () => {
   }
   
   if (currentPage === 'profile') {
-    return <ArtistProfilePage onNavigateHome={() => handleNavigate('landing')} isAdminMode={isAdminMode} />;
+    return <ArtistProfilePage 
+              onNavigateHome={() => handleNavigate('landing')} 
+              isAdminMode={isAdminMode} 
+              onToggleAdminMode={handleToggleAdminMode}
+              onOpenChangePasswordSettings={() => setIsChangePasswordModalOpen(true)}
+            />;
   }
   
   if (currentPage === 'exhibition') {
@@ -286,6 +291,8 @@ const App: React.FC = () => {
               onEditExhibition={openEditExhibitionModal}
               onDeleteExhibition={(ex) => openDeleteModal(ex, '전시회')}
               isLoading={isLoading}
+              onToggleAdminMode={handleToggleAdminMode}
+              onOpenChangePasswordSettings={() => setIsChangePasswordModalOpen(true)}
             />;
   }
 
@@ -299,6 +306,8 @@ const App: React.FC = () => {
         galleryTitle={galleryTitle}
         onTitleChange={handleTitleChange}
         onOpenChangePasswordSettings={() => setIsChangePasswordModalOpen(true)}
+        showHomeButton={true}
+        onNavigateHome={() => handleNavigate('landing')}
       />
       <main className="container mx-auto">
         <Gallery 

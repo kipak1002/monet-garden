@@ -9,6 +9,8 @@ interface HeaderProps {
   galleryTitle: string;
   onTitleChange: (newTitle: string) => void;
   onOpenChangePasswordSettings: () => void;
+  showHomeButton?: boolean;
+  onNavigateHome?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
@@ -18,7 +20,9 @@ const Header: React.FC<HeaderProps> = ({
   onToggleAdminMode,
   galleryTitle,
   onTitleChange,
-  onOpenChangePasswordSettings
+  onOpenChangePasswordSettings,
+  showHomeButton,
+  onNavigateHome
 }) => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editableTitle, setEditableTitle] = useState(galleryTitle);
@@ -71,35 +75,45 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <header className="bg-white/80 backdrop-blur-md sticky top-0 z-10 shadow-sm p-4">
       <div className="container mx-auto flex justify-between items-center gap-4">
-        <div className="flex items-center gap-2 flex-shrink-0 mr-4">
-            {isEditingTitle ? (
-                 <input
-                    ref={titleInputRef}
-                    type="text"
-                    value={editableTitle}
-                    onChange={(e) => setEditableTitle(e.target.value)}
-                    onBlur={handleTitleSave}
-                    onKeyDown={handleKeyDown}
-                    className="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight bg-transparent border-b-2 border-blue-500 focus:outline-none w-full"
-                />
-            ) : isAdminMode ? (
-                <button
-                    onClick={() => setIsEditingTitle(true)}
-                    className="flex items-center gap-2 group"
-                    title="갤러리 제목 편집"
+        <div className="flex items-center gap-4 flex-shrink-0 mr-4">
+            {showHomeButton && (
+                 <button
+                    onClick={onNavigateHome}
+                    className="font-semibold text-blue-600 hover:text-blue-800 transition-colors pr-4 border-r border-gray-300"
                 >
-                    <h1 className="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight group-hover:text-blue-600 transition-colors">
+                    HOME
+                </button>
+            )}
+            <div className="flex items-center gap-2">
+                {isEditingTitle ? (
+                     <input
+                        ref={titleInputRef}
+                        type="text"
+                        value={editableTitle}
+                        onChange={(e) => setEditableTitle(e.target.value)}
+                        onBlur={handleTitleSave}
+                        onKeyDown={handleKeyDown}
+                        className="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight bg-transparent border-b-2 border-blue-500 focus:outline-none w-full"
+                    />
+                ) : isAdminMode ? (
+                    <button
+                        onClick={() => setIsEditingTitle(true)}
+                        className="flex items-center gap-2 group"
+                        title="갤러리 제목 편집"
+                    >
+                        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight group-hover:text-blue-600 transition-colors">
+                            {galleryTitle}
+                        </h1>
+                        <div className="text-gray-500 group-hover:text-blue-600 transition-colors">
+                            <Icon type="edit" className="w-5 h-5" />
+                        </div>
+                    </button>
+                ) : (
+                    <h1 className="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">
                         {galleryTitle}
                     </h1>
-                    <div className="text-gray-500 group-hover:text-blue-600 transition-colors">
-                        <Icon type="edit" className="w-5 h-5" />
-                    </div>
-                </button>
-            ) : (
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">
-                    {galleryTitle}
-                </h1>
-            )}
+                )}
+            </div>
         </div>
         <div className="flex items-center gap-4">
             <div className="relative w-full max-w-xs">
