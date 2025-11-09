@@ -8,3 +8,10 @@ export interface Artwork {
   size: string;
   memo?: string | null;
 }
+
+export interface Exhibition {
+  id: number;
+  created_at: string;
+  title: string;
+  image_url: string;
+}

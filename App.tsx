@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import type { Artwork } from './types';
+import type { Artwork, Exhibition } from './types';
 import { supabase, uploadImage } from './services/supabaseClient';
 import Header from './components/Header';
 import Gallery from './components/Gallery';
@@ -12,6 +12,10 @@ import GenerateArtworkModal from './components/GenerateArtworkModal';
 import Icon from './components/Icon';
 import AdminPasswordModal from './components/AdminPasswordModal';
 import ChangePasswordModal from './components/ChangePasswordModal';
+import ArtistProfilePage from './components/ArtistProfilePage';
+import ExhibitionPage from './components/ExhibitionPage';
+
+type Page = 'landing' | 'gallery' | 'profile' | 'exhibition';
 
 const App: React.FC = () => {
   const [artworks, setArtworks] = useState<Artwork[]>([]);
@@ -19,7 +23,7 @@ const App: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isGalleryEntered, setIsGalleryEntered] = useState(false);
+  const [currentPage, setCurrentPage] = useState<Page>('landing');
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [isPasswordPromptOpen, setIsPasswordPromptOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -46,18 +50,15 @@ const App: React.FC = () => {
         if (artworksError) throw artworksError;
 
         const settingsMap = new Map(settingsData.map(s => [s.key, s.value]));
-        // FIX: Argument of type 'unknown' is not assignable to parameter of type 'SetStateAction<string>'.
         setGalleryTitle(String(settingsMap.get('galleryTitle') || '김명진 포트폴리오'));
-        // FIX: Argument of type 'unknown' is not assignable to parameter of type 'SetStateAction<string>'.
         setAdminPassword(String(settingsMap.get('adminPassword') || '000000'));
         
         const loadedArtworks = artworksData as Artwork[];
         setArtworks(loadedArtworks);
-        setFilteredArtworks(loadedArtworks); // Initially, show all artworks
+        setFilteredArtworks(loadedArtworks);
 
       } catch (error) {
         console.error('Error fetching initial data:', error);
-        // You might want to show an error message to the user
       } finally {
         setIsLoading(false);
       }
@@ -92,10 +93,8 @@ const App: React.FC = () => {
   const handleCloseModal = useCallback(() => {
     setSelectedArtwork(null);
   }, []);
-
-  const handleEnterGallery = () => {
-    setIsGalleryEntered(true);
-  };
+  
+  const navigateTo = (page: Page) => setCurrentPage(page);
 
   const handleToggleAdminMode = () => {
     if (isAdminMode) {
@@ -129,7 +128,6 @@ const App: React.FC = () => {
   const handleUpdateArtwork = async (updatedArtworkData: Artwork) => {
     let finalImageUrl = updatedArtworkData.image_url;
 
-    // Check if the image is a new upload (data URL)
     if (finalImageUrl && finalImageUrl.startsWith('data:')) {
         finalImageUrl = await uploadImage(finalImageUrl);
     }
@@ -138,7 +136,6 @@ const App: React.FC = () => {
         ...updatedArtworkData,
         image_url: finalImageUrl,
     };
-    // remove id before sending to supabase
     const { id, created_at, ...updateData } = artworkToUpdate;
 
     const { data, error } = await supabase
@@ -150,7 +147,7 @@ const App: React.FC = () => {
 
     if (error) {
         console.error("Error updating artwork:", error);
-        throw error; // Propagate error to the modal
+        throw error;
     } else if (data) {
         const updatedArtworks = artworks.map(art => art.id === data.id ? data : art);
         setArtworks(updatedArtworks as Artwork[]);
@@ -206,7 +203,7 @@ const App: React.FC = () => {
     
     if (error) {
         console.error("Error adding new artwork:", error);
-        throw error; // Propagate error to the modal
+        throw error;
     } else if (data) {
         const updatedArtworks = [data, ...artworks];
         setArtworks(updatedArtworks as Artwork[]);
@@ -215,7 +212,6 @@ const App: React.FC = () => {
   };
 
   const handleTitleChange = async (newTitle: string) => {
-    // Optimistic UI update
     setGalleryTitle(newTitle);
     const { error } = await supabase
       .from('settings')
@@ -224,7 +220,6 @@ const App: React.FC = () => {
     
     if (error) {
       console.error("Error updating title:", error);
-      // Optional: you could revert the title here and show an error message
     }
   };
 
@@ -251,43 +246,65 @@ const App: React.FC = () => {
     return { success: true, message: "비밀번호가 성공적으로 업데이트되었습니다!" };
   };
 
-  if (!isGalleryEntered) {
-    return <LandingPage onEnter={handleEnterGallery} galleryTitle={galleryTitle} subtitle="당신의 특별한 작품들을 모아 전시하는 개인 갤러리입니다." />
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'gallery':
+        return (
+          <>
+            <Header 
+              galleryTitle={galleryTitle}
+              onTitleChange={handleTitleChange}
+              searchTerm={searchTerm} 
+              onSearchChange={handleSearchChange} 
+              isAdminMode={isAdminMode}
+              onToggleAdminMode={handleToggleAdminMode}
+              onOpenChangePasswordSettings={handleOpenChangePasswordModal}
+            />
+            <main className="container mx-auto">
+              {isLoading ? (
+                  <div className="flex justify-center items-center h-96">
+                      <Spinner size="h-16 w-16" />
+                  </div>
+              ) : (
+                  <Gallery 
+                    artworks={filteredArtworks} 
+                    onSelectArtwork={handleSelectArtwork}
+                    isAdminMode={isAdminMode}
+                    onEditArtwork={handleOpenEditModal}
+                    onDeleteArtwork={handleOpenDeleteConfirm}
+                  />
+              )}
+            </main>
+          </>
+        );
+      case 'profile':
+        return <ArtistProfilePage onNavigateHome={() => navigateTo('landing')} isAdminMode={isAdminMode} />;
+      case 'exhibition':
+        return <ExhibitionPage onNavigateHome={() => navigateTo('landing')} isAdminMode={isAdminMode} />;
+      case 'landing':
+      default:
+        return (
+          <LandingPage 
+            onEnterGallery={() => navigateTo('gallery')}
+            onEnterProfile={() => navigateTo('profile')}
+            onEnterExhibition={() => navigateTo('exhibition')}
+            galleryTitle={galleryTitle} 
+            subtitle="당신의 특별한 작품들을 모아 전시하는 개인 갤러리입니다." 
+          />
+        );
+    }
   }
   
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
-      <Header 
-        galleryTitle={galleryTitle}
-        onTitleChange={handleTitleChange}
-        searchTerm={searchTerm} 
-        onSearchChange={handleSearchChange} 
-        isAdminMode={isAdminMode}
-        onToggleAdminMode={handleToggleAdminMode}
-        onOpenChangePasswordSettings={handleOpenChangePasswordModal}
-      />
-      <main className="container mx-auto">
-        {isLoading ? (
-            <div className="flex justify-center items-center h-96">
-                <Spinner size="h-16 w-16" />
-            </div>
-        ) : (
-            <Gallery 
-              artworks={filteredArtworks} 
-              onSelectArtwork={handleSelectArtwork}
-              isAdminMode={isAdminMode}
-              onEditArtwork={handleOpenEditModal}
-              onDeleteArtwork={handleOpenDeleteConfirm}
-            />
-        )}
-      </main>
+      {renderPage()}
       
-      {isAdminMode && (
+      {currentPage === 'gallery' && isAdminMode && (
         <button
           onClick={handleOpenAddModal}
           className="fixed bottom-8 right-8 bg-blue-600 text-white rounded-full p-4 shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transform hover:scale-110 transition-all duration-300 z-20"
-          title="Add New Artwork"
-          aria-label="Add New Artwork"
+          title="새 작품 추가"
+          aria-label="새 작품 추가"
         >
           <Icon type="plus" className="w-8 h-8" />
         </button>
