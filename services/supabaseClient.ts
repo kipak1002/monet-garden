@@ -8,6 +8,11 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+// ======================= 디버깅을 위한 임시 코드 =======================
+// 이 코드는 앱이 어떤 Supabase 주소로 연결을 시도하는지 브라우저 콘솔에 보여줍니다.
+console.log("현재 연결 시도 중인 Supabase URL:", supabaseUrl);
+// =====================================================================
+
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error("Supabase URL and Anon Key are required. Make sure you have a .env.local file with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY variables.");
 }
