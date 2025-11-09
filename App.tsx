@@ -46,8 +46,10 @@ const App: React.FC = () => {
         if (artworksError) throw artworksError;
 
         const settingsMap = new Map(settingsData.map(s => [s.key, s.value]));
-        setGalleryTitle(settingsMap.get('galleryTitle') || '김명진 포트폴리오');
-        setAdminPassword(settingsMap.get('adminPassword') || '000000');
+        // FIX: Argument of type 'unknown' is not assignable to parameter of type 'SetStateAction<string>'.
+        setGalleryTitle(String(settingsMap.get('galleryTitle') || '김명진 포트폴리오'));
+        // FIX: Argument of type 'unknown' is not assignable to parameter of type 'SetStateAction<string>'.
+        setAdminPassword(String(settingsMap.get('adminPassword') || '000000'));
         
         const loadedArtworks = artworksData as Artwork[];
         setArtworks(loadedArtworks);
@@ -250,7 +252,7 @@ const App: React.FC = () => {
   };
 
   if (!isGalleryEntered) {
-    return <LandingPage onEnter={handleEnterGallery} galleryTitle={galleryTitle} subtitle="김명진 작가의 개인 갤러리입니다." />
+    return <LandingPage onEnter={handleEnterGallery} galleryTitle={galleryTitle} subtitle="당신의 특별한 작품들을 모아 전시하는 개인 갤러리입니다." />
   }
   
   return (

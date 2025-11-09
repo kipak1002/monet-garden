@@ -19,13 +19,27 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter, galleryTitle, subtit
             {subtitle}
           </p>
         )}
-        <button
-          onClick={onEnter}
-          className="mt-8 inline-flex items-center justify-center bg-blue-600 text-white font-semibold py-3 px-8 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-105"
-        >
-          <Icon type="sparkles" className="w-6 h-6 mr-3" />
-          갤러리 입장
-        </button>
+        <div className="mt-10 flex flex-col items-center gap-6">
+            <div className="flex gap-4">
+                <button
+                className="font-medium text-gray-600 hover:text-gray-900 transition-all duration-300 py-2 px-5 border border-gray-300 rounded-full bg-white shadow-sm hover:bg-gray-50 transform hover:scale-105"
+                >
+                작가 Profile
+                </button>
+                <button
+                className="font-medium text-gray-600 hover:text-gray-900 transition-all duration-300 py-2 px-5 border border-gray-300 rounded-full bg-white shadow-sm hover:bg-gray-50 transform hover:scale-105"
+                >
+                exhibition
+                </button>
+            </div>
+            <button
+              onClick={onEnter}
+              className="inline-flex items-center justify-center bg-blue-600 text-white font-semibold py-3 px-8 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-105"
+            >
+              <Icon type="sparkles" className="w-6 h-6 mr-3" />
+              갤러리 입장
+            </button>
+        </div>
       </div>
       <style>{`
         @keyframes slide-up-fade-in {
