@@ -1,11 +1,11 @@
 // services/supabaseClient.ts
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error("Supabase URL 및 Anon Key가 필요합니다. .env 파일을 확인해주세요.");
+  throw new Error("Supabase URL 및 Anon Key가 필요합니다. 환경 변수를 확인해주세요.");
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
