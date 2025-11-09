@@ -76,7 +76,7 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
       <header className="bg-white/80 backdrop-blur-md sticky top-0 z-10 shadow-sm p-4">
-        <div className="container mx-auto flex justify-between items-center">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">
             Exhibitions
           </h1>
@@ -125,7 +125,7 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
           </div>
         </div>
       </header>
-      <main className="container mx-auto p-6 md:p-8">
+      <main className="max-w-7xl mx-auto p-6 md:p-8">
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
             <Spinner size="h-12 w-12" />
