@@ -46,30 +46,48 @@ const App: React.FC = () => {
   const fetchInitialData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const settingsPromise = supabase.from('settings').select('key, value');
-      const artworksPromise = supabase.from('artworks').select('*').order('created_at', { ascending: false });
-      const exhibitionsPromise = supabase.from('exhibitions').select('*').order('created_at', { ascending: false });
+      // Fetch settings
+      try {
+        const { data: settingsData, error: settingsError } = await supabase.from('settings').select('key, value');
+        if (settingsError) throw settingsError;
+        const settingsMap = new Map(settingsData.map(s => [s.key, s.value]));
+        setGalleryTitle(String(settingsMap.get('galleryTitle') || '김명진 포트폴리오'));
+        setAdminPassword(String(settingsMap.get('adminPassword') || '000000'));
+      } catch (error) {
+        console.error('Error fetching settings:', error);
+      }
 
-      const [
-        { data: settingsData, error: settingsError },
-        { data: artworksData, error: artworksError },
-        { data: exhibitionsData, error: exhibitionsError }
-      ] = await Promise.all([settingsPromise, artworksPromise, exhibitionsPromise]);
-      
-      if (settingsError) throw settingsError;
-      if (artworksError) throw artworksError;
-      if (exhibitionsError) throw exhibitionsError;
+      // Fetch artworks
+      try {
+        const { data: artworksData, error: artworksError } = await supabase.from('artworks').select('*').order('created_at', { ascending: false });
+        if (artworksError) throw artworksError;
+        setArtworks(artworksData as Artwork[]);
+        setFilteredArtworks(artworksData as Artwork[]);
+      } catch (error) {
+        console.error('Error fetching artworks:', error);
+      }
 
-      const settingsMap = new Map(settingsData.map(s => [s.key, s.value]));
-      setGalleryTitle(String(settingsMap.get('galleryTitle') || '김명진 포트폴리오'));
-      setAdminPassword(String(settingsMap.get('adminPassword') || '000000'));
-      
-      setArtworks(artworksData as Artwork[]);
-      setFilteredArtworks(artworksData as Artwork[]);
-      setExhibitions(exhibitionsData as Exhibition[]);
+      // Fetch exhibitions
+      try {
+        const { data: exhibitionsData, error: exhibitionsError } = await supabase.from('exhibitions').select('*').order('created_at', { ascending: false });
+        if (exhibitionsError) {
+           // If the table doesn't exist, it's not a critical error, just log it.
+          if (exhibitionsError.code === '42P01') { 
+            console.warn('Exhibitions table not found. Please create it in Supabase if you need this feature.');
+          } else {
+            throw exhibitionsError;
+          }
+        }
+        if (exhibitionsData) {
+          setExhibitions(exhibitionsData as Exhibition[]);
+        }
+      } catch (error) {
+        console.error('Error fetching exhibitions:', error);
+      }
 
     } catch (error) {
-      console.error('Error fetching initial data:', error);
+      // This outer catch is for any unexpected errors not caught by inner blocks.
+      console.error('An unexpected error occurred during initial data fetch:', error);
     } finally {
       setIsLoading(false);
     }
