@@ -8,7 +8,7 @@ import Spinner from './Spinner';
 import LandingPage from './LandingPage';
 import EditArtworkModal from './EditArtworkModal';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
-import GenerateArtworkModal from './GenerateArtworkModal';
+import GenerateArtworkModal, { NewArtworkData } from './GenerateArtworkModal';
 import Icon from './Icon';
 import AdminPasswordModal from './AdminPasswordModal';
 import ChangePasswordModal from './ChangePasswordModal';
@@ -36,13 +36,12 @@ const App: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
   const [editingArtwork, setEditingArtwork] = useState<Artwork | null>(null);
-  const [artworkToDelete, setArtworkToDelete] = useState<Artwork | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<Artwork | Exhibition | null>(null);
+  const [itemTypeToDelete, setItemTypeToDelete] = useState<'작품' | '전시회' | ''>('');
   
   // Exhibition Modals State
   const [isEditExhibitionModalOpen, setIsEditExhibitionModalOpen] = useState(false);
   const [editingExhibition, setEditingExhibition] = useState<Exhibition | null>(null);
-  const [exhibitionToDelete, setExhibitionToDelete] = useState<Exhibition | null>(null);
-
 
   const fetchInitialData = useCallback(async () => {
     setIsLoading(true);
@@ -81,23 +80,18 @@ const App: React.FC = () => {
   }, [fetchInitialData]);
 
   useEffect(() => {
-    const lowercasedTerm = searchTerm.toLowerCase();
-    if (!lowercasedTerm) {
-      setFilteredArtworks(artworks);
-    } else {
-      const results = artworks.filter(
-        (artwork) =>
-          artwork.title.toLowerCase().includes(lowercasedTerm) ||
-          artwork.artist.toLowerCase().includes(lowercasedTerm)
-      );
-      setFilteredArtworks(results);
-    }
+    const results = artworks.filter(artwork =>
+      artwork.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      artwork.artist.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      artwork.year.toString().includes(searchTerm)
+    );
+    setFilteredArtworks(results);
   }, [searchTerm, artworks]);
+  
+  // Page Navigation Handlers
+  const handleNavigate = (page: Page) => setCurrentPage(page);
 
-  // Navigation
-  const navigateTo = (page: Page) => setCurrentPage(page);
-
-  // Admin Mode
+  // Admin Mode Handlers
   const handleToggleAdminMode = () => {
     if (isAdminMode) {
       setIsAdminMode(false);
@@ -106,7 +100,7 @@ const App: React.FC = () => {
     }
   };
   
-  const handlePasswordSubmit = (password: string): boolean => {
+  const handleAdminPasswordSubmit = (password: string) => {
     if (password === adminPassword) {
       setIsAdminMode(true);
       setIsPasswordPromptOpen(false);
@@ -115,189 +109,243 @@ const App: React.FC = () => {
     return false;
   };
   
-  const handleUpdatePassword = async (currentAttempt: string, newPassword: string): Promise<{ success: boolean, message: string }> => {
-    if (currentAttempt !== adminPassword) {
-      return { success: false, message: "현재 비밀번호가 일치하지 않습니다." };
-    }
-
-    const { error } = await supabase
-      .from('settings')
-      .update({ value: newPassword })
-      .eq('key', 'adminPassword');
-
-    if (error) {
-        console.error("Error updating password:", error);
-        return { success: false, message: "데이터베이스에서 비밀번호 업데이트에 실패했습니다." };
-    }
-
-    setAdminPassword(newPassword);
-    setIsChangePasswordModalOpen(false);
-    return { success: true, message: "비밀번호가 성공적으로 업데이트되었습니다!" };
-  };
-
-  // Gallery Title
+  // Settings Handlers
   const handleTitleChange = async (newTitle: string) => {
     setGalleryTitle(newTitle);
-    const { error } = await supabase
-      .from('settings')
-      .update({ value: newTitle })
-      .eq('key', 'galleryTitle');
-    
-    if (error) console.error("Error updating title:", error);
-  };
-  
-  // Artwork CRUD
-  const handleAddNewArtwork = async (newArtworkData: Omit<Artwork, 'id' | 'created_at'>) => {
-    let finalImageUrl = newArtworkData.image_url;
-    if (finalImageUrl && finalImageUrl.startsWith('data:')) {
-        finalImageUrl = await uploadImage(finalImageUrl);
+    try {
+      await supabase
+        .from('settings')
+        .upsert({ key: 'galleryTitle', value: newTitle }, { onConflict: 'key' });
+    } catch (error) {
+      console.error('Error updating title:', error);
+      alert('제목 업데이트 중 오류가 발생했습니다.');
     }
+  };
+
+  const handleUpdatePassword = async (currentAttempt: string, newPassword: string): Promise<{ success: boolean, message: string }> => {
+    if (currentAttempt !== adminPassword) {
+      return { success: false, message: '현재 비밀번호가 일치하지 않습니다.' };
+    }
+    try {
+      await supabase
+        .from('settings')
+        .upsert({ key: 'adminPassword', value: newPassword }, { onConflict: 'key' });
+      setAdminPassword(newPassword);
+      setIsChangePasswordModalOpen(false);
+      alert('비밀번호가 성공적으로 변경되었습니다.');
+      return { success: true, message: '성공' };
+    } catch (error) {
+      console.error('Error updating password:', error);
+      return { success: false, message: '비밀번호 업데이트 중 오류가 발생했습니다.' };
+    }
+  };
+
+  // Artwork CRUD Handlers
+  const handleAddNewArtwork = async (newArtworkData: NewArtworkData) => {
+    const imageUrl = await uploadImage(newArtworkData.image_url);
     const { data, error } = await supabase
-        .from('artworks')
-        .insert([{ ...newArtworkData, image_url: finalImageUrl }])
-        .select()
-        .single();
-    if (error) { throw error; } 
-    setArtworks([data as Artwork, ...artworks]);
+      .from('artworks')
+      .insert([{ ...newArtworkData, image_url: imageUrl }])
+      .select()
+      .single();
+    if (error) throw error;
+    setArtworks(prev => [data as Artwork, ...prev]);
     setIsAddModalOpen(false);
   };
   
-  const handleUpdateArtwork = async (updatedArtworkData: Artwork) => {
-    let finalImageUrl = updatedArtworkData.image_url;
-    if (finalImageUrl && finalImageUrl.startsWith('data:')) {
-        finalImageUrl = await uploadImage(finalImageUrl);
+  const handleUpdateArtwork = async (updatedArtwork: Artwork) => {
+    let finalImageUrl = updatedArtwork.image_url;
+    // Check if the image_url is a data URL (base64), meaning it's a new upload
+    if (finalImageUrl.startsWith('data:image')) {
+      finalImageUrl = await uploadImage(finalImageUrl);
     }
-    const { id, created_at, ...updateData } = { ...updatedArtworkData, image_url: finalImageUrl };
-    const { data, error } = await supabase.from('artworks').update(updateData).eq('id', id).select().single();
-    if (error) { throw error; }
-    setArtworks(artworks.map(art => art.id === data.id ? data : art) as Artwork[]);
+    const artworkDataToUpdate = { ...updatedArtwork, image_url: finalImageUrl };
+
+    const { data, error } = await supabase
+      .from('artworks')
+      .update(artworkDataToUpdate)
+      .eq('id', updatedArtwork.id)
+      .select()
+      .single();
+    if (error) throw error;
+    setArtworks(prev => prev.map(a => (a.id === updatedArtwork.id ? data as Artwork : a)));
     setIsEditModalOpen(false);
-  };
-  
-  const handleConfirmDeleteArtwork = async () => {
-    if (!artworkToDelete) return;
-    const { error } = await supabase.from('artworks').delete().eq('id', artworkToDelete.id);
-    if (error) {
-        alert(`작품 삭제 중 오류가 발생했습니다: ${error.message}`);
-    } else {
-        setArtworks(artworks.filter(art => art.id !== artworkToDelete.id));
-        setArtworkToDelete(null);
-    }
+    setEditingArtwork(null);
   };
 
-  // Exhibition CRUD
+  const handleDeleteArtwork = async () => {
+    if (!itemToDelete || itemTypeToDelete !== '작품') return;
+    const { error } = await supabase.from('artworks').delete().eq('id', itemToDelete.id);
+    if (error) {
+        console.error("Error deleting artwork:", error);
+        alert("작품 삭제 중 오류가 발생했습니다.");
+    } else {
+        setArtworks(prev => prev.filter(a => a.id !== itemToDelete.id));
+    }
+    setItemToDelete(null);
+    setItemTypeToDelete('');
+  };
+
+  // Exhibition CRUD Handlers
   const handleAddExhibition = async (title: string, imageFile: File) => {
     const imageUrl = await uploadImage(imageFile);
-    const { data, error } = await supabase.from('exhibitions').insert({ title, image_url: imageUrl }).select().single();
-    if (error) { throw error; }
-    setExhibitions([data as Exhibition, ...exhibitions]);
-  };
-  
-  const handleUpdateExhibition = async (updatedExhibition: Exhibition) => {
-    let finalImageUrl = updatedExhibition.image_url;
-    if (finalImageUrl && finalImageUrl.startsWith('data:')) {
-        finalImageUrl = await uploadImage(finalImageUrl);
-    }
-    const { id, created_at, ...updateData } = { ...updatedExhibition, image_url: finalImageUrl };
-    const { data, error } = await supabase.from('exhibitions').update(updateData).eq('id', id).select().single();
-    if (error) { throw error; }
-    setExhibitions(exhibitions.map(ex => ex.id === data.id ? data : ex) as Exhibition[]);
-    setIsEditExhibitionModalOpen(false);
-  };
-  
-  const handleConfirmDeleteExhibition = async () => {
-    if (!exhibitionToDelete) return;
-    const { error } = await supabase.from('exhibitions').delete().eq('id', exhibitionToDelete.id);
-    if (error) {
-        alert(`전시회 삭제 중 오류가 발생했습니다: ${error.message}`);
-    } else {
-        setExhibitions(exhibitions.filter(ex => ex.id !== exhibitionToDelete.id));
-        setExhibitionToDelete(null);
-    }
+    const { data, error } = await supabase
+      .from('exhibitions')
+      .insert([{ title, image_url: imageUrl }])
+      .select()
+      .single();
+    if (error) throw error;
+    setExhibitions(prev => [data as Exhibition, ...prev]);
   };
 
-  // Render Logic
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'gallery':
-        return (
-          <>
-            <Header 
-              galleryTitle={galleryTitle}
-              onTitleChange={handleTitleChange}
-              searchTerm={searchTerm} 
-              onSearchChange={setSearchTerm} 
-              isAdminMode={isAdminMode}
-              onToggleAdminMode={handleToggleAdminMode}
-              onOpenChangePasswordSettings={() => setIsChangePasswordModalOpen(true)}
-            />
-            <main className="container mx-auto">
-              {isLoading ? (
-                  <div className="flex justify-center items-center h-96"> <Spinner size="h-16 w-16" /> </div>
-              ) : (
-                  <Gallery 
-                    artworks={filteredArtworks} 
-                    onSelectArtwork={setSelectedArtwork}
-                    isAdminMode={isAdminMode}
-                    onEditArtwork={(art) => { setEditingArtwork(art); setIsEditModalOpen(true); }}
-                    onDeleteArtwork={setArtworkToDelete}
-                  />
-              )}
-            </main>
-          </>
-        );
-      case 'profile':
-        return <ArtistProfilePage onNavigateHome={() => navigateTo('landing')} isAdminMode={isAdminMode} />;
-      case 'exhibition':
-        return <ExhibitionPage 
-                  onNavigateHome={() => navigateTo('landing')} 
-                  isAdminMode={isAdminMode}
-                  exhibitions={exhibitions}
-                  onAddExhibition={handleAddExhibition}
-                  onEditExhibition={(ex) => { setEditingExhibition(ex); setIsEditExhibitionModalOpen(true); }}
-                  onDeleteExhibition={setExhibitionToDelete}
-                  isLoading={isLoading}
-                />;
-      case 'landing':
-      default:
-        return (
-          <LandingPage 
-            onEnterGallery={() => navigateTo('gallery')}
-            onEnterProfile={() => navigateTo('profile')}
-            onEnterExhibition={() => navigateTo('exhibition')}
-            galleryTitle={galleryTitle} 
-            subtitle="당신의 특별한 작품들을 모아 전시하는 개인 갤러리입니다." 
-          />
-        );
+  const handleUpdateExhibition = async (updatedExhibition: Exhibition) => {
+    let finalImageUrl = updatedExhibition.image_url;
+    if (finalImageUrl.startsWith('data:image')) {
+      finalImageUrl = await uploadImage(finalImageUrl);
     }
+    const exhibitionDataToUpdate = { ...updatedExhibition, image_url: finalImageUrl };
+
+    const { data, error } = await supabase
+      .from('exhibitions')
+      .update(exhibitionDataToUpdate)
+      .eq('id', updatedExhibition.id)
+      .select()
+      .single();
+    if (error) throw error;
+    setExhibitions(prev => prev.map(e => (e.id === updatedExhibition.id ? data as Exhibition : e)));
+    setIsEditExhibitionModalOpen(false);
+    setEditingExhibition(null);
+  };
+
+  const handleDeleteExhibition = async () => {
+    if (!itemToDelete || itemTypeToDelete !== '전시회') return;
+    const { error } = await supabase.from('exhibitions').delete().eq('id', itemToDelete.id);
+    if (error) {
+        console.error("Error deleting exhibition:", error);
+        alert("전시회 삭제 중 오류가 발생했습니다.");
+    } else {
+        setExhibitions(prev => prev.filter(e => e.id !== itemToDelete.id));
+    }
+    setItemToDelete(null);
+    setItemTypeToDelete('');
+  };
+
+  // Modal Open/Close Handlers
+  const openEditModal = (artwork: Artwork) => { setEditingArtwork(artwork); setIsEditModalOpen(true); };
+  const openAddModal = () => setIsAddModalOpen(true);
+  const openDeleteModal = (item: Artwork | Exhibition, type: '작품' | '전시회') => { setItemToDelete(item); setItemTypeToDelete(type); };
+  const openEditExhibitionModal = (exhibition: Exhibition) => { setEditingExhibition(exhibition); setIsEditExhibitionModalOpen(true); };
+
+  const closeDeleteModal = () => { setItemToDelete(null); setItemTypeToDelete(''); };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <Spinner size="h-16 w-16" />
+      </div>
+    );
+  }
+
+  if (currentPage === 'landing') {
+    return <LandingPage 
+              onEnterGallery={() => handleNavigate('gallery')} 
+              onEnterProfile={() => handleNavigate('profile')}
+              onEnterExhibition={() => handleNavigate('exhibition')}
+              galleryTitle={galleryTitle}
+            />;
   }
   
+  if (currentPage === 'profile') {
+    return <ArtistProfilePage onNavigateHome={() => handleNavigate('landing')} isAdminMode={isAdminMode} />;
+  }
+  
+  if (currentPage === 'exhibition') {
+    return <ExhibitionPage 
+              onNavigateHome={() => handleNavigate('landing')} 
+              isAdminMode={isAdminMode} 
+              exhibitions={exhibitions}
+              onAddExhibition={handleAddExhibition}
+              onEditExhibition={openEditExhibitionModal}
+              onDeleteExhibition={(ex) => openDeleteModal(ex, '전시회')}
+              isLoading={isLoading}
+            />;
+  }
+
   return (
-    <div className="min-h-screen bg-gray-100 font-sans">
-      {renderPage()}
+    <div className="bg-gray-100 min-h-screen font-sans">
+      <Header
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        isAdminMode={isAdminMode}
+        onToggleAdminMode={handleToggleAdminMode}
+        galleryTitle={galleryTitle}
+        onTitleChange={handleTitleChange}
+        onOpenChangePasswordSettings={() => setIsChangePasswordModalOpen(true)}
+      />
+      <main className="container mx-auto">
+        <Gallery 
+          artworks={filteredArtworks}
+          onSelectArtwork={setSelectedArtwork}
+          isAdminMode={isAdminMode}
+          onEditArtwork={openEditModal}
+          onDeleteArtwork={(art) => openDeleteModal(art, '작품')}
+        />
+      </main>
       
-      {currentPage === 'gallery' && isAdminMode && (
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="fixed bottom-8 right-8 bg-blue-600 text-white rounded-full p-4 shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transform hover:scale-110 transition-all duration-300 z-20"
-          title="새 작품 추가"
-          aria-label="새 작품 추가"
-        >
-          <Icon type="plus" className="w-8 h-8" />
-        </button>
+      {isAdminMode && (
+          <button
+              onClick={openAddModal}
+              title="새 작품 추가"
+              className="fixed bottom-8 right-8 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-110"
+              aria-label="새 작품 추가"
+          >
+              <Icon type="plus" className="w-8 h-8" />
+          </button>
       )}
 
       {/* Modals */}
-      <ArtworkDetailModal artwork={selectedArtwork} onClose={() => setSelectedArtwork(null)} />
-      <EditArtworkModal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} artworkToEdit={editingArtwork} onUpdate={handleUpdateArtwork} onDelete={setArtworkToDelete} />
-      <GenerateArtworkModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onAdd={handleAddNewArtwork} />
-      {/* FIX: Changed prop name from 'artworkTitle' to 'itemNameToDelete' to match the generic modal implementation. */}
-      <ConfirmDeleteModal isOpen={!!artworkToDelete} onClose={() => setArtworkToDelete(null)} onConfirm={handleConfirmDeleteArtwork} itemNameToDelete={artworkToDelete?.title || ''} itemType="작품" />
-      <AdminPasswordModal isOpen={isPasswordPromptOpen} onClose={() => setIsPasswordPromptOpen(false)} onSubmit={handlePasswordSubmit} />
-      <ChangePasswordModal isOpen={isChangePasswordModalOpen} onClose={() => setIsChangePasswordModalOpen(false)} onUpdatePassword={handleUpdatePassword} />
-      <EditExhibitionModal isOpen={isEditExhibitionModalOpen} onClose={() => setIsEditExhibitionModalOpen(false)} exhibitionToEdit={editingExhibition} onUpdate={handleUpdateExhibition} />
-      {/* FIX: Changed prop name from 'artworkTitle' to 'itemNameToDelete' to match the generic modal implementation. */}
-      <ConfirmDeleteModal isOpen={!!exhibitionToDelete} onClose={() => setExhibitionToDelete(null)} onConfirm={handleConfirmDeleteExhibition} itemNameToDelete={exhibitionToDelete?.title || ''} itemType="전시회" />
+      <ArtworkDetailModal
+        artwork={selectedArtwork}
+        onClose={() => setSelectedArtwork(null)}
+      />
+      <EditArtworkModal 
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        artworkToEdit={editingArtwork}
+        onUpdate={handleUpdateArtwork}
+        onDelete={(art) => {
+            setIsEditModalOpen(false);
+            openDeleteModal(art, '작품');
+        }}
+      />
+       <GenerateArtworkModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAdd={handleAddNewArtwork}
+      />
+      <ConfirmDeleteModal
+        isOpen={!!itemToDelete}
+        onClose={closeDeleteModal}
+        onConfirm={itemTypeToDelete === '작품' ? handleDeleteArtwork : handleDeleteExhibition}
+        itemNameToDelete={itemToDelete?.title || ''}
+        itemType={itemTypeToDelete || ''}
+      />
+      <AdminPasswordModal 
+        isOpen={isPasswordPromptOpen}
+        onClose={() => setIsPasswordPromptOpen(false)}
+        onSubmit={handleAdminPasswordSubmit}
+      />
+      <ChangePasswordModal 
+        isOpen={isChangePasswordModalOpen}
+        onClose={() => setIsChangePasswordModalOpen(false)}
+        onUpdatePassword={handleUpdatePassword}
+      />
+      <EditExhibitionModal
+        isOpen={isEditExhibitionModalOpen}
+        onClose={() => setIsEditExhibitionModalOpen(false)}
+        exhibitionToEdit={editingExhibition}
+        onUpdate={handleUpdateExhibition}
+      />
     </div>
   );
 };
