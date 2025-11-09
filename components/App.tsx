@@ -264,73 +264,78 @@ const App: React.FC = () => {
     );
   }
 
-  if (currentPage === 'landing') {
-    return <LandingPage 
-              onEnterGallery={() => handleNavigate('gallery')} 
-              onEnterProfile={() => handleNavigate('profile')}
-              onEnterExhibition={() => handleNavigate('exhibition')}
+  const renderPage = () => {
+    switch(currentPage) {
+      case 'landing':
+        return <LandingPage 
+                  onEnterGallery={() => handleNavigate('gallery')} 
+                  onEnterProfile={() => handleNavigate('profile')}
+                  onEnterExhibition={() => handleNavigate('exhibition')}
+                  galleryTitle={galleryTitle}
+                />;
+      case 'profile':
+        return <ArtistProfilePage 
+                  onNavigateHome={() => handleNavigate('landing')} 
+                  isAdminMode={isAdminMode} 
+                  onToggleAdminMode={handleToggleAdminMode}
+                  onOpenChangePasswordSettings={() => setIsChangePasswordModalOpen(true)}
+                />;
+      case 'exhibition':
+        return <ExhibitionPage 
+                  onNavigateHome={() => handleNavigate('landing')} 
+                  isAdminMode={isAdminMode} 
+                  exhibitions={exhibitions}
+                  onAddExhibition={handleAddExhibition}
+                  onEditExhibition={openEditExhibitionModal}
+                  onDeleteExhibition={(ex) => openDeleteModal(ex, '전시회')}
+                  isLoading={isLoading}
+                  onToggleAdminMode={handleToggleAdminMode}
+                  onOpenChangePasswordSettings={() => setIsChangePasswordModalOpen(true)}
+                />;
+      case 'gallery':
+      default:
+        return (
+          <>
+            <Header
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              isAdminMode={isAdminMode}
+              onToggleAdminMode={handleToggleAdminMode}
               galleryTitle={galleryTitle}
-            />;
-  }
-  
-  if (currentPage === 'profile') {
-    return <ArtistProfilePage 
-              onNavigateHome={() => handleNavigate('landing')} 
-              isAdminMode={isAdminMode} 
-              onToggleAdminMode={handleToggleAdminMode}
+              onTitleChange={handleTitleChange}
               onOpenChangePasswordSettings={() => setIsChangePasswordModalOpen(true)}
-            />;
-  }
-  
-  if (currentPage === 'exhibition') {
-    return <ExhibitionPage 
-              onNavigateHome={() => handleNavigate('landing')} 
-              isAdminMode={isAdminMode} 
-              exhibitions={exhibitions}
-              onAddExhibition={handleAddExhibition}
-              onEditExhibition={openEditExhibitionModal}
-              onDeleteExhibition={(ex) => openDeleteModal(ex, '전시회')}
-              isLoading={isLoading}
-              onToggleAdminMode={handleToggleAdminMode}
-              onOpenChangePasswordSettings={() => setIsChangePasswordModalOpen(true)}
-            />;
+              showHomeButton={true}
+              onNavigateHome={() => handleNavigate('landing')}
+            />
+            <main className="container mx-auto">
+              <Gallery 
+                artworks={filteredArtworks}
+                onSelectArtwork={setSelectedArtwork}
+                isAdminMode={isAdminMode}
+                onEditArtwork={openEditModal}
+                onDeleteArtwork={(art) => openDeleteModal(art, '작품')}
+              />
+            </main>
+            {isAdminMode && (
+              <button
+                  onClick={openAddModal}
+                  title="새 작품 추가"
+                  className="fixed bottom-8 right-8 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-110"
+                  aria-label="새 작품 추가"
+              >
+                  <Icon type="plus" className="w-8 h-8" />
+              </button>
+            )}
+          </>
+        );
+    }
   }
 
   return (
     <div className="bg-gray-100 min-h-screen font-sans">
-      <Header
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        isAdminMode={isAdminMode}
-        onToggleAdminMode={handleToggleAdminMode}
-        galleryTitle={galleryTitle}
-        onTitleChange={handleTitleChange}
-        onOpenChangePasswordSettings={() => setIsChangePasswordModalOpen(true)}
-        showHomeButton={true}
-        onNavigateHome={() => handleNavigate('landing')}
-      />
-      <main className="container mx-auto">
-        <Gallery 
-          artworks={filteredArtworks}
-          onSelectArtwork={setSelectedArtwork}
-          isAdminMode={isAdminMode}
-          onEditArtwork={openEditModal}
-          onDeleteArtwork={(art) => openDeleteModal(art, '작품')}
-        />
-      </main>
-      
-      {isAdminMode && (
-          <button
-              onClick={openAddModal}
-              title="새 작품 추가"
-              className="fixed bottom-8 right-8 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-110"
-              aria-label="새 작품 추가"
-          >
-              <Icon type="plus" className="w-8 h-8" />
-          </button>
-      )}
+      {renderPage()}
 
-      {/* Modals */}
+      {/* Modals are now rendered at the top level, so they are available on all pages */}
       <ArtworkDetailModal
         artwork={selectedArtwork}
         onClose={() => setSelectedArtwork(null)}
