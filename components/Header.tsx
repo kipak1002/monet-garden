@@ -27,6 +27,10 @@ const Header: React.FC<HeaderProps> = ({
   const adminMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    setEditableTitle(galleryTitle);
+  }, [galleryTitle]);
+  
+  useEffect(() => {
     if (isEditingTitle && titleInputRef.current) {
       titleInputRef.current.focus();
       titleInputRef.current.select();

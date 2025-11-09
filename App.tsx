@@ -1,19 +1,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import type { Artwork, Exhibition } from './types';
-import { supabase, uploadImage } from './services/supabaseClient';
-import Header from './components/Header';
-import Gallery from './components/Gallery';
-import ArtworkDetailModal from './components/ArtworkDetailModal';
-import Spinner from './components/Spinner';
-import LandingPage from './components/LandingPage';
-import EditArtworkModal from './components/EditArtworkModal';
-import ConfirmDeleteModal from './components/ConfirmDeleteModal';
-import GenerateArtworkModal from './components/GenerateArtworkModal';
-import Icon from './components/Icon';
-import AdminPasswordModal from './components/AdminPasswordModal';
-import ChangePasswordModal from './components/ChangePasswordModal';
-import ArtistProfilePage from './components/ArtistProfilePage';
-import ExhibitionPage from './components/ExhibitionPage';
+import type { Artwork, Exhibition } from '../types';
+import { supabase, uploadImage } from '../services/supabaseClient';
+import Header from './Header';
+import Gallery from './Gallery';
+import ArtworkDetailModal from './ArtworkDetailModal';
+import Spinner from './Spinner';
+import LandingPage from './LandingPage';
+import EditArtworkModal from './EditArtworkModal';
+import ConfirmDeleteModal from './ConfirmDeleteModal';
+import GenerateArtworkModal from './GenerateArtworkModal';
+import Icon from './Icon';
+import AdminPasswordModal from './AdminPasswordModal';
+import ChangePasswordModal from './ChangePasswordModal';
+import ArtistProfilePage from './ArtistProfilePage';
+import ExhibitionPage from './ExhibitionPage';
 
 type Page = 'landing' | 'gallery' | 'profile' | 'exhibition';
 
