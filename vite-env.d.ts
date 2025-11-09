@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 
-// FIX: Add explicit type definitions for environment variables to resolve
-// errors related to `import.meta.env` and the "Cannot find type definition file for 'vite/client'" error.
+// Fix: Explicitly define ImportMetaEnv to solve issues with vite/client types not being found.
+// This provides type safety for environment variables accessed via `import.meta.env`.
 interface ImportMetaEnv {
   readonly VITE_SUPABASE_URL: string;
   readonly VITE_SUPABASE_ANON_KEY: string;
