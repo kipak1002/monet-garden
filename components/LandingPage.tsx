@@ -22,18 +22,18 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterGallery, onEnterProfil
           </p>
         )}
         <div className="mt-12 flex flex-col items-center gap-10">
-            <div className="flex justify-center gap-12">
+            <div className="flex justify-center gap-12 md:gap-16">
                 <div className="flex flex-col items-center gap-3 group cursor-pointer" onClick={onEnterProfile}>
-                    <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:bg-gray-50 transition-all duration-300 transform group-hover:scale-105">
-                        <Icon type="profile" className="w-12 h-12 text-gray-600 group-hover:text-blue-600 transition-colors" />
+                    <div className="w-24 h-24 md:w-36 md:h-36 bg-white rounded-full flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:bg-gray-50 transition-all duration-300 transform group-hover:scale-105">
+                        <Icon type="profile" className="w-12 h-12 md:w-16 md:h-16 text-gray-600 group-hover:text-blue-600 transition-colors" />
                     </div>
                     <span className="font-medium text-gray-700 group-hover:text-blue-600 transition-colors">작가 프로필</span>
                 </div>
                 <div className="flex flex-col items-center gap-3 group cursor-pointer" onClick={onEnterExhibition}>
-                    <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:bg-gray-50 transition-all duration-300 transform group-hover:scale-105">
-                        <Icon type="exhibition" className="w-12 h-12 text-gray-600 group-hover:text-blue-600 transition-colors" />
+                    <div className="w-24 h-24 md:w-36 md:h-36 bg-white rounded-full flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:bg-gray-50 transition-all duration-300 transform group-hover:scale-105">
+                        <Icon type="exhibition" className="w-12 h-12 md:w-16 md:h-16 text-gray-600 group-hover:text-blue-600 transition-colors" />
                     </div>
-                    <span className="font-medium text-gray-700 group-hover:text-blue-600 transition-colors">전시회</span>
+                    <span className="font-medium text-gray-700 group-hover:text-blue-600 transition-colors">Exhibition</span>
                 </div>
             </div>
             <button
