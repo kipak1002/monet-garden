@@ -177,7 +177,10 @@ const App: React.FC = () => {
     if (finalImageUrl.startsWith('data:image')) {
       finalImageUrl = await uploadImage(finalImageUrl);
     }
-    const artworkDataToUpdate = { ...updatedArtwork, image_url: finalImageUrl };
+    
+    // Destructure to remove id and created_at from the update payload
+    const { id, created_at, ...updateData } = updatedArtwork;
+    const artworkDataToUpdate = { ...updateData, image_url: finalImageUrl };
 
     const { data, error } = await supabase
       .from('artworks')
@@ -221,7 +224,10 @@ const App: React.FC = () => {
     if (finalImageUrl.startsWith('data:image')) {
       finalImageUrl = await uploadImage(finalImageUrl);
     }
-    const exhibitionDataToUpdate = { ...updatedExhibition, image_url: finalImageUrl };
+    
+    // Destructure to remove id and created_at from the update payload
+    const { id, created_at, ...updateData } = updatedExhibition;
+    const exhibitionDataToUpdate = { ...updateData, image_url: finalImageUrl };
 
     const { data, error } = await supabase
       .from('exhibitions')
