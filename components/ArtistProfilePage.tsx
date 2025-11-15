@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase, uploadImage } from '../services/supabaseClient';
 import Spinner from './Spinner';
 import Icon from './Icon';
+import Linkify from './Linkify';
 
 interface ArtistProfilePageProps {
   onNavigateHome: () => void;
@@ -272,9 +273,9 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
             <div className="mt-12 pt-8 border-t border-gray-200">
                 <div className="max-w-4xl mx-auto">
                     <h3 className="text-2xl font-bold text-gray-800 mb-4 text-center">추가 정보</h3>
-                    <p className="text-gray-700 whitespace-pre-wrap leading-relaxed bg-gray-50 p-6 rounded-md">
-                        {profileInfo}
-                    </p>
+                    <div className="text-gray-700 whitespace-pre-wrap leading-relaxed bg-gray-50 p-6 rounded-md">
+                        <Linkify text={profileInfo} />
+                    </div>
                 </div>
             </div>
         )}
