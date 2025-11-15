@@ -7,7 +7,7 @@ interface ExhibitionPageProps {
   onNavigateHome: () => void;
   isAdminMode: boolean;
   exhibitions: Exhibition[];
-  onAddExhibition: (title: string, imageFile: File) => Promise<void>;
+  onAddExhibition: (title: string, description: string, imageFile: File) => Promise<void>;
   onEditExhibition: (exhibition: Exhibition) => void;
   onDeleteExhibition: (exhibition: Exhibition) => void;
   isLoading: boolean;
@@ -27,7 +27,7 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
   onOpenChangePasswordSettings
 }) => {
   const [isUploading, setIsUploading] = useState(false);
-  const [newExhibition, setNewExhibition] = useState<{ title: string, image: File | null, previewUrl: string }>({ title: '', image: null, previewUrl: '' });
+  const [newExhibition, setNewExhibition] = useState<{ title: string, description: string, image: File | null, previewUrl: string }>({ title: '', description: '', image: null, previewUrl: '' });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
   const adminMenuRef = useRef<HTMLDivElement>(null);
@@ -55,15 +55,15 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
 
   const handleAddExhibition = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newExhibition.title || !newExhibition.image) {
-      alert('제목과 이미지 파일을 모두 선택해주세요.');
+    if (!newExhibition.title || !newExhibition.description || !newExhibition.image) {
+      alert('제목, 정보, 이미지 파일을 모두 선택해주세요.');
       return;
     }
 
     setIsUploading(true);
     try {
-      await onAddExhibition(newExhibition.title, newExhibition.image);
-      setNewExhibition({ title: '', image: null, previewUrl: '' }); // Reset form
+      await onAddExhibition(newExhibition.title, newExhibition.description, newExhibition.image);
+      setNewExhibition({ title: '', description: '', image: null, previewUrl: '' }); // Reset form
       if(fileInputRef.current) fileInputRef.current.value = "";
     } catch (error) {
       console.error('Error adding exhibition:', error);
@@ -148,6 +148,19 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
                       disabled={isUploading}
                     />
                   </div>
+                   <div>
+                    <label htmlFor="ex-desc" className="block text-sm font-medium text-gray-700">전시회 정보</label>
+                    <textarea
+                      id="ex-desc"
+                      value={newExhibition.description}
+                      onChange={(e) => setNewExhibition(prev => ({ ...prev, description: e.target.value }))}
+                      rows={4}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="전시회에 대한 설명을 입력하세요."
+                      required
+                      disabled={isUploading}
+                    />
+                  </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">대표 이미지</label>
                     <div className="mt-1 flex items-center gap-4">
@@ -217,8 +230,11 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
                     <img src={ex.image_url} alt={ex.title} className="w-full h-full object-contain" />
                   </div>
                   <div className="p-6">
-                    <h3 className="text-sm font-semibold text-gray-800">{ex.title}</h3>
-                    <p className="text-xs text-gray-500 mt-2">
+                    <h3 className="text-xl font-bold text-gray-800">{ex.title}</h3>
+                     {ex.description && (
+                      <p className="mt-4 text-base text-gray-700 whitespace-pre-wrap">{ex.description}</p>
+                    )}
+                    <p className="text-sm text-gray-500 mt-6 text-right">
                         게시일: {new Date(ex.created_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
                     </p>
                   </div>

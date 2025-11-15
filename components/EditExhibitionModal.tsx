@@ -13,7 +13,7 @@ interface EditExhibitionModalProps {
 type ExhibitionEditData = Omit<Exhibition, 'id' | 'created_at'>;
 
 const EditExhibitionModal: React.FC<EditExhibitionModalProps> = ({ isOpen, onClose, exhibitionToEdit, onUpdate }) => {
-  const [formData, setFormData] = useState<ExhibitionEditData>({ title: '', image_url: '' });
+  const [formData, setFormData] = useState<ExhibitionEditData>({ title: '', image_url: '', description: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -22,6 +22,7 @@ const EditExhibitionModal: React.FC<EditExhibitionModalProps> = ({ isOpen, onClo
       setFormData({
         title: exhibitionToEdit.title,
         image_url: exhibitionToEdit.image_url,
+        description: exhibitionToEdit.description || '',
       });
       setIsSubmitting(false);
     }
@@ -41,7 +42,7 @@ const EditExhibitionModal: React.FC<EditExhibitionModalProps> = ({ isOpen, onClo
     };
   }, [isOpen, onClose]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
@@ -63,7 +64,7 @@ const EditExhibitionModal: React.FC<EditExhibitionModalProps> = ({ isOpen, onClo
   const handleSaveChanges = async () => {
     if (exhibitionToEdit) {
         if (!formData.title || !formData.image_url) {
-            alert("모든 필수 필드를 입력해주세요.");
+            alert("제목과 이미지는 필수 필드입니다.");
             return;
         }
         setIsSubmitting(true);
@@ -102,6 +103,19 @@ const EditExhibitionModal: React.FC<EditExhibitionModalProps> = ({ isOpen, onClo
             <div>
                 <label htmlFor="ex-edit-title" className="block text-sm font-medium text-gray-700">전시회 제목</label>
                 <input type="text" name="title" id="ex-edit-title" value={formData.title} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"/>
+            </div>
+
+            <div>
+              <label htmlFor="ex-edit-description" className="block text-sm font-medium text-gray-700">전시회 정보</label>
+              <textarea 
+                  name="description" 
+                  id="ex-edit-description" 
+                  value={formData.description || ''} 
+                  onChange={handleChange}
+                  rows={4}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+                  placeholder="전시회에 대한 설명을 입력하세요."
+              />
             </div>
 
             <div className='space-y-4'>

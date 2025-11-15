@@ -214,11 +214,11 @@ const App: React.FC = () => {
   };
 
   // Exhibition CRUD Handlers
-  const handleAddExhibition = async (title: string, imageFile: File) => {
+  const handleAddExhibition = async (title: string, description: string, imageFile: File) => {
     const imageUrl = await uploadImage(imageFile);
     const { data, error } = await supabase
       .from('exhibitions')
-      .insert([{ title, image_url: imageUrl }])
+      .insert([{ title, description, image_url: imageUrl }])
       .select()
       .single();
     if (error) throw error;
@@ -234,6 +234,7 @@ const App: React.FC = () => {
     // Explicitly create the update payload to avoid sending immutable fields like 'id' or 'created_at'.
     const exhibitionDataToUpdate = {
       title: updatedExhibition.title,
+      description: updatedExhibition.description,
       image_url: finalImageUrl,
     };
 

@@ -14,4 +14,5 @@ export interface Exhibition {
   created_at: string;
   title: string;
   image_url: string;
+  description?: string | null;
 }
