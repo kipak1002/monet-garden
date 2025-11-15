@@ -30,6 +30,7 @@ const App: React.FC = () => {
   const [isPasswordPromptOpen, setIsPasswordPromptOpen] = useState(false);
   const [galleryTitle, setGalleryTitle] = useState('김명진 포트폴리오');
   const [adminPassword, setAdminPassword] = useState('');
+  const [landingBackgroundUrl, setLandingBackgroundUrl] = useState('');
 
   // Modals State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -53,6 +54,7 @@ const App: React.FC = () => {
         const settingsMap = new Map(settingsData.map(s => [s.key, s.value]));
         setGalleryTitle(String(settingsMap.get('galleryTitle') || '김명진 포트폴리오'));
         setAdminPassword(String(settingsMap.get('adminPassword') || '000000'));
+        setLandingBackgroundUrl(String(settingsMap.get('landingBackgroundUrl') || ''));
       } catch (error) {
         console.error('Error fetching settings:', error);
       }
@@ -137,6 +139,24 @@ const App: React.FC = () => {
     } catch (error) {
       console.error('Error updating title:', error);
       alert('제목 업데이트 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleUpdateLandingBackground = async (imageFile: File): Promise<void> => {
+    try {
+      const newUrl = await uploadImage(imageFile);
+      const { error } = await supabase
+        .from('settings')
+        .upsert({ key: 'landingBackgroundUrl', value: newUrl }, { onConflict: 'key' });
+      
+      if (error) throw error;
+      
+      setLandingBackgroundUrl(newUrl);
+      alert('배경 이미지가 성공적으로 변경되었습니다.');
+    } catch (error) {
+      console.error('Error updating background image:', error);
+      alert('배경 이미지 업데이트 중 오류가 발생했습니다.');
+      throw error;
     }
   };
 
@@ -295,6 +315,9 @@ const App: React.FC = () => {
                   onEnterProfile={() => handleNavigate('profile')}
                   onEnterExhibition={() => handleNavigate('exhibition')}
                   galleryTitle={galleryTitle}
+                  backgroundImageUrl={landingBackgroundUrl}
+                  isAdminMode={isAdminMode}
+                  onUpdateBackground={handleUpdateLandingBackground}
                 />;
       case 'profile':
         return <ArtistProfilePage 
