@@ -17,9 +17,12 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
   onOpenChangePasswordSettings
 }) => {
   const [profileImageUrls, setProfileImageUrls] = useState<string[]>([]);
+  const [profileInfo, setProfileInfo] = useState('');
+  
   const [editImageUrls, setEditImageUrls] = useState<string[]>([]);
   const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
   const [newImagePreviewUrls, setNewImagePreviewUrls] = useState<string[]>([]);
+  const [editProfileInfo, setEditProfileInfo] = useState('');
   
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -34,37 +37,47 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
       try {
         const { data, error } = await supabase
           .from('settings')
-          .select('value')
-          .eq('key', 'artistProfile')
-          .single();
+          .select('key, value')
+          .in('key', ['artistProfile', 'artistProfileInfo']);
         
-        if (error && error.code !== 'PGRST116') throw error;
+        if (error) throw error;
         
-        const value = data?.value;
-        if (value) {
+        const settingsMap = new Map(data.map(s => [s.key, s.value]));
+
+        // Handle Images
+        const imageUrlsValue = settingsMap.get('artistProfile');
+        if (imageUrlsValue) {
             try {
-                const urls = JSON.parse(value);
+                // FIX: Cast imageUrlsValue to string before parsing as JSON to prevent type errors.
+                const urls = JSON.parse(String(imageUrlsValue));
                 if (Array.isArray(urls)) {
                     setProfileImageUrls(urls);
                     setEditImageUrls(urls);
-                } else {
-                    // Handle case where value is a single URL string for backward compatibility
-                    setProfileImageUrls([value]);
-                    setEditImageUrls([value]);
                 }
             } catch (e) {
-                // Handle non-JSON string value, likely a single URL from previous version
-                setProfileImageUrls([value]);
-                setEditImageUrls([value]);
+                // Handle non-JSON string value for backward compatibility
+                // FIX: Cast imageUrlsValue to string to prevent type errors.
+                setProfileImageUrls([String(imageUrlsValue)]);
+                // FIX: Cast imageUrlsValue to string to prevent type errors.
+                setEditImageUrls([String(imageUrlsValue)]);
             }
         } else {
             setProfileImageUrls([]);
             setEditImageUrls([]);
         }
 
+        // Handle Text Info
+        // FIX: Cast infoValue to string to ensure type safety. The value from Supabase could be unknown.
+        const infoValue = settingsMap.get('artistProfileInfo') || '';
+        // FIX: Cast infoValue to string to prevent type errors.
+        setProfileInfo(String(infoValue));
+        // FIX: Cast infoValue to string to prevent type errors.
+        setEditProfileInfo(String(infoValue));
+
       } catch (error) {
-        console.error('Error fetching profile images:', error);
+        console.error('Error fetching profile data:', error);
         setProfileImageUrls([]);
+        setProfileInfo('');
       } finally {
         setIsLoading(false);
       }
@@ -73,13 +86,15 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
   }, []);
   
   useEffect(() => {
+      // When exiting admin mode, revert any unsaved changes
       if (!isAdminMode) {
           setEditImageUrls(profileImageUrls);
+          setEditProfileInfo(profileInfo);
           setNewImageFiles([]);
           newImagePreviewUrls.forEach(URL.revokeObjectURL);
           setNewImagePreviewUrls([]);
       }
-  }, [isAdminMode, profileImageUrls]);
+  }, [isAdminMode, profileImageUrls, profileInfo]);
 
 
   useEffect(() => {
@@ -120,19 +135,32 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
   const handleSaveChanges = async () => {
     setIsSaving(true);
     try {
+      // Handle image uploads
       const uploadPromises = newImageFiles.map(file => uploadImage(file));
       const newlyUploadedUrls = await Promise.all(uploadPromises);
-
       const finalImageUrls = [...editImageUrls, ...newlyUploadedUrls];
 
-      const { error } = await supabase
+      // Prepare database updates
+      const saveImagesPromise = supabase
         .from('settings')
         .upsert({ key: 'artistProfile', value: JSON.stringify(finalImageUrls) }, { onConflict: 'key' });
-
-      if (error) throw error;
       
+      const saveInfoPromise = supabase
+        .from('settings')
+        .upsert({ key: 'artistProfileInfo', value: editProfileInfo }, { onConflict: 'key' });
+
+      // Run updates in parallel
+      const [imagesResult, infoResult] = await Promise.all([saveImagesPromise, saveInfoPromise]);
+
+      if (imagesResult.error) throw imagesResult.error;
+      if (infoResult.error) throw infoResult.error;
+      
+      // Update local state on success
       setProfileImageUrls(finalImageUrls);
       setEditImageUrls(finalImageUrls);
+      setProfileInfo(editProfileInfo);
+      
+      // Clean up previews
       newImagePreviewUrls.forEach(URL.revokeObjectURL);
       setNewImageFiles([]);
       setNewImagePreviewUrls([]);
@@ -147,8 +175,8 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
   };
 
   const renderAdminView = () => (
-    <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
+    <div className="max-w-7xl mx-auto divide-y divide-gray-200">
+        <div className="py-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">이미지 관리</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                 {editImageUrls.map((url, index) => (
@@ -196,7 +224,19 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
                 />
             </div>
         </div>
-        <div className="mt-8 flex justify-end">
+
+        <div className="py-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">SNS &amp; 연락처 정보</h3>
+            <textarea
+                value={editProfileInfo}
+                onChange={(e) => setEditProfileInfo(e.target.value)}
+                rows={5}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+                placeholder="인스타그램 링크, 이메일, 연락처 등 추가 정보를 입력하세요."
+            />
+        </div>
+
+        <div className="pt-8 flex justify-end">
             <button
             onClick={handleSaveChanges}
             disabled={isSaving}
@@ -226,6 +266,16 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
             <div className="text-center py-20 text-gray-500">
                 <p>등록된 프로필 이미지가 없습니다.</p>
                 <p className="text-sm mt-2">관리자 모드에서 이미지를 추가해주세요.</p>
+            </div>
+        )}
+        {profileInfo && (
+            <div className="mt-12 pt-8 border-t border-gray-200">
+                <div className="max-w-4xl mx-auto">
+                    <h3 className="text-2xl font-bold text-gray-800 mb-4 text-center">추가 정보</h3>
+                    <p className="text-gray-700 whitespace-pre-wrap leading-relaxed bg-gray-50 p-6 rounded-md">
+                        {profileInfo}
+                    </p>
+                </div>
             </div>
         )}
     </div>
