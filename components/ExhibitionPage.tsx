@@ -78,7 +78,7 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
       <header className="bg-white/80 backdrop-blur-md sticky top-0 z-10 shadow-sm p-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">
-            Exhibitions
+            전시회
           </h1>
           <div className="flex items-center gap-4">
             <button
@@ -217,9 +217,9 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
                     <img src={ex.image_url} alt={ex.title} className="w-full h-full object-contain" />
                   </div>
                   <div className="p-6">
-                    <h3 className="text-lg font-semibold text-gray-800">{ex.title}</h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                        {new Date(ex.created_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    <h3 className="text-sm font-semibold text-gray-800">{ex.title}</h3>
+                    <p className="text-xs text-gray-500 mt-2">
+                        게시일: {new Date(ex.created_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
                     </p>
                   </div>
                 </div>
