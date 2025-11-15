@@ -217,7 +217,10 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
                     <img src={ex.image_url} alt={ex.title} className="w-full h-full object-contain" />
                   </div>
                   <div className="p-6">
-                    <h3 className="text-2xl font-bold text-gray-800">{ex.title}</h3>
+                    <h3 className="text-lg font-semibold text-gray-800">{ex.title}</h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                        {new Date(ex.created_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    </p>
                   </div>
                 </div>
               )) : (

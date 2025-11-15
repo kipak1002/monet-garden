@@ -178,9 +178,15 @@ const App: React.FC = () => {
       finalImageUrl = await uploadImage(finalImageUrl);
     }
     
-    // Destructure to remove id and created_at from the update payload
-    const { id, created_at, ...updateData } = updatedArtwork;
-    const artworkDataToUpdate = { ...updateData, image_url: finalImageUrl };
+    // Explicitly create the update payload to avoid sending immutable fields like 'id' or 'created_at'.
+    const artworkDataToUpdate = {
+      title: updatedArtwork.title,
+      artist: updatedArtwork.artist,
+      year: updatedArtwork.year,
+      image_url: finalImageUrl,
+      size: updatedArtwork.size,
+      memo: updatedArtwork.memo,
+    };
 
     const { data, error } = await supabase
       .from('artworks')
@@ -225,9 +231,11 @@ const App: React.FC = () => {
       finalImageUrl = await uploadImage(finalImageUrl);
     }
     
-    // Destructure to remove id and created_at from the update payload
-    const { id, created_at, ...updateData } = updatedExhibition;
-    const exhibitionDataToUpdate = { ...updateData, image_url: finalImageUrl };
+    // Explicitly create the update payload to avoid sending immutable fields like 'id' or 'created_at'.
+    const exhibitionDataToUpdate = {
+      title: updatedExhibition.title,
+      image_url: finalImageUrl,
+    };
 
     const { data, error } = await supabase
       .from('exhibitions')
