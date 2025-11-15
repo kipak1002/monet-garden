@@ -69,7 +69,7 @@ const App: React.FC = () => {
 
       // Fetch exhibitions
       try {
-        const { data: exhibitionsData, error: exhibitionsError } = await supabase.from('exhibitions').select('*').order('created_at', { ascending: false });
+        const { data: exhibitionsData, error: exhibitionsError } = await supabase.from('exhibitions').select('*').order('display_order', { ascending: false });
         if (exhibitionsError) {
            // If the table doesn't exist, it's not a critical error, just log it.
           if (exhibitionsError.code === '42P01') { 
@@ -215,12 +215,15 @@ const App: React.FC = () => {
 
   // Exhibition CRUD Handlers
   const handleAddExhibition = async (title: string, description: string, imageFiles: File[]) => {
+    const maxOrder = exhibitions.length > 0 ? Math.max(...exhibitions.map(e => e.display_order || 0)) : 0;
+    const newOrder = maxOrder + 1;
+
     const uploadPromises = imageFiles.map(file => uploadImage(file));
     const imageUrls = await Promise.all(uploadPromises);
 
     const { data, error } = await supabase
       .from('exhibitions')
-      .insert([{ title, description, image_urls: imageUrls }])
+      .insert([{ title, description, image_urls: imageUrls, display_order: newOrder }])
       .select()
       .single();
     if (error) throw error;
@@ -240,6 +243,7 @@ const App: React.FC = () => {
       title: updatedExhibition.title,
       description: updatedExhibition.description,
       image_urls: finalImageUrls,
+      display_order: updatedExhibition.display_order,
     };
 
     const { data, error } = await supabase
@@ -249,7 +253,7 @@ const App: React.FC = () => {
       .select()
       .single();
     if (error) throw error;
-    setExhibitions(prev => prev.map(e => (e.id === updatedExhibition.id ? data as Exhibition : e)));
+    setExhibitions(prev => prev.map(e => (e.id === updatedExhibition.id ? data as Exhibition : e)).sort((a, b) => b.display_order - a.display_order));
     setIsEditExhibitionModalOpen(false);
     setEditingExhibition(null);
   };
