@@ -288,12 +288,6 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
                         이미지가 없습니다.
                     </div>
                   )}
-                  
-                  <div className="p-6">
-                    <p className="text-sm text-gray-500 text-right">
-                        게시일: {new Date(ex.created_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
-                    </p>
-                  </div>
                 </div>
               )) : (
                 <div className="text-center py-20">
