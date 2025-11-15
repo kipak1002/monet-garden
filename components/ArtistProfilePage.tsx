@@ -227,7 +227,7 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
         </div>
 
         <div className="py-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">SNS &amp; 연락처 정보</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">CONTACT US</h3>
             <textarea
                 value={editProfileInfo}
                 onChange={(e) => setEditProfileInfo(e.target.value)}
@@ -271,8 +271,8 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
         )}
         {profileInfo && (
             <div className="mt-12 pt-8 border-t border-gray-200">
-                <div className="max-w-4xl mx-auto">
-                    <h3 className="text-2xl font-bold text-gray-800 mb-4 text-center">추가 정보</h3>
+                <div className="max-w-4xl">
+                    <h3 className="text-2xl font-bold text-gray-800 mb-4">CONTACT US</h3>
                     <div className="text-gray-700 whitespace-pre-wrap leading-relaxed bg-gray-50 p-6 rounded-md">
                         <Linkify text={profileInfo} />
                     </div>
