@@ -214,11 +214,13 @@ const App: React.FC = () => {
   };
 
   // Exhibition CRUD Handlers
-  const handleAddExhibition = async (title: string, description: string, imageFile: File) => {
-    const imageUrl = await uploadImage(imageFile);
+  const handleAddExhibition = async (title: string, description: string, imageFiles: File[]) => {
+    const uploadPromises = imageFiles.map(file => uploadImage(file));
+    const imageUrls = await Promise.all(uploadPromises);
+
     const { data, error } = await supabase
       .from('exhibitions')
-      .insert([{ title, description, image_url: imageUrl }])
+      .insert([{ title, description, image_urls: imageUrls }])
       .select()
       .single();
     if (error) throw error;
@@ -226,16 +228,18 @@ const App: React.FC = () => {
   };
 
   const handleUpdateExhibition = async (updatedExhibition: Exhibition) => {
-    let finalImageUrl = updatedExhibition.image_url;
-    if (finalImageUrl.startsWith('data:image')) {
-      finalImageUrl = await uploadImage(finalImageUrl);
-    }
+    const newImageDataUrls = updatedExhibition.image_urls.filter(url => url.startsWith('data:image'));
+    const existingImageUrls = updatedExhibition.image_urls.filter(url => !url.startsWith('data:image'));
+
+    const uploadPromises = newImageDataUrls.map(dataUrl => uploadImage(dataUrl));
+    const newlyUploadedUrls = await Promise.all(uploadPromises);
+
+    const finalImageUrls = [...existingImageUrls, ...newlyUploadedUrls];
     
-    // Explicitly create the update payload to avoid sending immutable fields like 'id' or 'created_at'.
     const exhibitionDataToUpdate = {
       title: updatedExhibition.title,
       description: updatedExhibition.description,
-      image_url: finalImageUrl,
+      image_urls: finalImageUrls,
     };
 
     const { data, error } = await supabase

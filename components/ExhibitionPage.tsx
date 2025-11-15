@@ -7,7 +7,7 @@ interface ExhibitionPageProps {
   onNavigateHome: () => void;
   isAdminMode: boolean;
   exhibitions: Exhibition[];
-  onAddExhibition: (title: string, description: string, imageFile: File) => Promise<void>;
+  onAddExhibition: (title: string, description: string, imageFiles: File[]) => Promise<void>;
   onEditExhibition: (exhibition: Exhibition) => void;
   onDeleteExhibition: (exhibition: Exhibition) => void;
   isLoading: boolean;
@@ -27,7 +27,7 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
   onOpenChangePasswordSettings
 }) => {
   const [isUploading, setIsUploading] = useState(false);
-  const [newExhibition, setNewExhibition] = useState<{ title: string, description: string, image: File | null, previewUrl: string }>({ title: '', description: '', image: null, previewUrl: '' });
+  const [newExhibition, setNewExhibition] = useState<{ title: string, description: string, images: File[], previewUrls: string[] }>({ title: '', description: '', images: [], previewUrls: [] });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
   const adminMenuRef = useRef<HTMLDivElement>(null);
@@ -46,24 +46,49 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const previewUrl = URL.createObjectURL(file);
-      setNewExhibition(prev => ({ ...prev, image: file, previewUrl }));
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      const filePreviews = files.map(file => URL.createObjectURL(file));
+      
+      setNewExhibition(prev => ({
+        ...prev,
+        images: [...prev.images, ...files],
+        previewUrls: [...prev.previewUrls, ...filePreviews],
+      }));
     }
   };
+  
+  const removeNewImage = (indexToRemove: number) => {
+    setNewExhibition(prev => {
+        const updatedImages = prev.images.filter((_, index) => index !== indexToRemove);
+        const updatedPreviewUrls = prev.previewUrls.filter((_, index) => index !== indexToRemove);
+        
+        // Clean up object URL to prevent memory leaks
+        URL.revokeObjectURL(prev.previewUrls[indexToRemove]);
+
+        return {
+            ...prev,
+            images: updatedImages,
+            previewUrls: updatedPreviewUrls,
+        };
+    });
+  }
 
   const handleAddExhibition = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newExhibition.title || !newExhibition.description || !newExhibition.image) {
-      alert('제목, 정보, 이미지 파일을 모두 선택해주세요.');
+    if (!newExhibition.title || !newExhibition.description || newExhibition.images.length === 0) {
+      alert('제목, 정보, 그리고 하나 이상의 이미지 파일을 모두 선택해주세요.');
       return;
     }
 
     setIsUploading(true);
     try {
-      await onAddExhibition(newExhibition.title, newExhibition.description, newExhibition.image);
-      setNewExhibition({ title: '', description: '', image: null, previewUrl: '' }); // Reset form
+      await onAddExhibition(newExhibition.title, newExhibition.description, newExhibition.images);
+      
+      // Clean up all object URLs
+      newExhibition.previewUrls.forEach(url => URL.revokeObjectURL(url));
+
+      setNewExhibition({ title: '', description: '', images: [], previewUrls: [] }); // Reset form
       if(fileInputRef.current) fileInputRef.current.value = "";
     } catch (error) {
       console.error('Error adding exhibition:', error);
@@ -163,37 +188,47 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">대표 이미지</label>
-                    <div className="mt-1 flex items-center gap-4">
-                      <div className="w-32 h-32 rounded-md bg-gray-200 overflow-hidden flex-shrink-0">
-                        {newExhibition.previewUrl ? (
-                          <img src={newExhibition.previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-400">
-                            <Icon type="upload" className="w-10 h-10" />
-                          </div>
-                        )}
-                      </div>
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleFileChange}
-                        accept="image/png, image/jpeg, image/webp"
-                        className="hidden"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        disabled={isUploading}
-                      >
-                        이미지 선택
-                      </button>
+                    <div className="mt-2">
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                            accept="image/png, image/jpeg, image/webp"
+                            className="hidden"
+                            multiple
+                        />
+                        <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            disabled={isUploading}
+                        >
+                            <Icon type="upload" className="w-5 h-5 mr-2 inline-block"/>
+                            이미지 선택
+                        </button>
                     </div>
+                     {newExhibition.previewUrls.length > 0 && (
+                        <div className="mt-4 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
+                            {newExhibition.previewUrls.map((url, index) => (
+                                <div key={index} className="relative group">
+                                    <img src={url} alt={`Preview ${index}`} className="w-full h-24 object-cover rounded-md" />
+                                    <button
+                                        type="button"
+                                        onClick={() => removeNewImage(index)}
+                                        className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        aria-label="Remove image"
+                                    >
+                                        <Icon type="close" className="w-3 h-3" />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                   </div>
                   <div className="flex justify-end">
                     <button
                       type="submit"
-                      disabled={isUploading || !newExhibition.title || !newExhibition.image}
+                      disabled={isUploading || !newExhibition.title || newExhibition.images.length === 0}
                       className="w-32 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300 flex justify-center items-center"
                     >
                       {isUploading ? <Spinner size="h-5 w-5" /> : '추가하기'}
@@ -203,7 +238,7 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
               </div>
             )}
             
-            <div className="space-y-8">
+            <div className="space-y-12">
               {exhibitions.length > 0 ? exhibitions.map(ex => (
                 <div key={ex.id} className="bg-white rounded-lg shadow-md overflow-hidden group relative">
                    {isAdminMode && (
@@ -226,15 +261,36 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
                         </button>
                     </div>
                   )}
-                  <div className="w-full h-80 md:h-[30rem] lg:h-[40rem] bg-gray-200">
-                    <img src={ex.image_url} alt={ex.title} className="w-full h-full object-contain" />
-                  </div>
+                  
                   <div className="p-6">
                     <h3 className="text-xl font-bold text-gray-800">{ex.title}</h3>
                      {ex.description && (
-                      <p className="mt-4 text-base text-gray-700 whitespace-pre-wrap">{ex.description}</p>
+                      <p className="mt-2 text-base text-gray-700 whitespace-pre-wrap">{ex.description}</p>
                     )}
-                    <p className="text-sm text-gray-500 mt-6 text-right">
+                  </div>
+
+                  {ex.image_urls && ex.image_urls.length > 0 ? (
+                    <div className="w-full bg-gray-100 p-4">
+                        <div className="flex overflow-x-auto space-x-4 py-2 custom-scrollbar snap-x snap-mandatory">
+                            {ex.image_urls.map((url, index) => (
+                                <div key={index} className="flex-shrink-0 w-4/5 md:w-auto snap-center">
+                                    <img 
+                                        src={url} 
+                                        alt={`${ex.title} image ${index + 1}`} 
+                                        className="h-80 md:h-[30rem] lg:h-[40rem] object-contain rounded-md" 
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                  ) : (
+                    <div className="p-6 text-center text-gray-500">
+                        이미지가 없습니다.
+                    </div>
+                  )}
+                  
+                  <div className="p-6">
+                    <p className="text-sm text-gray-500 text-right">
                         게시일: {new Date(ex.created_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
                     </p>
                   </div>

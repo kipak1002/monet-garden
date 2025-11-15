@@ -13,7 +13,7 @@ interface EditExhibitionModalProps {
 type ExhibitionEditData = Omit<Exhibition, 'id' | 'created_at'>;
 
 const EditExhibitionModal: React.FC<EditExhibitionModalProps> = ({ isOpen, onClose, exhibitionToEdit, onUpdate }) => {
-  const [formData, setFormData] = useState<ExhibitionEditData>({ title: '', image_url: '', description: '' });
+  const [formData, setFormData] = useState<ExhibitionEditData>({ title: '', image_urls: [], description: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -21,7 +21,7 @@ const EditExhibitionModal: React.FC<EditExhibitionModalProps> = ({ isOpen, onClo
     if (exhibitionToEdit) {
       setFormData({
         title: exhibitionToEdit.title,
-        image_url: exhibitionToEdit.image_url,
+        image_urls: exhibitionToEdit.image_urls || [],
         description: exhibitionToEdit.description || '',
       });
       setIsSubmitting(false);
@@ -48,23 +48,34 @@ const EditExhibitionModal: React.FC<EditExhibitionModalProps> = ({ isOpen, onClo
   };
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result;
-        if (typeof result === 'string') {
-          setFormData(prev => ({ ...prev, image_url: result }));
-        }
-      };
-      reader.readAsDataURL(file);
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      files.forEach(file => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+              if (typeof reader.result === 'string') {
+                  setFormData(prev => ({
+                      ...prev,
+                      image_urls: [...prev.image_urls, reader.result as string]
+                  }));
+              }
+          };
+          reader.readAsDataURL(file);
+      });
     }
+  };
+  
+  const handleRemoveImage = (indexToRemove: number) => {
+    setFormData(prev => ({
+        ...prev,
+        image_urls: prev.image_urls.filter((_, index) => index !== indexToRemove)
+    }));
   };
 
   const handleSaveChanges = async () => {
     if (exhibitionToEdit) {
-        if (!formData.title || !formData.image_url) {
-            alert("제목과 이미지는 필수 필드입니다.");
+        if (!formData.title) {
+            alert("제목은 필수 필드입니다.");
             return;
         }
         setIsSubmitting(true);
@@ -119,9 +130,21 @@ const EditExhibitionModal: React.FC<EditExhibitionModalProps> = ({ isOpen, onClo
             </div>
 
             <div className='space-y-4'>
-                <h4 className='text-sm font-medium text-gray-700'>대표 이미지 변경</h4>
-                <div className='w-full aspect-video rounded-md overflow-hidden bg-gray-200'>
-                    <img src={formData.image_url} alt="Current exhibition" className='w-full h-full object-cover'/>
+                <h4 className='text-sm font-medium text-gray-700'>이미지 관리</h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {formData.image_urls.map((url, index) => (
+                        <div key={index} className="relative group">
+                            <img src={url} alt={`Exhibition image ${index + 1}`} className="w-full h-24 object-cover rounded-md" />
+                            <button
+                                type="button"
+                                onClick={() => handleRemoveImage(index)}
+                                className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                aria-label="Remove image"
+                            >
+                                <Icon type="trash" className="w-4 h-4" />
+                            </button>
+                        </div>
+                    ))}
                 </div>
                 
                 <div>
@@ -131,6 +154,7 @@ const EditExhibitionModal: React.FC<EditExhibitionModalProps> = ({ isOpen, onClo
                         onChange={handleFileChange}
                         accept="image/png, image/jpeg, image/webp"
                         className="hidden"
+                        multiple
                     />
                     <button
                         type="button"
@@ -138,8 +162,8 @@ const EditExhibitionModal: React.FC<EditExhibitionModalProps> = ({ isOpen, onClo
                         className="w-full flex items-center justify-center py-2 px-4 border border-dashed border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         disabled={isSubmitting}
                     >
-                        <Icon type="upload" className="w-5 h-5 mr-2"/>
-                        기기에서 새 이미지 업로드
+                        <Icon type="plus" className="w-5 h-5 mr-2"/>
+                        이미지 추가
                     </button>
                 </div>
             </div>

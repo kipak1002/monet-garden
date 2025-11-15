@@ -13,6 +13,6 @@ export interface Exhibition {
   id: number;
   created_at: string;
   title: string;
-  image_url: string;
+  image_urls: string[];
   description?: string | null;
 }
