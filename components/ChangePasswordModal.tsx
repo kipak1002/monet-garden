@@ -87,7 +87,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
         <h2 className="text-2xl font-bold text-gray-900 mb-4">비밀번호 변경</h2>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          <fieldset disabled={isUpdating}>
+          <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">현재 비밀번호</label>
               <input
@@ -99,6 +99,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
                 className={`w-full mt-1 p-2 border ${error.includes('Current') ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-2 ${error.includes('Current') ? 'focus:ring-red-500' : 'focus:ring-blue-500'}`}
                 autoComplete="off"
                 inputMode="numeric"
+                disabled={isUpdating}
               />
             </div>
             <div>
@@ -111,6 +112,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
                 className={`w-full mt-1 p-2 border ${error && newPassword.length !== 6 ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-2 ${error && newPassword.length !== 6 ? 'focus:ring-red-500' : 'focus:ring-blue-500'}`}
                 autoComplete="new-password"
                 inputMode="numeric"
+                disabled={isUpdating}
               />
             </div>
             <div>
@@ -123,9 +125,10 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
                 className={`w-full mt-1 p-2 border ${error.includes('match') ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-2 ${error.includes('match') ? 'focus:ring-red-500' : 'focus:ring-blue-500'}`}
                 autoComplete="new-password"
                 inputMode="numeric"
+                disabled={isUpdating}
               />
             </div>
-          </fieldset>
+          </div>
           
           {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 

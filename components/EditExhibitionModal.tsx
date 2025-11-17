@@ -13,7 +13,7 @@ interface EditExhibitionModalProps {
 type ExhibitionEditData = Omit<Exhibition, 'id' | 'created_at'>;
 
 const EditExhibitionModal: React.FC<EditExhibitionModalProps> = ({ isOpen, onClose, exhibitionToEdit, onUpdate }) => {
-  const [formData, setFormData] = useState<ExhibitionEditData>({ title: '', image_urls: [], description: '' });
+  const [formData, setFormData] = useState<ExhibitionEditData>({ title: '', image_urls: [], description: '', display_order: 0 });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -23,6 +23,7 @@ const EditExhibitionModal: React.FC<EditExhibitionModalProps> = ({ isOpen, onClo
         title: exhibitionToEdit.title,
         image_urls: exhibitionToEdit.image_urls || [],
         description: exhibitionToEdit.description || '',
+        display_order: exhibitionToEdit.display_order,
       });
       setIsSubmitting(false);
     }
@@ -110,10 +111,10 @@ const EditExhibitionModal: React.FC<EditExhibitionModalProps> = ({ isOpen, onClo
                 <Icon type="close" className="w-8 h-8" />
             </button>
         </div>
-        <fieldset disabled={isSubmitting} className='p-6 md:p-8 overflow-y-auto space-y-6 flex-1 min-h-0'>
+        <div className='p-6 md:p-8 overflow-y-auto space-y-6 flex-1 min-h-0'>
             <div>
                 <label htmlFor="ex-edit-title" className="block text-sm font-medium text-gray-700">전시회 제목</label>
-                <input type="text" name="title" id="ex-edit-title" value={formData.title} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"/>
+                <input type="text" name="title" id="ex-edit-title" value={formData.title} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100" disabled={isSubmitting}/>
             </div>
 
             <div>
@@ -126,6 +127,7 @@ const EditExhibitionModal: React.FC<EditExhibitionModalProps> = ({ isOpen, onClo
                   rows={4}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
                   placeholder="전시회에 대한 설명을 입력하세요."
+                  disabled={isSubmitting}
               />
             </div>
 
@@ -140,6 +142,7 @@ const EditExhibitionModal: React.FC<EditExhibitionModalProps> = ({ isOpen, onClo
                                 onClick={() => handleRemoveImage(index)}
                                 className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                                 aria-label="Remove image"
+                                disabled={isSubmitting}
                             >
                                 <Icon type="trash" className="w-4 h-4" />
                             </button>
@@ -155,6 +158,7 @@ const EditExhibitionModal: React.FC<EditExhibitionModalProps> = ({ isOpen, onClo
                         accept="image/png, image/jpeg, image/webp"
                         className="hidden"
                         multiple
+                        disabled={isSubmitting}
                     />
                     <button
                         type="button"
@@ -167,7 +171,7 @@ const EditExhibitionModal: React.FC<EditExhibitionModalProps> = ({ isOpen, onClo
                     </button>
                 </div>
             </div>
-        </fieldset>
+        </div>
         <div className="p-6 bg-gray-50 border-t flex justify-end items-center gap-3">
             <button onClick={onClose} disabled={isSubmitting} className="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:bg-gray-100">
                 취소

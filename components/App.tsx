@@ -48,63 +48,45 @@ const App: React.FC = () => {
     setIsLoading(true);
     try {
       // Fetch settings
-      try {
-        const { data: settingsData, error: settingsError } = await supabase.from('settings').select('key, value');
-        if (settingsError) throw settingsError;
-        const settingsMap = new Map(settingsData.map(s => [s.key, s.value]));
-        setGalleryTitle(String(settingsMap.get('galleryTitle') || '김명진 포트폴리오'));
-        setAdminPassword(String(settingsMap.get('adminPassword') || '000000'));
-        setLandingBackgroundUrl(String(settingsMap.get('landingBackgroundUrl') || ''));
-      } catch (error) {
-        console.error('Error fetching settings:', error);
-      }
+      const { data: settingsData, error: settingsError } = await supabase.from('settings').select('key, value');
+      if (settingsError) throw settingsError;
+      
+      const settingsMap = new Map(settingsData.map(s => [s.key, s.value]));
+      setGalleryTitle(String(settingsMap.get('galleryTitle') || '김명진 포트폴리오'));
+      setAdminPassword(String(settingsMap.get('adminPassword') || '000000'));
+      setLandingBackgroundUrl(String(settingsMap.get('landingBackgroundUrl') || ''));
 
       // Fetch artworks
-      try {
-        const { data: artworksData, error: artworksError } = await supabase.from('artworks').select('*').order('created_at', { ascending: false });
-        if (artworksError) throw artworksError;
-        
-        // FIX: Ensure image_urls is always an array. In some cases, Supabase might return a comma-separated string
-        // or a string representation of a PostgreSQL array ('{url1,url2}'). This code handles both cases
-        // by splitting the string into an array of URLs, making the app robust against this data inconsistency.
-        const processedArtworks = (artworksData as any[]).map(artwork => {
-          if (artwork.image_urls && typeof artwork.image_urls === 'string') {
-            // Remove potential curly braces from PG array string format and then split
-            const urlsString = artwork.image_urls.replace(/^{|}$/g, '');
-            return {
-              ...artwork,
-              image_urls: urlsString.split(',').filter((url: string) => url.trim() !== '')
-            };
-          }
-          return artwork;
-        });
-
-        setArtworks(processedArtworks as Artwork[]);
-        setFilteredArtworks(processedArtworks as Artwork[]);
-      } catch (error) {
-        console.error('Error fetching artworks:', error);
-      }
+      const { data: artworksData, error: artworksError } = await supabase.from('artworks').select('*').order('created_at', { ascending: false });
+      if (artworksError) throw artworksError;
+      
+      const processedArtworks = (artworksData || []).map(artwork => {
+        if (artwork.image_urls && typeof artwork.image_urls === 'string') {
+          const urlsString = artwork.image_urls.replace(/^{|}$/g, '');
+          return {
+            ...artwork,
+            image_urls: urlsString.split(',').filter((url: string) => url.trim() !== '')
+          };
+        }
+        return artwork;
+      });
+      setArtworks(processedArtworks as Artwork[]);
+      setFilteredArtworks(processedArtworks as Artwork[]);
 
       // Fetch exhibitions
-      try {
-        const { data: exhibitionsData, error: exhibitionsError } = await supabase.from('exhibitions').select('*').order('display_order', { ascending: false });
-        if (exhibitionsError) {
-           // If the table doesn't exist, it's not a critical error, just log it.
-          if (exhibitionsError.code === '42P01') { 
-            console.warn('Exhibitions table not found. Please create it in Supabase if you need this feature.');
-          } else {
-            throw exhibitionsError;
-          }
+      const { data: exhibitionsData, error: exhibitionsError } = await supabase.from('exhibitions').select('*').order('display_order', { ascending: false });
+      if (exhibitionsError) {
+        if (exhibitionsError.code === '42P01') { 
+          console.warn('Exhibitions table not found. Please create it in Supabase if you need this feature.');
+        } else {
+          throw exhibitionsError;
         }
-        if (exhibitionsData) {
-          setExhibitions(exhibitionsData as Exhibition[]);
-        }
-      } catch (error) {
-        console.error('Error fetching exhibitions:', error);
+      }
+      if (exhibitionsData) {
+        setExhibitions(exhibitionsData as Exhibition[]);
       }
 
     } catch (error) {
-      // This outer catch is for any unexpected errors not caught by inner blocks.
       console.error('An unexpected error occurred during initial data fetch:', error);
     } finally {
       setIsLoading(false);
