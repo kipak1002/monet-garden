@@ -62,12 +62,29 @@ const App: React.FC = () => {
       
       const processedArtworks = (artworksData || []).map(artwork => {
         if (artwork.image_urls && typeof artwork.image_urls === 'string') {
-          const urlsString = artwork.image_urls.replace(/^{|}$/g, '');
-          return {
-            ...artwork,
-            image_urls: urlsString.split(',').filter((url: string) => url.trim() !== '')
-          };
+          // It's a string from the DB, parse it into an array.
+          // Format is likely `{"url1","url2"}`.
+          const urlsString = artwork.image_urls.replace(/^{|}$/g, ''); // Remove braces
+          
+          if (!urlsString) {
+            return { ...artwork, image_urls: [] };
+          }
+
+          const urls = urlsString.split(',').map(url => {
+            let cleanUrl = url.trim();
+            // Remove surrounding double quotes, which are common in this format.
+            if (cleanUrl.startsWith('"') && cleanUrl.endsWith('"')) {
+              cleanUrl = cleanUrl.substring(1, cleanUrl.length - 1);
+            }
+            return cleanUrl;
+          }).filter(url => url.trim() !== ''); // Filter out any empty strings
+
+          return { ...artwork, image_urls: urls };
+        } else if (!artwork.image_urls) {
+          // Handle null or undefined case
+          return { ...artwork, image_urls: [] };
         }
+        // If it's already an array, return as is.
         return artwork;
       });
       setArtworks(processedArtworks as Artwork[]);
