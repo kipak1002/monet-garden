@@ -18,6 +18,63 @@ import EditExhibitionModal from './EditExhibitionModal';
 
 type Page = 'landing' | 'gallery' | 'profile' | 'exhibition';
 
+/**
+ * A robust function to parse the `image_urls` field from Supabase,
+ * which can be a string in various formats (JSON array, Postgres array literal)
+ * or already an array.
+ * @param urls - The input data from the database.
+ * @returns A string array of URLs.
+ */
+const parseImageUrls = (urls: unknown): string[] => {
+  if (!urls) {
+    return [];
+  }
+
+  // Case 0: Already a valid array
+  if (Array.isArray(urls)) {
+    return urls.filter(u => typeof u === 'string');
+  }
+
+  if (typeof urls !== 'string') {
+    return [];
+  }
+
+  const trimmedUrls = urls.trim();
+  if (trimmedUrls === '') {
+    return [];
+  }
+
+  // Case 1: JSON array string '["url1", "url2"]'
+  if (trimmedUrls.startsWith('[') && trimmedUrls.endsWith(']')) {
+    try {
+      const parsed = JSON.parse(trimmedUrls);
+      return Array.isArray(parsed) ? parsed.filter((u: any) => typeof u === 'string') : [];
+    } catch (e) {
+      // Ignore parse error and fall through
+    }
+  }
+
+  // Case 2: Postgres array literal string '{"url1","url2"}'
+  if (trimmedUrls.startsWith('{') && trimmedUrls.endsWith('}')) {
+    return trimmedUrls
+      .slice(1, -1) // Remove {}
+      .split(',')
+      .map(url => {
+        let cleanUrl = url.trim();
+        // Remove surrounding double quotes if they exist from `COPY` command or similar
+        if (cleanUrl.startsWith('"') && cleanUrl.endsWith('"')) {
+          cleanUrl = cleanUrl.slice(1, -1);
+        }
+        return cleanUrl;
+      })
+      .filter(url => url.length > 0);
+  }
+
+  // Case 3: A single URL string (fallback)
+  return [trimmedUrls];
+};
+
+
 const App: React.FC = () => {
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [exhibitions, setExhibitions] = useState<Exhibition[]>([]);
@@ -44,6 +101,16 @@ const App: React.FC = () => {
   const [isEditExhibitionModalOpen, setIsEditExhibitionModalOpen] = useState(false);
   const [editingExhibition, setEditingExhibition] = useState<Exhibition | null>(null);
 
+  const processArtwork = (artwork: any): Artwork => ({
+    ...artwork,
+    image_urls: parseImageUrls(artwork.image_urls),
+  });
+
+  const processExhibition = (exhibition: any): Exhibition => ({
+      ...exhibition,
+      image_urls: parseImageUrls(exhibition.image_urls),
+  });
+
   const fetchInitialData = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -60,35 +127,9 @@ const App: React.FC = () => {
       const { data: artworksData, error: artworksError } = await supabase.from('artworks').select('*').order('created_at', { ascending: false });
       if (artworksError) throw artworksError;
       
-      const processedArtworks = (artworksData || []).map(artwork => {
-        if (artwork.image_urls && typeof artwork.image_urls === 'string') {
-          // It's a string from the DB, parse it into an array.
-          // Format is likely `{"url1","url2"}`.
-          const urlsString = artwork.image_urls.replace(/^{|}$/g, ''); // Remove braces
-          
-          if (!urlsString) {
-            return { ...artwork, image_urls: [] };
-          }
-
-          const urls = urlsString.split(',').map(url => {
-            let cleanUrl = url.trim();
-            // Remove surrounding double quotes, which are common in this format.
-            if (cleanUrl.startsWith('"') && cleanUrl.endsWith('"')) {
-              cleanUrl = cleanUrl.substring(1, cleanUrl.length - 1);
-            }
-            return cleanUrl;
-          }).filter(url => url.trim() !== ''); // Filter out any empty strings
-
-          return { ...artwork, image_urls: urls };
-        } else if (!artwork.image_urls) {
-          // Handle null or undefined case
-          return { ...artwork, image_urls: [] };
-        }
-        // If it's already an array, return as is.
-        return artwork;
-      });
-      setArtworks(processedArtworks as Artwork[]);
-      setFilteredArtworks(processedArtworks as Artwork[]);
+      const processedArtworks = (artworksData || []).map(processArtwork);
+      setArtworks(processedArtworks);
+      setFilteredArtworks(processedArtworks);
 
       // Fetch exhibitions
       const { data: exhibitionsData, error: exhibitionsError } = await supabase.from('exhibitions').select('*').order('display_order', { ascending: false });
@@ -100,7 +141,8 @@ const App: React.FC = () => {
         }
       }
       if (exhibitionsData) {
-        setExhibitions(exhibitionsData as Exhibition[]);
+        const processedExhibitions = (exhibitionsData || []).map(processExhibition);
+        setExhibitions(processedExhibitions);
       }
 
     } catch (error) {
@@ -206,7 +248,8 @@ const App: React.FC = () => {
       .select()
       .single();
     if (error) throw error;
-    setArtworks(prev => [data as Artwork, ...prev]);
+    const newArtwork = processArtwork(data);
+    setArtworks(prev => [newArtwork, ...prev]);
     setIsAddModalOpen(false);
   };
   
@@ -235,7 +278,8 @@ const App: React.FC = () => {
       .select()
       .single();
     if (error) throw error;
-    setArtworks(prev => prev.map(a => (a.id === updatedArtwork.id ? data as Artwork : a)));
+    const freshArtwork = processArtwork(data);
+    setArtworks(prev => prev.map(a => (a.id === updatedArtwork.id ? freshArtwork : a)));
     setIsEditModalOpen(false);
     setEditingArtwork(null);
   };
@@ -267,7 +311,8 @@ const App: React.FC = () => {
       .select()
       .single();
     if (error) throw error;
-    setExhibitions(prev => [data as Exhibition, ...prev]);
+    const newExhibition = processExhibition(data);
+    setExhibitions(prev => [newExhibition, ...prev]);
   };
 
   const handleUpdateExhibition = async (updatedExhibition: Exhibition) => {
@@ -293,7 +338,8 @@ const App: React.FC = () => {
       .select()
       .single();
     if (error) throw error;
-    setExhibitions(prev => prev.map(e => (e.id === updatedExhibition.id ? data as Exhibition : e)).sort((a, b) => b.display_order - a.display_order));
+    const freshExhibition = processExhibition(data);
+    setExhibitions(prev => prev.map(e => (e.id === updatedExhibition.id ? freshExhibition : e)).sort((a, b) => b.display_order - a.display_order));
     setIsEditExhibitionModalOpen(false);
     setEditingExhibition(null);
   };
