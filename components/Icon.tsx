@@ -1,11 +1,29 @@
 import React from 'react';
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
-  type: 'search' | 'close' | 'sparkles' | 'edit' | 'shield-check' | 'upload' | 'trash' | 'plus' | 'key' | 'cog' | 'profile' | 'exhibition';
+  type: 'search' | 'close' | 'sparkles' | 'edit' | 'shield-check' | 'upload' | 'trash' | 'plus' | 'key' | 'cog' | 'profile' | 'exhibition' | 'collection' | 'chevron-left' | 'chevron-right';
 }
 
 const Icon: React.FC<IconProps> = ({ type, ...props }) => {
   switch (type) {
+    case 'chevron-left':
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+        </svg>
+      );
+    case 'chevron-right':
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+        </svg>
+      );
+    case 'collection':
+        return (
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
+            </svg>
+        );
     case 'profile':
       return (
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>

@@ -4,7 +4,7 @@ export interface Artwork {
   title: string;
   artist: string;
   year: number;
-  image_url: string;
+  image_urls: string[];
   size: string;
   memo?: string | null;
 }
@@ -15,4 +15,5 @@ export interface Exhibition {
   title: string;
   image_urls: string[];
   description?: string | null;
+  display_order: number;
 }

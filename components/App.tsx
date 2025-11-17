@@ -180,10 +180,12 @@ const App: React.FC = () => {
 
   // Artwork CRUD Handlers
   const handleAddNewArtwork = async (newArtworkData: NewArtworkData) => {
-    const imageUrl = await uploadImage(newArtworkData.image_url);
+    const uploadPromises = newArtworkData.image_urls.map(dataUrl => uploadImage(dataUrl));
+    const imageUrls = await Promise.all(uploadPromises);
+
     const { data, error } = await supabase
       .from('artworks')
-      .insert([{ ...newArtworkData, image_url: imageUrl }])
+      .insert([{ ...newArtworkData, image_urls: imageUrls }])
       .select()
       .single();
     if (error) throw error;
@@ -192,18 +194,19 @@ const App: React.FC = () => {
   };
   
   const handleUpdateArtwork = async (updatedArtwork: Artwork) => {
-    let finalImageUrl = updatedArtwork.image_url;
-    // Check if the image_url is a data URL (base64), meaning it's a new upload
-    if (finalImageUrl.startsWith('data:image')) {
-      finalImageUrl = await uploadImage(finalImageUrl);
-    }
+    const newImageDataUrls = updatedArtwork.image_urls.filter(url => url.startsWith('data:image'));
+    const existingImageUrls = updatedArtwork.image_urls.filter(url => !url.startsWith('data:image'));
     
-    // Explicitly create the update payload to avoid sending immutable fields like 'id' or 'created_at'.
+    const uploadPromises = newImageDataUrls.map(dataUrl => uploadImage(dataUrl));
+    const newlyUploadedUrls = await Promise.all(uploadPromises);
+
+    const finalImageUrls = [...existingImageUrls, ...newlyUploadedUrls];
+    
     const artworkDataToUpdate = {
       title: updatedArtwork.title,
       artist: updatedArtwork.artist,
       year: updatedArtwork.year,
-      image_url: finalImageUrl,
+      image_urls: finalImageUrls,
       size: updatedArtwork.size,
       memo: updatedArtwork.memo,
     };
