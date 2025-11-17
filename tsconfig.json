@@ -5,6 +5,7 @@
     "module": "ESNext",
     "skipLibCheck": true,
     "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
@@ -15,9 +16,8 @@
     "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
-    "allowImportingTsExtensions": true
+    "forceConsistentCasingInFileNames": true
   },
   "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", "netlify/functions"]
+  "exclude": ["node_modules"]
 }

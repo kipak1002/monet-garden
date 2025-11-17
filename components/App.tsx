@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { Artwork, Exhibition } from '../types';
-import { supabase, uploadImage } from '../services';
+import { supabase, uploadImage } from '../services/supabaseClient.ts';
 import Header from './Header';
 import Gallery from './Gallery';
 import ArtworkDetailModal from './ArtworkDetailModal';

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Icon from './Icon';
 import Spinner from './Spinner';
-import { generateArtworkMemo } from '../services';
+import { generateArtworkMemo } from '../services/geminiService.ts';
 
 export type NewArtworkData = {
     title: string;
