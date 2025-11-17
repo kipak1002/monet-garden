@@ -119,6 +119,8 @@ const GenerateArtworkModal: React.FC<GenerateArtworkModalProps> = ({ isOpen, onC
 
   if (!isOpen) return null;
 
+  const isDisabled = isSubmitting || isGeneratingMemo;
+
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 transition-opacity duration-300 animate-fade-in"
@@ -138,10 +140,10 @@ const GenerateArtworkModal: React.FC<GenerateArtworkModalProps> = ({ isOpen, onC
                 <Icon type="close" className="w-8 h-8" />
             </button>
         </div>
-        <fieldset disabled={isSubmitting || isGeneratingMemo} className='p-6 md:p-8 overflow-y-auto space-y-6 flex-1 min-h-0'>
+        <div className='p-6 md:p-8 overflow-y-auto space-y-6 flex-1 min-h-0'>
             <div>
                 <label htmlFor="add-title" className="block text-sm font-medium text-gray-700">제목</label>
-                <input type="text" name="title" id="add-title" value={formData.title} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"/>
+                <input type="text" name="title" id="add-title" value={formData.title} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100" disabled={isDisabled}/>
             </div>
             
             <div className='space-y-4'>
@@ -156,6 +158,7 @@ const GenerateArtworkModal: React.FC<GenerateArtworkModalProps> = ({ isOpen, onC
                                     onClick={() => handleRemoveImage(index)}
                                     className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                                     aria-label="이미지 삭제"
+                                    disabled={isDisabled}
                                 >
                                     <Icon type="trash" className="w-4 h-4" />
                                 </button>
@@ -183,7 +186,7 @@ const GenerateArtworkModal: React.FC<GenerateArtworkModalProps> = ({ isOpen, onC
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
                         className="w-full flex items-center justify-center py-2 px-4 border border-dashed border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        disabled={isSubmitting}
+                        disabled={isDisabled}
                     >
                         <Icon type="upload" className="w-5 h-5 mr-2"/>
                         기기에서 이미지 업로드
@@ -194,16 +197,16 @@ const GenerateArtworkModal: React.FC<GenerateArtworkModalProps> = ({ isOpen, onC
             <div className='grid grid-cols-2 gap-4'>
                 <div>
                     <label htmlFor="add-artist" className="block text-sm font-medium text-gray-700">아티스트</label>
-                    <input type="text" name="artist" id="add-artist" value={formData.artist} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"/>
+                    <input type="text" name="artist" id="add-artist" value={formData.artist} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100" disabled={isDisabled}/>
                 </div>
                 <div>
                     <label htmlFor="add-year" className="block text-sm font-medium text-gray-700">연도</label>
-                    <input type="number" name="year" id="add-year" value={formData.year} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"/>
+                    <input type="number" name="year" id="add-year" value={formData.year} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100" disabled={isDisabled}/>
                 </div>
             </div>
             <div>
                 <label htmlFor="add-size" className="block text-sm font-medium text-gray-700">크기</label>
-                <input type="text" name="size" id="add-size" value={formData.size} onChange={handleChange} placeholder="예: 100cm x 70cm" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"/>
+                <input type="text" name="size" id="add-size" value={formData.size} onChange={handleChange} placeholder="예: 100cm x 70cm" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100" disabled={isDisabled}/>
             </div>
             <div>
                 <div className="flex justify-between items-center mb-1">
@@ -211,7 +214,7 @@ const GenerateArtworkModal: React.FC<GenerateArtworkModalProps> = ({ isOpen, onC
                     <button
                         type="button"
                         onClick={handleGenerateMemo}
-                        disabled={isGeneratingMemo || formData.images.length === 0}
+                        disabled={isDisabled || formData.images.length === 0}
                         className="flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
                         aria-label="AI로 메모 생성"
                     >
@@ -228,9 +231,9 @@ const GenerateArtworkModal: React.FC<GenerateArtworkModalProps> = ({ isOpen, onC
                         )}
                     </button>
                 </div>
-                <textarea name="memo" id="add-memo" value={formData.memo || ''} onChange={handleChange} placeholder="작품에 대한 추가적인 메모를 남겨보세요." rows={3} className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"/>
+                <textarea name="memo" id="add-memo" value={formData.memo || ''} onChange={handleChange} placeholder="작품에 대한 추가적인 메모를 남겨보세요." rows={3} className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100" disabled={isDisabled}/>
             </div>
-        </fieldset>
+        </div>
         <div className="p-6 bg-gray-50 border-t flex justify-end items-center gap-3">
             <button onClick={onClose} disabled={isSubmitting} className="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:bg-gray-100">
                 취소
