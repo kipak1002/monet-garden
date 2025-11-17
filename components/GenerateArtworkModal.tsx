@@ -20,7 +20,7 @@ interface GenerateArtworkModalProps {
 
 const DEFAULT_FORM_STATE = {
   title: '',
-  artist: '',
+  artist: '김명진',
   year: new Date().getFullYear(),
   images: [] as File[],
   previewUrls: [] as string[],
