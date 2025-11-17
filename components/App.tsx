@@ -19,9 +19,11 @@ import EditExhibitionModal from './EditExhibitionModal';
 type Page = 'landing' | 'gallery' | 'profile' | 'exhibition';
 
 /**
- * A robust function to parse the `image_urls` field from Supabase,
- * which can be a string in various formats (JSON array, Postgres array literal)
- * or already an array. This new version uses regex for better reliability.
+ * A robust function to parse the `image_urls` field from Supabase.
+ * This field might be a proper string array, a stringified JSON array,
+ * a stringified Postgres array literal, or even a text[] column containing
+ * a single string which is a stringified JSON array. This function aims to
+ * handle all these cases gracefully.
  * @param urls - The input data from the database.
  * @returns A string array of URLs.
  */
@@ -29,22 +31,34 @@ const parseImageUrls = (urls: unknown): string[] => {
   if (!urls) {
     return [];
   }
-  // Case 0: Already a valid array. This is the ideal case.
-  if (Array.isArray(urls)) {
-    return urls.filter((u): u is string => typeof u === 'string' && u.length > 0);
+
+  let dataToParse: any = urls;
+
+  // Case 1: The data is an array from Supabase. It might be the correct
+  // array of strings, OR it might be an array containing a single string
+  // that itself needs to be parsed (e.g., ['["url1", "url2"]']).
+  if (Array.isArray(dataToParse)) {
+    if (dataToParse.length === 1 && typeof dataToParse[0] === 'string') {
+      // It's a single-element array containing a string.
+      // We'll try to parse this string.
+      dataToParse = dataToParse[0];
+    } else {
+      // It's a multi-element array, assume it's the correct list of URLs.
+      return dataToParse.filter((u): u is string => typeof u === 'string' && u.length > 0);
+    }
   }
 
-  // If it's not an array, it should be a string for us to parse.
-  if (typeof urls !== 'string') {
+  // At this point, dataToParse should be a string if it's not a valid multi-element array.
+  if (typeof dataToParse !== 'string') {
     return [];
   }
 
-  const str = urls.trim();
-  if (str === '') {
+  const str = dataToParse.trim();
+  if (!str) {
     return [];
   }
 
-  // Case 1: Try parsing as a JSON array string, e.g., '["url1", "url2"]'
+  // Case 2: The string is a JSON array, e.g., '["url1", "url2"]'
   if (str.startsWith('[') && str.endsWith(']')) {
     try {
       const parsed = JSON.parse(str);
@@ -56,22 +70,16 @@ const parseImageUrls = (urls: unknown): string[] => {
     }
   }
 
-  // Case 2: Try parsing as a Postgres array literal using regex.
-  // This handles formats like '{"url1","url2"}' by extracting quoted substrings.
-  const regex = /"([^"]+)"/g;
-  const matches = str.match(regex);
-
-  if (matches) {
-    // The match includes the quotes, so we strip them.
-    return matches.map(match => match.substring(1, match.length - 1));
-  }
-
-  // Case 3: Fallback for unquoted Postgres array, e.g., '{url1,url2}'
+  // Case 3: The string is a Postgres array literal, e.g., '{"url1","url2"}'
   if (str.startsWith('{') && str.endsWith('}')) {
-      return str.slice(1, -1).split(',').map(s => s.trim()).filter(Boolean);
+    const content = str.substring(1, str.length - 1);
+    // This is a simple parser. It splits by comma and trims quotes.
+    return content.split(',')
+      .map(item => item.trim().replace(/^"|"$/g, ''))
+      .filter(Boolean);
   }
-  
-  // Final fallback: treat the whole non-empty string as a single URL.
+
+  // Case 4: Fallback for a single URL string.
   return [str];
 };
 
