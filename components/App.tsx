@@ -63,8 +63,24 @@ const App: React.FC = () => {
       try {
         const { data: artworksData, error: artworksError } = await supabase.from('artworks').select('*').order('created_at', { ascending: false });
         if (artworksError) throw artworksError;
-        setArtworks(artworksData as Artwork[]);
-        setFilteredArtworks(artworksData as Artwork[]);
+        
+        // FIX: Ensure image_urls is always an array. In some cases, Supabase might return a comma-separated string
+        // or a string representation of a PostgreSQL array ('{url1,url2}'). This code handles both cases
+        // by splitting the string into an array of URLs, making the app robust against this data inconsistency.
+        const processedArtworks = (artworksData as any[]).map(artwork => {
+          if (artwork.image_urls && typeof artwork.image_urls === 'string') {
+            // Remove potential curly braces from PG array string format and then split
+            const urlsString = artwork.image_urls.replace(/^{|}$/g, '');
+            return {
+              ...artwork,
+              image_urls: urlsString.split(',').filter((url: string) => url.trim() !== '')
+            };
+          }
+          return artwork;
+        });
+
+        setArtworks(processedArtworks as Artwork[]);
+        setFilteredArtworks(processedArtworks as Artwork[]);
       } catch (error) {
         console.error('Error fetching artworks:', error);
       }
