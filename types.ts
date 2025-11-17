@@ -4,7 +4,7 @@ export interface Artwork {
   title: string;
   artist: string;
   year: number;
-  image_urls: string[];
+  image_url: string;
   size: string;
   memo?: string | null;
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { Artwork, Exhibition } from '../types';
-import { supabase, uploadImage } from '../services/supabaseClient.ts';
+import { supabase, uploadImage } from '../services/supabaseClient';
 import Header from './Header';
 import Gallery from './Gallery';
 import ArtworkDetailModal from './ArtworkDetailModal';
@@ -180,12 +180,11 @@ const App: React.FC = () => {
 
   // Artwork CRUD Handlers
   const handleAddNewArtwork = async (newArtworkData: NewArtworkData) => {
-    const uploadPromises = newArtworkData.image_urls.map(dataUrl => uploadImage(dataUrl));
-    const imageUrls = await Promise.all(uploadPromises);
+    const imageUrl = await uploadImage(newArtworkData.image_url);
 
     const { data, error } = await supabase
       .from('artworks')
-      .insert([{ ...newArtworkData, image_urls: imageUrls }])
+      .insert([{ ...newArtworkData, image_url: imageUrl }])
       .select()
       .single();
     if (error) throw error;
@@ -194,19 +193,17 @@ const App: React.FC = () => {
   };
   
   const handleUpdateArtwork = async (updatedArtwork: Artwork) => {
-    const newImageDataUrls = updatedArtwork.image_urls.filter(url => url.startsWith('data:image'));
-    const existingImageUrls = updatedArtwork.image_urls.filter(url => !url.startsWith('data:image'));
-    
-    const uploadPromises = newImageDataUrls.map(dataUrl => uploadImage(dataUrl));
-    const newlyUploadedUrls = await Promise.all(uploadPromises);
+    let finalImageUrl = updatedArtwork.image_url;
 
-    const finalImageUrls = [...existingImageUrls, ...newlyUploadedUrls];
+    if (updatedArtwork.image_url.startsWith('data:image')) {
+        finalImageUrl = await uploadImage(updatedArtwork.image_url);
+    }
     
     const artworkDataToUpdate = {
       title: updatedArtwork.title,
       artist: updatedArtwork.artist,
       year: updatedArtwork.year,
-      image_urls: finalImageUrls,
+      image_url: finalImageUrl,
       size: updatedArtwork.size,
       memo: updatedArtwork.memo,
     };

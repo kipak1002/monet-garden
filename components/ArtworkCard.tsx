@@ -50,7 +50,7 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ artwork, onSelect, isAdminMod
     onDelete(artwork);
   };
 
-  const thumbnailUrl = artwork.image_urls && artwork.image_urls.length > 0 ? artwork.image_urls[0] : '';
+  const thumbnailUrl = artwork.image_url;
 
   return (
     <div
@@ -76,12 +76,6 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ artwork, onSelect, isAdminMod
           >
             <Icon type="trash" className="w-5 h-5" />
           </button>
-        </div>
-      )}
-      {artwork.image_urls && artwork.image_urls.length > 1 && (
-        <div className="absolute top-2 left-2 z-10 bg-black/50 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1 backdrop-blur-sm">
-            <Icon type="collection" className="w-3 h-3" />
-            <span>{artwork.image_urls.length}</span>
         </div>
       )}
       <div className="w-full h-64 bg-gray-200 overflow-hidden">
