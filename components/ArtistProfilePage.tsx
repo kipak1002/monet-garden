@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { supabase, uploadImage } from '../services/supabaseClient';
+import { supabase, uploadImage } from '../services/supabaseClient.ts';
 import Spinner from './Spinner';
 import Icon from './Icon';
 import Linkify from './Linkify';
