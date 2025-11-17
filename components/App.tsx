@@ -21,7 +21,7 @@ type Page = 'landing' | 'gallery' | 'profile' | 'exhibition';
 /**
  * A robust function to parse the `image_urls` field from Supabase,
  * which can be a string in various formats (JSON array, Postgres array literal)
- * or already an array.
+ * or already an array. This new version uses regex for better reliability.
  * @param urls - The input data from the database.
  * @returns A string array of URLs.
  */
@@ -29,49 +29,50 @@ const parseImageUrls = (urls: unknown): string[] => {
   if (!urls) {
     return [];
   }
-
-  // Case 0: Already a valid array
+  // Case 0: Already a valid array. This is the ideal case.
   if (Array.isArray(urls)) {
-    return urls.filter(u => typeof u === 'string');
+    return urls.filter((u): u is string => typeof u === 'string' && u.length > 0);
   }
 
+  // If it's not an array, it should be a string for us to parse.
   if (typeof urls !== 'string') {
     return [];
   }
 
-  const trimmedUrls = urls.trim();
-  if (trimmedUrls === '') {
+  const str = urls.trim();
+  if (str === '') {
     return [];
   }
 
-  // Case 1: JSON array string '["url1", "url2"]'
-  if (trimmedUrls.startsWith('[') && trimmedUrls.endsWith(']')) {
+  // Case 1: Try parsing as a JSON array string, e.g., '["url1", "url2"]'
+  if (str.startsWith('[') && str.endsWith(']')) {
     try {
-      const parsed = JSON.parse(trimmedUrls);
-      return Array.isArray(parsed) ? parsed.filter((u: any) => typeof u === 'string') : [];
+      const parsed = JSON.parse(str);
+      if (Array.isArray(parsed)) {
+        return parsed.filter((u): u is string => typeof u === 'string' && u.length > 0);
+      }
     } catch (e) {
-      // Ignore parse error and fall through
+      // Not valid JSON, fall through to other methods.
     }
   }
 
-  // Case 2: Postgres array literal string '{"url1","url2"}'
-  if (trimmedUrls.startsWith('{') && trimmedUrls.endsWith('}')) {
-    return trimmedUrls
-      .slice(1, -1) // Remove {}
-      .split(',')
-      .map(url => {
-        let cleanUrl = url.trim();
-        // Remove surrounding double quotes if they exist from `COPY` command or similar
-        if (cleanUrl.startsWith('"') && cleanUrl.endsWith('"')) {
-          cleanUrl = cleanUrl.slice(1, -1);
-        }
-        return cleanUrl;
-      })
-      .filter(url => url.length > 0);
+  // Case 2: Try parsing as a Postgres array literal using regex.
+  // This handles formats like '{"url1","url2"}' by extracting quoted substrings.
+  const regex = /"([^"]+)"/g;
+  const matches = str.match(regex);
+
+  if (matches) {
+    // The match includes the quotes, so we strip them.
+    return matches.map(match => match.substring(1, match.length - 1));
   }
 
-  // Case 3: A single URL string (fallback)
-  return [trimmedUrls];
+  // Case 3: Fallback for unquoted Postgres array, e.g., '{url1,url2}'
+  if (str.startsWith('{') && str.endsWith('}')) {
+      return str.slice(1, -1).split(',').map(s => s.trim()).filter(Boolean);
+  }
+  
+  // Final fallback: treat the whole non-empty string as a single URL.
+  return [str];
 };
 
 
