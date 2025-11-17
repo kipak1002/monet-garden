@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import type { Artwork } from '../types';
 import Icon from './Icon';
 import Spinner from './Spinner';
-import { generateArtworkMemo } from '../services/geminiService';
+import { generateArtworkMemo } from '../services';
 
 interface EditArtworkModalProps {
   isOpen: boolean;
@@ -15,7 +15,7 @@ interface EditArtworkModalProps {
 type ArtworkEditData = Omit<Artwork, 'id' | 'created_at'>;
 
 const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, artworkToEdit, onUpdate, onDelete }) => {
-  const [formData, setFormData] = useState<ArtworkEditData>({ title: '', artist: '', year: 0, image_url: '', size: '', memo: '' });
+  const [formData, setFormData] = useState<ArtworkEditData>({ title: '', artist: '', year: 0, image_urls: [], size: '', memo: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingMemo, setIsGeneratingMemo] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -26,7 +26,7 @@ const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, ar
         title: artworkToEdit.title,
         artist: artworkToEdit.artist,
         year: artworkToEdit.year,
-        image_url: artworkToEdit.image_url,
+        image_urls: artworkToEdit.image_urls,
         size: artworkToEdit.size,
         memo: artworkToEdit.memo || '',
       });
@@ -55,36 +55,38 @@ const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, ar
   };
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onloadend = () => {
-          if (typeof reader.result === 'string') {
-              setFormData(prev => ({
-                  ...prev,
-                  image_url: reader.result as string
-              }));
-          }
-      };
-      reader.readAsDataURL(file);
+    if (e.target.files) {
+        const files = Array.from(e.target.files);
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                if(typeof reader.result === 'string') {
+                    setFormData(prev => ({
+                        ...prev,
+                        image_urls: [...prev.image_urls, reader.result as string]
+                    }));
+                }
+            };
+            reader.readAsDataURL(file);
+        });
     }
   };
 
-  const handleRemoveImage = () => {
+  const handleRemoveImage = (indexToRemove: number) => {
     setFormData(prev => ({
         ...prev,
-        image_url: ''
+        image_urls: prev.image_urls.filter((_, i) => i !== indexToRemove)
     }));
   };
   
   const handleGenerateMemo = async () => {
-    if (!formData.image_url) {
+    if (formData.image_urls.length === 0) {
       alert("AI 메모를 생성하려면 먼저 이미지가 있어야 합니다.");
       return;
     }
     setIsGeneratingMemo(true);
     try {
-      const memo = await generateArtworkMemo(formData.image_url);
+      const memo = await generateArtworkMemo(formData.image_urls[0]);
       setFormData(prev => ({ ...prev, memo }));
     } catch (error) {
       console.error(error);
@@ -96,8 +98,8 @@ const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, ar
 
   const handleSaveChanges = async () => {
     if (artworkToEdit) {
-        if (!formData.title || !formData.artist || !formData.year || !formData.size || !formData.image_url) {
-            alert("이미지를 포함한 모든 필수 필드를 입력해주세요.");
+        if (!formData.title || !formData.artist || !formData.year || !formData.size || formData.image_urls.length === 0) {
+            alert("하나 이상의 이미지를 포함한 모든 필수 필드를 입력해주세요.");
             return;
         }
         setIsSubmitting(true);
@@ -140,26 +142,30 @@ const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, ar
 
             <div className='space-y-4'>
                 <h4 className='text-sm font-medium text-gray-700'>이미지 관리</h4>
-                 <div className="w-full aspect-video rounded-md overflow-hidden bg-gray-200 flex items-center justify-center relative group">
-                    {formData.image_url ? (
-                        <>
-                            <img src={formData.image_url} alt="작품 이미지" className="w-full h-full object-contain" />
-                            <button
-                                type="button"
-                                onClick={handleRemoveImage}
-                                className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                                aria-label="이미지 삭제"
-                            >
-                                <Icon type="trash" className="w-4 h-4" />
-                            </button>
-                        </>
-                    ) : (
-                         <div className="text-center text-gray-500">
+                {formData.image_urls.length > 0 ? (
+                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                        {formData.image_urls.map((url, index) => (
+                            <div key={`${url}-${index}`} className="relative group aspect-square">
+                                <img src={url} alt={`작품 이미지 ${index + 1}`} className="w-full h-full object-cover rounded-md shadow-sm" />
+                                <button
+                                    type="button"
+                                    onClick={() => handleRemoveImage(index)}
+                                    className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    aria-label="이미지 삭제"
+                                >
+                                    <Icon type="trash" className="w-4 h-4" />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="w-full aspect-video rounded-md bg-gray-100 flex items-center justify-center text-center text-gray-500">
+                        <div>
                             <Icon type="upload" className="w-12 h-12 mx-auto text-gray-400" />
-                            <p className="mt-2 text-sm">아래 버튼을 눌러 새 이미지를 업로드하세요.</p>
+                            <p className="mt-2 text-sm">이미지가 없습니다. 아래 버튼으로 추가해주세요.</p>
                         </div>
-                    )}
-                </div>
+                    </div>
+                )}
                 
                 <div>
                     <input
@@ -168,6 +174,7 @@ const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, ar
                         onChange={handleFileChange}
                         accept="image/png, image/jpeg, image/webp"
                         className="hidden"
+                        multiple
                     />
                     <button
                         type="button"
@@ -175,8 +182,8 @@ const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, ar
                         className="w-full flex items-center justify-center py-2 px-4 border border-dashed border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         disabled={isSubmitting}
                     >
-                        <Icon type="upload" className="w-5 h-5 mr-2"/>
-                        다른 이미지로 변경
+                        <Icon type="plus" className="w-5 h-5 mr-2"/>
+                        이미지 추가
                     </button>
                 </div>
             </div>
@@ -201,7 +208,7 @@ const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, ar
                      <button
                         type="button"
                         onClick={handleGenerateMemo}
-                        disabled={isGeneratingMemo || !formData.image_url}
+                        disabled={isGeneratingMemo || formData.image_urls.length === 0}
                         className="flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
                         aria-label="AI로 메모 생성"
                     >

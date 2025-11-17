@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Icon from './Icon';
 import Spinner from './Spinner';
-import { generateArtworkMemo } from '../services/geminiService';
+import { generateArtworkMemo } from '../services';
 
 export type NewArtworkData = {
     title: string;
     artist: string;
     year: number;
-    image_url: string;
+    images: File[];
     size: string;
     memo?: string | null;
 };
@@ -18,24 +18,26 @@ interface GenerateArtworkModalProps {
   onAdd: (newArtworkData: NewArtworkData) => Promise<void>;
 }
 
-const DEFAULT_FORM_DATA: NewArtworkData = {
+const DEFAULT_FORM_STATE = {
   title: '',
   artist: '',
   year: new Date().getFullYear(),
-  image_url: '',
+  images: [] as File[],
+  previewUrls: [] as string[],
   size: '',
   memo: '',
 };
 
 const GenerateArtworkModal: React.FC<GenerateArtworkModalProps> = ({ isOpen, onClose, onAdd }) => {
-  const [formData, setFormData] = useState<NewArtworkData>(DEFAULT_FORM_DATA);
+  const [formData, setFormData] = useState(DEFAULT_FORM_STATE);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingMemo, setIsGeneratingMemo] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
-        setFormData(DEFAULT_FORM_DATA);
+        formData.previewUrls.forEach(URL.revokeObjectURL);
+        setFormData(DEFAULT_FORM_STATE);
         setIsSubmitting(false);
         setIsGeneratingMemo(false);
     }
@@ -61,33 +63,35 @@ const GenerateArtworkModal: React.FC<GenerateArtworkModalProps> = ({ isOpen, onC
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === 'string') {
-          setFormData(prev => ({ ...prev, image_url: reader.result as string }));
-        }
-      };
-      reader.readAsDataURL(file);
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+      setFormData(prev => ({
+          ...prev,
+          images: [...prev.images, ...newFiles],
+          previewUrls: [...prev.previewUrls, ...newPreviews]
+      }));
     }
+     if(fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleRemoveImage = () => {
-    setFormData(prev => ({ ...prev, image_url: '' }));
-    if(fileInputRef.current) {
-        fileInputRef.current.value = "";
-    }
+  const handleRemoveImage = (indexToRemove: number) => {
+    URL.revokeObjectURL(formData.previewUrls[indexToRemove]);
+    setFormData(prev => ({
+        ...prev,
+        images: prev.images.filter((_, i) => i !== indexToRemove),
+        previewUrls: prev.previewUrls.filter((_, i) => i !== indexToRemove)
+    }));
   };
   
   const handleGenerateMemo = async () => {
-    if (!formData.image_url) {
+    if (formData.previewUrls.length === 0) {
       alert("AI 메모를 생성하려면 먼저 이미지를 업로드해야 합니다.");
       return;
     }
     setIsGeneratingMemo(true);
     try {
-      const memo = await generateArtworkMemo(formData.image_url);
+      const memo = await generateArtworkMemo(formData.previewUrls[0]);
       setFormData(prev => ({ ...prev, memo }));
     } catch (error) {
       console.error(error);
@@ -98,13 +102,14 @@ const GenerateArtworkModal: React.FC<GenerateArtworkModalProps> = ({ isOpen, onC
   };
 
   const handleAddArtwork = async () => {
-    if (!formData.title || !formData.artist || !formData.year || !formData.size || !formData.image_url) {
-        alert("이미지를 포함한 모든 필수 필드를 입력해주세요.");
+    if (!formData.title || !formData.artist || !formData.year || !formData.size || formData.images.length === 0) {
+        alert("하나 이상의 이미지를 포함한 모든 필수 필드를 입력해주세요.");
         return;
     }
     setIsSubmitting(true);
     try {
-      await onAdd(formData);
+      const { previewUrls, ...dataToSubmit } = formData;
+      await onAdd(dataToSubmit);
     } catch(error) {
       console.error("Failed to add artwork", error);
       alert("작품 추가 중 오류가 발생했습니다. 다시 시도해주세요.");
@@ -140,27 +145,31 @@ const GenerateArtworkModal: React.FC<GenerateArtworkModalProps> = ({ isOpen, onC
             </div>
             
             <div className='space-y-4'>
-                <h4 className='text-sm font-medium text-gray-700'>작품 이미지</h4>
-                <div className='w-full aspect-video rounded-md overflow-hidden bg-gray-200 flex items-center justify-center relative group'>
-                    {formData.image_url ? (
-                        <>
-                            <img src={formData.image_url} alt="새 작품 미리보기" className="w-full h-full object-contain" />
-                             <button
-                                type="button"
-                                onClick={handleRemoveImage}
-                                className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                                aria-label="이미지 삭제"
-                            >
-                                <Icon type="trash" className="w-4 h-4" />
-                            </button>
-                        </>
-                    ) : (
-                        <div className="text-center text-gray-500">
+                <h4 className='text-sm font-medium text-gray-700'>작품 이미지 (여러 장 업로드 가능)</h4>
+                 {formData.previewUrls.length > 0 ? (
+                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                        {formData.previewUrls.map((url, index) => (
+                            <div key={url} className="relative group aspect-square">
+                                <img src={url} alt={`새 작품 미리보기 ${index + 1}`} className="w-full h-full object-cover rounded-md shadow-sm" />
+                                <button
+                                    type="button"
+                                    onClick={() => handleRemoveImage(index)}
+                                    className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    aria-label="이미지 삭제"
+                                >
+                                    <Icon type="trash" className="w-4 h-4" />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="w-full aspect-video rounded-md bg-gray-100 flex items-center justify-center text-center text-gray-500">
+                        <div>
                             <Icon type="upload" className="w-12 h-12 mx-auto text-gray-400" />
                             <p className="mt-2 text-sm">아래 버튼을 눌러 이미지를 업로드하세요.</p>
                         </div>
-                    )}
-                </div>
+                    </div>
+                )}
                 <div>
                     <input
                         type="file"
@@ -168,6 +177,7 @@ const GenerateArtworkModal: React.FC<GenerateArtworkModalProps> = ({ isOpen, onC
                         onChange={handleFileChange}
                         accept="image/png, image/jpeg, image/webp"
                         className="hidden"
+                        multiple
                     />
                     <button
                         type="button"
@@ -201,7 +211,7 @@ const GenerateArtworkModal: React.FC<GenerateArtworkModalProps> = ({ isOpen, onC
                     <button
                         type="button"
                         onClick={handleGenerateMemo}
-                        disabled={isGeneratingMemo || !formData.image_url}
+                        disabled={isGeneratingMemo || formData.images.length === 0}
                         className="flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
                         aria-label="AI로 메모 생성"
                     >

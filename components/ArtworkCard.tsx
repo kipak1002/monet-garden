@@ -50,7 +50,8 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ artwork, onSelect, isAdminMod
     onDelete(artwork);
   };
 
-  const thumbnailUrl = artwork.image_url;
+  const thumbnailUrl = artwork.image_urls && artwork.image_urls.length > 0 ? artwork.image_urls[0] : '';
+  const hasMultipleImages = artwork.image_urls && artwork.image_urls.length > 1;
 
   return (
     <div
@@ -58,6 +59,12 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ artwork, onSelect, isAdminMod
       className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer group transform hover:-translate-y-1 transition-all duration-300 relative"
       onClick={() => onSelect(artwork)}
     >
+      {hasMultipleImages && (
+        <div className="absolute top-2 left-2 z-10 flex items-center gap-1 bg-black/50 text-white text-xs rounded-full px-2 py-1 backdrop-blur-sm">
+            <Icon type="collection" className="w-4 h-4" />
+            <span>{artwork.image_urls.length}</span>
+        </div>
+      )}
       {isAdminMode && (
         <div className="absolute top-2 right-2 z-10 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <button 

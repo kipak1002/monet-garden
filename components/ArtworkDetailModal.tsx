@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { Artwork } from '../types';
 import Icon from './Icon';
 
@@ -11,7 +11,11 @@ const ArtworkDetailModal: React.FC<ArtworkDetailModalProps> = ({
   artwork,
   onClose,
 }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  
   useEffect(() => {
+    setCurrentIndex(0); // Reset index when artwork changes
+
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         onClose();
@@ -23,9 +27,26 @@ const ArtworkDetailModal: React.FC<ArtworkDetailModalProps> = ({
     return () => {
       window.removeEventListener('keydown', handleEsc);
     };
-  }, [onClose]);
+  }, [artwork, onClose]);
 
   if (!artwork) return null;
+
+  const images = artwork.image_urls || [];
+  const hasMultipleImages = images.length > 1;
+
+  const goToPrevious = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const isFirstSlide = currentIndex === 0;
+    const newIndex = isFirstSlide ? images.length - 1 : currentIndex - 1;
+    setCurrentIndex(newIndex);
+  };
+
+  const goToNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const isLastSlide = currentIndex === images.length - 1;
+    const newIndex = isLastSlide ? 0 : currentIndex + 1;
+    setCurrentIndex(newIndex);
+  };
 
   return (
     <div
@@ -44,10 +65,29 @@ const ArtworkDetailModal: React.FC<ArtworkDetailModalProps> = ({
           <Icon type="close" className="w-8 h-8" />
         </button>
         <div className="w-full md:w-2/3 h-96 md:h-auto bg-gray-100 relative flex items-center justify-center">
-            {artwork.image_url ? (
-                <img src={artwork.image_url} alt={artwork.title} className="w-full h-full object-contain" />
+            {images.length > 0 ? (
+                <img src={images[currentIndex]} alt={`${artwork.title} - Image ${currentIndex + 1}`} className="w-full h-full object-contain" />
             ) : (
                 <div className='text-gray-500'>이미지가 없습니다.</div>
+            )}
+            {hasMultipleImages && (
+              <>
+                <button onClick={goToPrevious} className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full p-2 hover:bg-black/60 transition-colors z-10" aria-label="이전 이미지">
+                    <Icon type="chevron-left" className="w-6 h-6" />
+                </button>
+                <button onClick={goToNext} className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full p-2 hover:bg-black/60 transition-colors z-10" aria-label="다음 이미지">
+                    <Icon type="chevron-right" className="w-6 h-6" />
+                </button>
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                    {images.map((_, slideIndex) => (
+                        <div
+                            key={slideIndex}
+                            className={`w-2 h-2 rounded-full cursor-pointer transition-colors ${currentIndex === slideIndex ? 'bg-white' : 'bg-white/50'}`}
+                            onClick={(e) => { e.stopPropagation(); setCurrentIndex(slideIndex); }}
+                        />
+                    ))}
+                </div>
+              </>
             )}
         </div>
         <div className="w-full md:w-1/3 p-6 md:p-8 flex flex-col overflow-y-auto">
