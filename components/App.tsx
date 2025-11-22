@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { Artwork, Exhibition } from '../types';
-import { supabase, uploadImage } from '../services/supabaseClient.ts';
+import { supabase, uploadImage, recordVisit, getVisitorCount } from '../services/supabaseClient.ts';
 import Header from './Header';
 import Gallery from './Gallery';
 import ArtworkDetailModal from './ArtworkDetailModal';
@@ -97,6 +97,7 @@ const App: React.FC = () => {
   const [galleryTitle, setGalleryTitle] = useState('김명진 포트폴리오');
   const [adminPassword, setAdminPassword] = useState('');
   const [landingBackgroundUrl, setLandingBackgroundUrl] = useState('');
+  const [visitorCount, setVisitorCount] = useState<number | null>(null);
 
   // Modals State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -119,6 +120,18 @@ const App: React.FC = () => {
       ...exhibition,
       image_urls: parseImageUrls(exhibition.image_urls),
   });
+
+  // Record visit on app mount
+  useEffect(() => {
+    recordVisit();
+  }, []);
+
+  // Fetch visitor count when admin mode is active
+  useEffect(() => {
+    if (isAdminMode) {
+      getVisitorCount().then(count => setVisitorCount(count));
+    }
+  }, [isAdminMode]);
 
   const fetchInitialData = useCallback(async () => {
     setIsLoading(true);
@@ -427,6 +440,7 @@ const App: React.FC = () => {
               onOpenChangePasswordSettings={() => setIsChangePasswordModalOpen(true)}
               showHomeButton={true}
               onNavigateHome={() => handleNavigate('landing')}
+              visitorCount={visitorCount}
             />
             <main className="container mx-auto">
               <Gallery 

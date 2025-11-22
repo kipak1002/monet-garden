@@ -11,6 +11,7 @@ interface HeaderProps {
   onOpenChangePasswordSettings: () => void;
   showHomeButton?: boolean;
   onNavigateHome?: () => void;
+  visitorCount?: number | null;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
@@ -22,7 +23,8 @@ const Header: React.FC<HeaderProps> = ({
   onTitleChange,
   onOpenChangePasswordSettings,
   showHomeButton,
-  onNavigateHome
+  onNavigateHome,
+  visitorCount
 }) => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editableTitle, setEditableTitle] = useState(galleryTitle);
@@ -141,7 +143,13 @@ const Header: React.FC<HeaderProps> = ({
                         <Icon type="cog" className="w-6 h-6" />
                     </button>
                     {isAdminMenuOpen && (
-                        <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-20 ring-1 ring-black ring-opacity-5">
+                        <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg py-2 z-20 ring-1 ring-black ring-opacity-5">
+                             {visitorCount !== undefined && visitorCount !== null && (
+                                <div className="px-4 py-2 text-sm text-gray-600 border-b border-gray-100 mb-1 flex justify-between items-center">
+                                    <span className="font-semibold">총 방문자 수</span>
+                                    <span className="bg-blue-100 text-blue-800 py-0.5 px-2 rounded-full text-xs">{visitorCount.toLocaleString()}명</span>
+                                </div>
+                            )}
                             <button
                                 onClick={() => {
                                     onOpenChangePasswordSettings();

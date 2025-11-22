@@ -55,3 +55,45 @@ export async function uploadImage(file: File | string): Promise<string> {
     
     return data.publicUrl;
 }
+
+/**
+ * Records a new visit in the visitor_logs table.
+ * Uses sessionStorage to prevent counting page refreshes as new visits within the same session.
+ */
+export async function recordVisit() {
+    const VISITED_KEY = 'has_visited_session';
+    
+    // If the user has already visited in this session, don't record again.
+    if (sessionStorage.getItem(VISITED_KEY)) {
+        return;
+    }
+
+    try {
+        const { error } = await supabase.from('visitor_logs').insert({});
+        if (!error) {
+            sessionStorage.setItem(VISITED_KEY, 'true');
+        } else {
+            // If table doesn't exist (404 or 42P01), just ignore silently to not break the app
+            console.warn("Visitor logging failed (Table might not exist):", error.message);
+        }
+    } catch (e) {
+        console.error("Error recording visit:", e);
+    }
+}
+
+/**
+ * Gets the total count of visitors.
+ */
+export async function getVisitorCount(): Promise<number> {
+    try {
+        const { count, error } = await supabase
+            .from('visitor_logs')
+            .select('*', { count: 'exact', head: true });
+            
+        if (error) throw error;
+        return count || 0;
+    } catch (e) {
+        console.warn("Failed to fetch visitor count:", e);
+        return 0;
+    }
+}
