@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://myungjin-portfolio.com/sitemap.xml
