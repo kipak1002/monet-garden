@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://myungjin-portfolio.com/sitemap.xml
+Sitemap: https://myungjin-kim.vercel.app/sitemap.xml
