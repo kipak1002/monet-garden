@@ -133,6 +133,7 @@ const App: React.FC = () => {
   const fetchInitialData = useCallback(async () => {
     setIsLoading(true);
     try {
+      // 1. 기초 설정 데이터 페칭
       const { data: settingsData, error: settingsError } = await supabase.from('settings').select('key, value');
       if (settingsError) throw settingsError;
       
@@ -141,21 +142,44 @@ const App: React.FC = () => {
       setAdminPassword(String(settingsMap.get('adminPassword') || '000000'));
       setLandingBackgroundUrl(String(settingsMap.get('landingBackgroundUrl') || ''));
 
-      const { data: artworksData, error: artworksError } = await supabase.from('artworks').select('*').order('created_at', { ascending: false });
-      if (artworksError) throw artworksError;
-      const processedArtworks = (artworksData || []).map(processArtwork);
-      setArtworks(processedArtworks);
-      setFilteredArtworks(processedArtworks);
+      // 2. 우선 순위 페칭: 최신 작품 4개만 먼저 가져오기
+      const { data: priorityArtworks, error: priorityError } = await supabase
+        .from('artworks')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .range(0, 3); // 0~3번 인덱스 (총 4개)
 
-      const { data: exhibitionsData, error: exhibitionsError } = await supabase.from('exhibitions').select('*').order('display_order', { ascending: false });
+      if (priorityError) throw priorityError;
+      
+      if (priorityArtworks) {
+        const processedPriority = priorityArtworks.map(processArtwork);
+        setArtworks(processedPriority);
+        setFilteredArtworks(processedPriority);
+      }
+
+      // 전시회 및 상상갤러리 정보도 기초 로딩에 포함 (데이터 양이 적으므로)
+      const { data: exhibitionsData } = await supabase.from('exhibitions').select('*').order('display_order', { ascending: false });
       if (exhibitionsData) setExhibitions((exhibitionsData || []).map(processExhibition));
 
-      const { data: imaginationData, error: imaginationError } = await supabase.from('imagination_gallery').select('*').order('display_order', { ascending: false });
+      const { data: imaginationData } = await supabase.from('imagination_gallery').select('*').order('display_order', { ascending: false });
       if (imaginationData) setImaginationArtworks(imaginationData);
+
+      // 여기까지 로딩되면 화면을 보여줌
+      setIsLoading(false);
+
+      // 3. 백그라운드 페칭: 나머지 전체 작품 데이터 가져오기
+      const { data: allArtworks, error: allArtworksError } = await supabase
+        .from('artworks')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (!allArtworksError && allArtworks) {
+        const processedAll = allArtworks.map(processArtwork);
+        setArtworks(processedAll);
+      }
 
     } catch (error) {
       console.error('Data fetch error:', error);
-    } finally {
       setIsLoading(false);
     }
   }, []);
