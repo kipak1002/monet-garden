@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import type { Artwork, Exhibition } from '../types';
 import { supabase, uploadImage, recordVisit, getVisitorCount } from '../services/supabaseClient.ts';
@@ -18,71 +19,38 @@ import EditExhibitionModal from './EditExhibitionModal';
 
 type Page = 'landing' | 'gallery' | 'profile' | 'exhibition';
 
-/**
- * A robust function to parse the `image_urls` field from Supabase.
- * This field might be a proper string array, a stringified JSON array,
- * a stringified Postgres array literal, or even a text[] column containing
- * a single string which is a stringified JSON array. This function aims to
- * handle all these cases gracefully.
- * @param urls - The input data from the database.
- * @returns A string array of URLs.
- */
+interface HistoryState {
+  page: Page;
+  selectedArtworkId?: number | null;
+}
+
 const parseImageUrls = (urls: unknown): string[] => {
-  if (!urls) {
-    return [];
-  }
-
+  if (!urls) return [];
   let dataToParse: any = urls;
-
-  // Case 1: The data is an array from Supabase. It might be the correct
-  // array of strings, OR it might be an array containing a single string
-  // that itself needs to be parsed (e.g., ['["url1", "url2"]']).
   if (Array.isArray(dataToParse)) {
     if (dataToParse.length === 1 && typeof dataToParse[0] === 'string') {
-      // It's a single-element array containing a string.
-      // We'll try to parse this string.
       dataToParse = dataToParse[0];
     } else {
-      // It's a multi-element array, assume it's the correct list of URLs.
       return dataToParse.filter((u): u is string => typeof u === 'string' && u.length > 0);
     }
   }
-
-  // At this point, dataToParse should be a string if it's not a valid multi-element array.
-  if (typeof dataToParse !== 'string') {
-    return [];
-  }
-
+  if (typeof dataToParse !== 'string') return [];
   const str = dataToParse.trim();
-  if (!str) {
-    return [];
-  }
-
-  // Case 2: The string is a JSON array, e.g., '["url1", "url2"]'
+  if (!str) return [];
   if (str.startsWith('[') && str.endsWith(']')) {
     try {
       const parsed = JSON.parse(str);
       if (Array.isArray(parsed)) {
         return parsed.filter((u): u is string => typeof u === 'string' && u.length > 0);
       }
-    } catch (e) {
-      // Not valid JSON, fall through to other methods.
-    }
+    } catch (e) {}
   }
-
-  // Case 3: The string is a Postgres array literal, e.g., '{"url1","url2"}'
   if (str.startsWith('{') && str.endsWith('}')) {
     const content = str.substring(1, str.length - 1);
-    // This is a simple parser. It splits by comma and trims quotes.
-    return content.split(',')
-      .map(item => item.trim().replace(/^"|"$/g, ''))
-      .filter(Boolean);
+    return content.split(',').map(item => item.trim().replace(/^"|"$/g, '')).filter(Boolean);
   }
-
-  // Case 4: Fallback for a single URL string.
   return [str];
 };
-
 
 const App: React.FC = () => {
   const [artworks, setArtworks] = useState<Artwork[]>([]);
@@ -121,12 +89,43 @@ const App: React.FC = () => {
       image_urls: parseImageUrls(exhibition.image_urls),
   });
 
-  // Record visit on app mount
+  // Browser History Management
   useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      const state = event.state as HistoryState;
+      if (state) {
+        setCurrentPage(state.page);
+        if (state.selectedArtworkId) {
+          const found = artworks.find(a => a.id === state.selectedArtworkId);
+          setSelectedArtwork(found || null);
+        } else {
+          setSelectedArtwork(null);
+        }
+      } else {
+        // Fallback for initial entry
+        setCurrentPage('landing');
+        setSelectedArtwork(null);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    
+    // Initial state setup
+    if (!window.history.state) {
+      window.history.replaceState({ page: 'landing', selectedArtworkId: null }, '');
+    }
+
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [artworks]);
+
+  const recordVisitOnMount = useCallback(() => {
     recordVisit();
   }, []);
 
-  // Fetch visitor count when admin mode is active
+  useEffect(() => {
+    recordVisitOnMount();
+  }, [recordVisitOnMount]);
+
   useEffect(() => {
     if (isAdminMode) {
       getVisitorCount().then(count => setVisitorCount(count));
@@ -136,7 +135,6 @@ const App: React.FC = () => {
   const fetchInitialData = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Fetch settings
       const { data: settingsData, error: settingsError } = await supabase.from('settings').select('key, value');
       if (settingsError) throw settingsError;
       
@@ -145,7 +143,6 @@ const App: React.FC = () => {
       setAdminPassword(String(settingsMap.get('adminPassword') || '000000'));
       setLandingBackgroundUrl(String(settingsMap.get('landingBackgroundUrl') || ''));
 
-      // Fetch artworks
       const { data: artworksData, error: artworksError } = await supabase.from('artworks').select('*').order('created_at', { ascending: false });
       if (artworksError) throw artworksError;
       
@@ -153,22 +150,13 @@ const App: React.FC = () => {
       setArtworks(processedArtworks);
       setFilteredArtworks(processedArtworks);
 
-      // Fetch exhibitions
       const { data: exhibitionsData, error: exhibitionsError } = await supabase.from('exhibitions').select('*').order('display_order', { ascending: false });
-      if (exhibitionsError) {
-        if (exhibitionsError.code === '42P01') { 
-          console.warn('Exhibitions table not found. Please create it in Supabase if you need this feature.');
-        } else {
-          throw exhibitionsError;
-        }
-      }
       if (exhibitionsData) {
         const processedExhibitions = (exhibitionsData || []).map(processExhibition);
         setExhibitions(processedExhibitions);
       }
-
     } catch (error) {
-      console.error('An unexpected error occurred during initial data fetch:', error);
+      console.error('Data fetch error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -187,10 +175,25 @@ const App: React.FC = () => {
     setFilteredArtworks(results);
   }, [searchTerm, artworks]);
   
-  // Page Navigation Handlers
-  const handleNavigate = (page: Page) => setCurrentPage(page);
+  // Navigation with History
+  const handleNavigate = (page: Page) => {
+    setCurrentPage(page);
+    window.history.pushState({ page, selectedArtworkId: null }, '');
+  };
 
-  // Admin Mode Handlers
+  const handleSelectArtwork = (artwork: Artwork | null) => {
+    setSelectedArtwork(artwork);
+    if (artwork) {
+      window.history.pushState({ page: currentPage, selectedArtworkId: artwork.id }, '');
+    } else {
+      // If manually closing via code (not back button), we want to go back in history if the current state was the artwork
+      const state = window.history.state as HistoryState;
+      if (state && state.selectedArtworkId) {
+        window.history.back();
+      }
+    }
+  };
+
   const handleToggleAdminMode = () => {
     if (isAdminMode) {
       setIsAdminMode(false);
@@ -208,13 +211,10 @@ const App: React.FC = () => {
     return false;
   };
   
-  // Settings Handlers
   const handleTitleChange = async (newTitle: string) => {
     setGalleryTitle(newTitle);
     try {
-      await supabase
-        .from('settings')
-        .upsert({ key: 'galleryTitle', value: newTitle }, { onConflict: 'key' });
+      await supabase.from('settings').upsert({ key: 'galleryTitle', value: newTitle }, { onConflict: 'key' });
     } catch (error) {
       console.error('Error updating title:', error);
       alert('제목 업데이트 중 오류가 발생했습니다.');
@@ -224,16 +224,12 @@ const App: React.FC = () => {
   const handleUpdateLandingBackground = async (imageFile: File): Promise<void> => {
     try {
       const newUrl = await uploadImage(imageFile);
-      const { error } = await supabase
-        .from('settings')
-        .upsert({ key: 'landingBackgroundUrl', value: newUrl }, { onConflict: 'key' });
-      
+      const { error } = await supabase.from('settings').upsert({ key: 'landingBackgroundUrl', value: newUrl }, { onConflict: 'key' });
       if (error) throw error;
-      
       setLandingBackgroundUrl(newUrl);
       alert('배경 이미지가 성공적으로 변경되었습니다.');
     } catch (error) {
-      console.error('Error updating background image:', error);
+      console.error('Error updating background:', error);
       alert('배경 이미지 업데이트 중 오류가 발생했습니다.');
       throw error;
     }
@@ -244,9 +240,7 @@ const App: React.FC = () => {
       return { success: false, message: '현재 비밀번호가 일치하지 않습니다.' };
     }
     try {
-      await supabase
-        .from('settings')
-        .upsert({ key: 'adminPassword', value: newPassword }, { onConflict: 'key' });
+      await supabase.from('settings').upsert({ key: 'adminPassword', value: newPassword }, { onConflict: 'key' });
       setAdminPassword(newPassword);
       setIsChangePasswordModalOpen(false);
       alert('비밀번호가 성공적으로 변경되었습니다.');
@@ -257,18 +251,11 @@ const App: React.FC = () => {
     }
   };
 
-  // Artwork CRUD Handlers
   const handleAddNewArtwork = async (newArtworkData: NewArtworkData) => {
     const uploadPromises = newArtworkData.images.map(imageFile => uploadImage(imageFile));
     const imageUrls = await Promise.all(uploadPromises);
-
     const { images, ...artworkDetails } = newArtworkData;
-
-    const { data, error } = await supabase
-      .from('artworks')
-      .insert([{ ...artworkDetails, image_urls: imageUrls }])
-      .select()
-      .single();
+    const { data, error } = await supabase.from('artworks').insert([{ ...artworkDetails, image_urls: imageUrls }]).select().single();
     if (error) throw error;
     const newArtwork = processArtwork(data);
     setArtworks(prev => [newArtwork, ...prev]);
@@ -278,12 +265,9 @@ const App: React.FC = () => {
   const handleUpdateArtwork = async (updatedArtwork: Artwork) => {
     const newImageDataUrls = updatedArtwork.image_urls.filter(url => url.startsWith('data:image'));
     const existingImageUrls = updatedArtwork.image_urls.filter(url => !url.startsWith('data:image'));
-
     const uploadPromises = newImageDataUrls.map(dataUrl => uploadImage(dataUrl));
     const newlyUploadedUrls = await Promise.all(uploadPromises);
-
     const finalImageUrls = [...existingImageUrls, ...newlyUploadedUrls];
-    
     const artworkDataToUpdate = {
       title: updatedArtwork.title,
       artist: updatedArtwork.artist,
@@ -292,13 +276,7 @@ const App: React.FC = () => {
       size: updatedArtwork.size,
       memo: updatedArtwork.memo,
     };
-
-    const { data, error } = await supabase
-      .from('artworks')
-      .update(artworkDataToUpdate)
-      .eq('id', updatedArtwork.id)
-      .select()
-      .single();
+    const { data, error } = await supabase.from('artworks').update(artworkDataToUpdate).eq('id', updatedArtwork.id).select().single();
     if (error) throw error;
     const freshArtwork = processArtwork(data);
     setArtworks(prev => prev.map(a => (a.id === updatedArtwork.id ? freshArtwork : a)));
@@ -319,19 +297,12 @@ const App: React.FC = () => {
     setItemTypeToDelete('');
   };
 
-  // Exhibition CRUD Handlers
   const handleAddExhibition = async (title: string, description: string, imageFiles: File[]) => {
     const maxOrder = exhibitions.length > 0 ? Math.max(...exhibitions.map(e => e.display_order || 0)) : 0;
     const newOrder = maxOrder + 1;
-
     const uploadPromises = imageFiles.map(file => uploadImage(file));
     const imageUrls = await Promise.all(uploadPromises);
-
-    const { data, error } = await supabase
-      .from('exhibitions')
-      .insert([{ title, description, image_urls: imageUrls, display_order: newOrder }])
-      .select()
-      .single();
+    const { data, error } = await supabase.from('exhibitions').insert([{ title, description, image_urls: imageUrls, display_order: newOrder }]).select().single();
     if (error) throw error;
     const newExhibition = processExhibition(data);
     setExhibitions(prev => [newExhibition, ...prev]);
@@ -340,25 +311,16 @@ const App: React.FC = () => {
   const handleUpdateExhibition = async (updatedExhibition: Exhibition) => {
     const newImageDataUrls = updatedExhibition.image_urls.filter(url => url.startsWith('data:image'));
     const existingImageUrls = updatedExhibition.image_urls.filter(url => !url.startsWith('data:image'));
-
     const uploadPromises = newImageDataUrls.map(dataUrl => uploadImage(dataUrl));
     const newlyUploadedUrls = await Promise.all(uploadPromises);
-
     const finalImageUrls = [...existingImageUrls, ...newlyUploadedUrls];
-    
     const exhibitionDataToUpdate = {
       title: updatedExhibition.title,
       description: updatedExhibition.description,
       image_urls: finalImageUrls,
       display_order: updatedExhibition.display_order,
     };
-
-    const { data, error } = await supabase
-      .from('exhibitions')
-      .update(exhibitionDataToUpdate)
-      .eq('id', updatedExhibition.id)
-      .select()
-      .single();
+    const { data, error } = await supabase.from('exhibitions').update(exhibitionDataToUpdate).eq('id', updatedExhibition.id).select().single();
     if (error) throw error;
     const freshExhibition = processExhibition(data);
     setExhibitions(prev => prev.map(e => (e.id === updatedExhibition.id ? freshExhibition : e)).sort((a, b) => b.display_order - a.display_order));
@@ -379,12 +341,10 @@ const App: React.FC = () => {
     setItemTypeToDelete('');
   };
 
-  // Modal Open/Close Handlers
   const openEditModal = (artwork: Artwork) => { setEditingArtwork(artwork); setIsEditModalOpen(true); };
   const openAddModal = () => setIsAddModalOpen(true);
   const openDeleteModal = (item: Artwork | Exhibition, type: '작품' | '전시회') => { setItemToDelete(item); setItemTypeToDelete(type); };
   const openEditExhibitionModal = (exhibition: Exhibition) => { setEditingExhibition(exhibition); setIsEditExhibitionModalOpen(true); };
-
   const closeDeleteModal = () => { setItemToDelete(null); setItemTypeToDelete(''); };
 
   if (isLoading) {
@@ -445,7 +405,7 @@ const App: React.FC = () => {
             <main className="container mx-auto">
               <Gallery 
                 artworks={filteredArtworks}
-                onSelectArtwork={setSelectedArtwork}
+                onSelectArtwork={handleSelectArtwork}
                 isAdminMode={isAdminMode}
                 onEditArtwork={openEditModal}
                 onDeleteArtwork={(art) => openDeleteModal(art, '작품')}
@@ -469,11 +429,9 @@ const App: React.FC = () => {
   return (
     <div className="bg-gray-100 min-h-screen font-sans">
       {renderPage()}
-
-      {/* Modals are now rendered at the top level, so they are available on all pages */}
       <ArtworkDetailModal
         artwork={selectedArtwork}
-        onClose={() => setSelectedArtwork(null)}
+        onClose={() => handleSelectArtwork(null)}
       />
       <EditArtworkModal 
         isOpen={isEditModalOpen}
