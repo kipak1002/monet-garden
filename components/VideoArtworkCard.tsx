@@ -29,6 +29,9 @@ const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({ item, isAdminMode, 
         <video 
           src={item.video_url} 
           controls 
+          loop
+          muted
+          playsInline
           className="w-full h-full object-contain"
           poster={item.original_image_url}
         />
