@@ -53,7 +53,6 @@ const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({ item, isAdminMode, 
             />
           </div>
           <div className="flex flex-col text-sm text-gray-600">
-            <p><span className="font-semibold text-gray-900">원화:</span> 별도 이미지 참조</p>
             <p><span className="font-semibold text-gray-900">크기:</span> {item.size}</p>
           </div>
         </div>
