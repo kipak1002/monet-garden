@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import Icon from './Icon';
 import Spinner from './Spinner';
@@ -6,6 +7,7 @@ interface LandingPageProps {
   onEnterGallery: () => void;
   onEnterProfile: () => void;
   onEnterExhibition: () => void;
+  onEnterImagination: () => void;
   galleryTitle: string;
   subtitle?: string;
   backgroundImageUrl: string;
@@ -18,7 +20,8 @@ const DEFAULT_BACKGROUND_IMAGE = "https://images.unsplash.com/photo-153197357616
 const LandingPage: React.FC<LandingPageProps> = ({ 
   onEnterGallery, 
   onEnterProfile, 
-  onEnterExhibition, 
+  onEnterExhibition,
+  onEnterImagination,
   galleryTitle, 
   subtitle,
   backgroundImageUrl,
@@ -82,24 +85,30 @@ const LandingPage: React.FC<LandingPageProps> = ({
             {subtitle}
           </p>
         )}
-        <div className="mt-12 flex flex-col items-center gap-10">
-            <div className="flex justify-center gap-12 md:gap-16">
+        <div className="mt-12 flex flex-col items-center gap-6">
+            <div className="flex flex-wrap justify-center gap-6 md:gap-12">
                 <div className="flex flex-col items-center gap-3 group cursor-pointer" onClick={onEnterProfile}>
-                    <div className="w-24 h-24 md:w-36 md:h-36 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20 shadow-lg group-hover:bg-white/20 transition-all duration-300 transform group-hover:scale-105">
-                        <Icon type="profile" className="w-12 h-12 md:w-16 md:h-16 text-white transition-colors" />
+                    <div className="w-20 h-20 md:w-28 md:h-28 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20 shadow-lg group-hover:bg-white/20 transition-all duration-300 transform group-hover:scale-105">
+                        <Icon type="profile" className="w-10 h-10 md:w-14 md:h-14 text-white transition-colors" />
                     </div>
                     <span className="font-medium text-gray-200 group-hover:text-white transition-colors">작가 프로필</span>
                 </div>
                 <div className="flex flex-col items-center gap-3 group cursor-pointer" onClick={onEnterExhibition}>
-                    <div className="w-24 h-24 md:w-36 md:h-36 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20 shadow-lg group-hover:bg-white/20 transition-all duration-300 transform group-hover:scale-105">
-                        <Icon type="exhibition" className="w-12 h-12 md:w-16 md:h-16 text-white transition-colors" />
+                    <div className="w-20 h-20 md:w-28 md:h-28 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20 shadow-lg group-hover:bg-white/20 transition-all duration-300 transform group-hover:scale-105">
+                        <Icon type="exhibition" className="w-10 h-10 md:w-14 md:h-14 text-white transition-colors" />
                     </div>
                     <span className="font-medium text-gray-200 group-hover:text-white transition-colors">Exhibition</span>
+                </div>
+                <div className="flex flex-col items-center gap-3 group cursor-pointer" onClick={onEnterImagination}>
+                    <div className="w-20 h-20 md:w-28 md:h-28 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20 shadow-lg group-hover:bg-white/20 transition-all duration-300 transform group-hover:scale-105">
+                        <Icon type="video" className="w-10 h-10 md:w-14 md:h-14 text-white transition-colors" />
+                    </div>
+                    <span className="font-medium text-gray-200 group-hover:text-white transition-colors">상상갤러리</span>
                 </div>
             </div>
             <button
               onClick={onEnterGallery}
-              className="inline-flex items-center justify-center bg-white text-blue-700 font-bold py-3 px-8 rounded-full shadow-lg hover:bg-gray-200 transition-all duration-300 transform hover:scale-105"
+              className="mt-4 inline-flex items-center justify-center bg-white text-blue-700 font-bold py-3 px-10 rounded-full shadow-lg hover:bg-gray-200 transition-all duration-300 transform hover:scale-105"
             >
               <Icon type="sparkles" className="w-6 h-6 mr-3" />
               갤러리 입장

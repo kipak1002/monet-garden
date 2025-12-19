@@ -1,3 +1,4 @@
+
 export interface Artwork {
   id: number;
   created_at: string;
@@ -15,5 +16,16 @@ export interface Exhibition {
   title: string;
   image_urls: string[];
   description?: string | null;
+  display_order: number;
+}
+
+export interface ImaginationArtwork {
+  id: number;
+  created_at: string;
+  title: string;
+  video_url: string;
+  original_image_url: string;
+  size: string;
+  year: number;
   display_order: number;
 }
