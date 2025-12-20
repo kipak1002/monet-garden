@@ -5,12 +5,14 @@ import Spinner from './Spinner';
 import Icon from './Icon';
 import VideoArtworkCard from './VideoArtworkCard';
 import AddImaginationModal from './AddImaginationModal';
+import EditImaginationModal from './EditImaginationModal';
 
 interface ImaginationGalleryPageProps {
   onNavigateHome: () => void;
   isAdminMode: boolean;
   imaginationArtworks: ImaginationArtwork[];
   onAddImagination: (title: string, size: string, year: number, videoFile: File, originalImage: File) => Promise<void>;
+  onUpdateImagination: (id: number, title: string, size: string, year: number, videoFile?: File, originalImage?: File) => Promise<void>;
   onDeleteImagination: (item: ImaginationArtwork) => void;
   onToggleAdminMode: () => void;
   onOpenChangePasswordSettings: () => void;
@@ -21,11 +23,14 @@ const ImaginationGalleryPage: React.FC<ImaginationGalleryPageProps> = ({
   isAdminMode,
   imaginationArtworks,
   onAddImagination,
+  onUpdateImagination,
   onDeleteImagination,
   onToggleAdminMode,
   onOpenChangePasswordSettings
 }) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<ImaginationArtwork | null>(null);
   const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
   const adminMenuRef = React.useRef<HTMLDivElement>(null);
 
@@ -38,6 +43,11 @@ const ImaginationGalleryPage: React.FC<ImaginationGalleryPageProps> = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const handleEditClick = (item: ImaginationArtwork) => {
+    setEditingItem(item);
+    setIsEditModalOpen(true);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
@@ -78,6 +88,7 @@ const ImaginationGalleryPage: React.FC<ImaginationGalleryPageProps> = ({
               key={item.id} 
               item={item} 
               isAdminMode={isAdminMode} 
+              onEdit={() => handleEditClick(item)}
               onDelete={() => onDeleteImagination(item)} 
             />
           )) : (
@@ -102,6 +113,13 @@ const ImaginationGalleryPage: React.FC<ImaginationGalleryPageProps> = ({
         isOpen={isAddModalOpen} 
         onClose={() => setIsAddModalOpen(false)} 
         onAdd={onAddImagination} 
+      />
+
+      <EditImaginationModal 
+        isOpen={isEditModalOpen}
+        onClose={() => { setIsEditModalOpen(false); setEditingItem(null); }}
+        itemToEdit={editingItem}
+        onUpdate={onUpdateImagination}
       />
     </div>
   );

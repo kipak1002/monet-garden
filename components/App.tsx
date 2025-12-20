@@ -322,6 +322,21 @@ const App: React.FC = () => {
     setImaginationArtworks(prev => [data, ...prev]);
   };
 
+  const handleUpdateImagination = async (id: number, title: string, size: string, year: number, videoFile?: File, originalImage?: File) => {
+    const updates: any = { title, size, year };
+    
+    if (videoFile) {
+        updates.video_url = await uploadImage(videoFile);
+    }
+    if (originalImage) {
+        updates.original_image_url = await uploadImage(originalImage);
+    }
+    
+    const { data, error } = await supabase.from('imagination_gallery').update(updates).eq('id', id).select().single();
+    if (error) throw error;
+    setImaginationArtworks(prev => prev.map(i => (i.id === id ? data : i)));
+  };
+
   const openEditModal = (artwork: Artwork) => { setEditingArtwork(artwork); setIsEditModalOpen(true); };
   const openAddModal = () => setIsAddModalOpen(true);
   const openDeleteModal = (item: any, type: '작품' | '전시회' | '상상작품') => { setItemToDelete(item); setItemTypeToDelete(type); };
@@ -367,6 +382,7 @@ const App: React.FC = () => {
                   isAdminMode={isAdminMode}
                   imaginationArtworks={imaginationArtworks}
                   onAddImagination={handleAddImagination}
+                  onUpdateImagination={handleUpdateImagination}
                   onDeleteImagination={(item) => openDeleteModal(item, '상상작품')}
                   onToggleAdminMode={handleToggleAdminMode}
                   onOpenChangePasswordSettings={() => setIsChangePasswordModalOpen(true)}

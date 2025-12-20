@@ -6,17 +6,25 @@ import Icon from './Icon';
 interface VideoArtworkCardProps {
   item: ImaginationArtwork;
   isAdminMode: boolean;
+  onEdit: () => void;
   onDelete: () => void;
 }
 
-const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({ item, isAdminMode, onDelete }) => {
+const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({ item, isAdminMode, onEdit, onDelete }) => {
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col group relative border border-gray-100 transition-all hover:shadow-2xl">
       {isAdminMode && (
-        <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute top-2 right-2 z-10 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button 
+            onClick={(e) => { e.stopPropagation(); onEdit(); }}
+            className="bg-white text-gray-700 p-2 rounded-full shadow-md hover:bg-blue-500 hover:text-white transition-all"
+            title="수정"
+          >
+            <Icon type="edit" className="w-5 h-5" />
+          </button>
           <button 
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            className="bg-red-500 text-white p-2 rounded-full shadow-md hover:bg-red-600"
+            className="bg-white text-red-500 p-2 rounded-full shadow-md hover:bg-red-500 hover:text-white transition-all"
             title="삭제"
           >
             <Icon type="trash" className="w-5 h-5" />
