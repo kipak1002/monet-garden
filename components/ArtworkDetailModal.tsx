@@ -1,6 +1,8 @@
+
 import React, { useEffect, useState } from 'react';
 import type { Artwork } from '../types';
 import Icon from './Icon';
+import Linkify from './Linkify';
 
 interface ArtworkDetailModalProps {
   artwork: Artwork | null;
@@ -98,7 +100,9 @@ const ArtworkDetailModal: React.FC<ArtworkDetailModalProps> = ({
           {artwork.memo && (
             <div className="mt-4 pt-4 border-t">
               <h4 className="text-md font-semibold text-gray-800">메모:</h4>
-              <p className="text-gray-700 whitespace-pre-wrap leading-relaxed bg-gray-50 p-3 rounded-md mt-1">{artwork.memo}</p>
+              <p className="text-gray-700 whitespace-pre-wrap leading-relaxed bg-gray-50 p-3 rounded-md mt-1">
+                <Linkify text={artwork.memo} />
+              </p>
             </div>
            )}
         </div>

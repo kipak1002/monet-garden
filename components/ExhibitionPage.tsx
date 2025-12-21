@@ -1,7 +1,9 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import type { Exhibition } from '../types';
 import Spinner from './Spinner';
 import Icon from './Icon';
+import Linkify from './Linkify';
 
 interface ExhibitionPageProps {
   onNavigateHome: () => void;
@@ -47,7 +49,7 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const files = Array.from(e.target.files);
+      const files: File[] = Array.from(e.target.files);
       const filePreviews = files.map(file => URL.createObjectURL(file));
       
       setNewExhibition(prev => ({
@@ -265,7 +267,9 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
                   <div className="p-6">
                     <h3 className="text-xl font-bold text-gray-800">{ex.title}</h3>
                      {ex.description && (
-                      <p className="mt-2 text-base text-gray-700 whitespace-pre-wrap">{ex.description}</p>
+                      <p className="mt-2 text-base text-gray-700 whitespace-pre-wrap">
+                        <Linkify text={ex.description} />
+                      </p>
                     )}
                   </div>
 
