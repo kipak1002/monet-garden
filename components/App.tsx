@@ -314,6 +314,29 @@ const App: React.FC = () => {
     setExhibitions(prev => [processExhibition(data), ...prev]);
   };
 
+  const handleUpdateExhibition = async (updatedExhibition: Exhibition) => {
+    const newImageDataUrls = (updatedExhibition.image_urls || []).filter(url => url.startsWith('data:image'));
+    const existingImageUrls = (updatedExhibition.image_urls || []).filter(url => !url.startsWith('data:image'));
+    const uploadPromises = newImageDataUrls.map(dataUrl => uploadImage(dataUrl));
+    const newlyUploadedUrls = await Promise.all(uploadPromises);
+    const finalImageUrls = [...existingImageUrls, ...newlyUploadedUrls];
+    
+    const { data, error } = await supabase
+        .from('exhibitions')
+        .update({ 
+            title: updatedExhibition.title, 
+            description: updatedExhibition.description, 
+            image_urls: finalImageUrls 
+        })
+        .eq('id', updatedExhibition.id)
+        .select()
+        .single();
+        
+    if (error) throw error;
+    setExhibitions(prev => prev.map(e => (e.id === updatedExhibition.id ? processExhibition(data) : e)));
+    setIsEditExhibitionModalOpen(false);
+  };
+
   const handleAddImagination = async (title: string, size: string, year: number, videoFile: File, originalImage: File) => {
     const maxOrder = imaginationArtworks.length > 0 ? Math.max(...imaginationArtworks.map(i => i.display_order || 0)) : 0;
     const [videoUrl, imageUrl] = await Promise.all([uploadImage(videoFile), uploadImage(originalImage)]);
@@ -338,6 +361,7 @@ const App: React.FC = () => {
   };
 
   const openEditModal = (artwork: Artwork) => { setEditingArtwork(artwork); setIsEditModalOpen(true); };
+  const openEditExhibitionModal = (exhibition: Exhibition) => { setEditingExhibition(exhibition); setIsEditExhibitionModalOpen(true); };
   const openAddModal = () => setIsAddModalOpen(true);
   const openDeleteModal = (item: any, type: '작품' | '전시회' | '상상작품') => { setItemToDelete(item); setItemTypeToDelete(type); };
   const closeDeleteModal = () => { setItemToDelete(null); setItemTypeToDelete(''); };
@@ -370,7 +394,7 @@ const App: React.FC = () => {
                   isAdminMode={isAdminMode} 
                   exhibitions={exhibitions}
                   onAddExhibition={handleAddExhibition}
-                  onEditExhibition={(ex) => {}} 
+                  onEditExhibition={openEditExhibitionModal} 
                   onDeleteExhibition={(ex) => openDeleteModal(ex, '전시회')}
                   isLoading={isLoading}
                   onToggleAdminMode={handleToggleAdminMode}
@@ -435,7 +459,7 @@ const App: React.FC = () => {
       <ConfirmDeleteModal isOpen={!!itemToDelete} onClose={closeDeleteModal} onConfirm={handleDeleteArtwork} itemNameToDelete={itemToDelete?.title || ''} itemType={itemTypeToDelete || ''} />
       <AdminPasswordModal isOpen={isPasswordPromptOpen} onClose={() => setIsPasswordPromptOpen(false)} onSubmit={handleAdminPasswordSubmit} />
       <ChangePasswordModal isOpen={isChangePasswordModalOpen} onClose={() => setIsChangePasswordModalOpen(false)} onUpdatePassword={handleUpdatePassword} />
-      <EditExhibitionModal isOpen={isEditExhibitionModalOpen} onClose={() => setIsEditExhibitionModalOpen(false)} exhibitionToEdit={editingExhibition} onUpdate={async (ex) => {}} />
+      <EditExhibitionModal isOpen={isEditExhibitionModalOpen} onClose={() => setIsEditExhibitionModalOpen(false)} exhibitionToEdit={editingExhibition} onUpdate={handleUpdateExhibition} />
     </div>
   );
 };
