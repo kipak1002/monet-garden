@@ -47,6 +47,6 @@ export async function generateArtworkMemo(imageDataUrl: string): Promise<string>
     return response.text?.trim() || "";
   } catch (error) {
     console.error("Error generating artwork memo with Gemini:", error);
-    throw new Error("AI로 메모를 생성하는 데 실패했습니다. 네트워크 연결을 확인하거나 나중에 다시 시도해주세요.");
+    throw new Error("AI로 메모를 생성하sss는 데 실패했습니다. 네트워크 연결을 확인하거나 나중에 다시 시도해주세요.");
   }
 }
