@@ -75,102 +75,140 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="bg-white/80 backdrop-blur-md sticky top-0 z-10 shadow-sm p-4">
-      <div className="container mx-auto flex justify-between items-center gap-4">
-        <div className="flex items-center gap-2 md:gap-4 min-w-0 flex-shrink-1">
+    <header className="bg-white/90 backdrop-blur-md sticky top-0 z-20 shadow-sm p-3 md:p-4">
+      <div className="container mx-auto flex flex-col md:flex-row md:items-center gap-3 md:gap-6">
+        {/* Top Row: Home, Title, and Admin Controls */}
+        <div className="flex justify-between items-center gap-2 min-w-0 flex-1">
+          <div className="flex items-center gap-2 md:gap-4 min-w-0">
             {showHomeButton && (
-                 <button
-                    onClick={onNavigateHome}
-                    className="font-semibold text-blue-600 hover:text-blue-800 transition-colors pr-2 md:pr-4 border-r border-gray-300 flex-shrink-0"
-                >
-                    HOME
-                </button>
+              <button
+                onClick={onNavigateHome}
+                className="font-semibold text-blue-600 hover:text-blue-800 transition-colors pr-2 md:pr-4 border-r border-gray-300 flex-shrink-0 text-sm md:text-base"
+              >
+                HOME
+              </button>
             )}
             <div className="flex items-center gap-2 min-w-0">
-                {isEditingTitle ? (
-                     <input
-                        ref={titleInputRef}
-                        type="text"
-                        value={editableTitle}
-                        onChange={(e) => setEditableTitle(e.target.value)}
-                        onBlur={handleTitleSave}
-                        onKeyDown={handleKeyDown}
-                        className="text-xl md:text-3xl font-bold text-gray-800 tracking-tight bg-transparent border-b-2 border-blue-500 focus:outline-none w-full"
-                    />
-                ) : isAdminMode ? (
-                    <button
-                        onClick={() => setIsEditingTitle(true)}
-                        className="flex items-center gap-2 group min-w-0"
-                        title="갤러리 제목 편집"
-                    >
-                        <h1 className="text-xl md:text-3xl font-bold text-gray-800 tracking-tight group-hover:text-blue-600 transition-colors truncate">
-                            {galleryTitle}
-                        </h1>
-                        <div className="text-gray-500 group-hover:text-blue-600 transition-colors flex-shrink-0">
-                            <Icon type="edit" className="w-4 h-4 md:w-5 md:h-5" />
-                        </div>
-                    </button>
-                ) : (
-                    <h1 className="text-xl md:text-3xl font-bold text-gray-800 tracking-tight truncate">
-                        {galleryTitle}
-                    </h1>
-                )}
+              {isEditingTitle ? (
+                <input
+                  ref={titleInputRef}
+                  type="text"
+                  value={editableTitle}
+                  onChange={(e) => setEditableTitle(e.target.value)}
+                  onBlur={handleTitleSave}
+                  onKeyDown={handleKeyDown}
+                  className="text-lg md:text-2xl font-bold text-gray-800 tracking-tight bg-transparent border-b-2 border-blue-500 focus:outline-none w-full"
+                />
+              ) : isAdminMode ? (
+                <button
+                  onClick={() => setIsEditingTitle(true)}
+                  className="flex items-center gap-2 group min-w-0"
+                  title="갤러리 제목 편집"
+                >
+                  <h1 className="text-lg md:text-2xl font-bold text-gray-800 tracking-tight group-hover:text-blue-600 transition-colors truncate">
+                    {galleryTitle}
+                  </h1>
+                  <div className="text-gray-500 group-hover:text-blue-600 transition-colors flex-shrink-0">
+                    <Icon type="edit" className="w-4 h-4 md:w-5 md:h-5" />
+                  </div>
+                </button>
+              ) : (
+                <h1 className="text-lg md:text-2xl font-bold text-gray-800 tracking-tight truncate">
+                  {galleryTitle}
+                </h1>
+              )}
             </div>
-        </div>
-        <div className="flex items-center gap-2 md:gap-4 flex-1 justify-end">
-            <div className="relative w-full max-w-[200px] md:max-w-xs">
-              <input
-                type="text"
-                placeholder="작품 검색..."
-                value={searchTerm}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-              />
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                <Icon type="search" className="w-5 h-5" />
-              </div>
-            </div>
+          </div>
+
+          {/* Admin Buttons (Mobile) */}
+          <div className="flex md:hidden items-center gap-2 flex-shrink-0">
             {isAdminMode && (
-                <div className="relative" ref={adminMenuRef}>
-                    <button
-                        onClick={() => setIsAdminMenuOpen(prev => !prev)}
-                        title="관리자 설정"
-                        className="p-2 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 transition-colors"
-                        aria-haspopup="true"
-                        aria-expanded={isAdminMenuOpen}
-                        aria-label="관리자 설정"
-                    >
-                        <Icon type="cog" className="w-6 h-6" />
-                    </button>
-                    {isAdminMenuOpen && (
-                        <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg py-2 z-20 ring-1 ring-black ring-opacity-5">
-                             {visitorCount !== undefined && visitorCount !== null && (
-                                <div className="px-4 py-2 text-sm text-gray-600 border-b border-gray-100 mb-1 flex justify-between items-center">
-                                    <span className="font-semibold">총 방문자 수</span>
-                                    <span className="bg-blue-100 text-blue-800 py-0.5 px-2 rounded-full text-xs">{visitorCount.toLocaleString()}명</span>
-                                </div>
-                            )}
-                            <button
-                                onClick={() => {
-                                    onOpenChangePasswordSettings();
-                                    setIsAdminMenuOpen(false);
-                                }}
-                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
-                            >
-                                <Icon type="key" className="w-5 h-5 text-gray-500" />
-                                <span>관리자 비밀번호 변경</span>
-                            </button>
-                        </div>
+              <div className="relative" ref={adminMenuRef}>
+                <button
+                  onClick={() => setIsAdminMenuOpen(prev => !prev)}
+                  className="p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+                >
+                  <Icon type="cog" className="w-5 h-5" />
+                </button>
+                {isAdminMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-2 z-30 ring-1 ring-black ring-opacity-5">
+                    {visitorCount !== undefined && visitorCount !== null && (
+                      <div className="px-4 py-2 text-xs text-gray-600 border-b border-gray-100 mb-1 flex justify-between items-center">
+                        <span className="font-semibold">방문자</span>
+                        <span className="bg-blue-100 text-blue-800 py-0.5 px-2 rounded-full">{visitorCount.toLocaleString()}</span>
+                      </div>
                     )}
-                </div>
+                    <button
+                      onClick={() => { onOpenChangePasswordSettings(); setIsAdminMenuOpen(false); }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
+                    >
+                      <Icon type="key" className="w-4 h-4 text-gray-500" />
+                      <span>비밀번호 변경</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
             <button
               onClick={onToggleAdminMode}
-              title={isAdminMode ? "관리자 모드 종료" : "관리자 모드 시작"}
-              className={`p-2 rounded-full transition-colors duration-300 ${isAdminMode ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}
+              className={`p-2 rounded-full transition-colors duration-300 ${isAdminMode ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}
             >
-              <Icon type="shield-check" className="w-6 h-6" />
+              <Icon type="shield-check" className="w-5 h-5" />
             </button>
+          </div>
+        </div>
+
+        {/* Search Bar Row (Full width on mobile, max-w-xs on desktop) */}
+        <div className="w-full md:max-w-xs md:ml-auto">
+          <div className="relative w-full">
+            <input
+              type="text"
+              placeholder="작품 검색..."
+              value={searchTerm}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 md:py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors text-sm md:text-base bg-gray-50 md:bg-white"
+            />
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+              <Icon type="search" className="w-4 h-4 md:w-5 md:h-5" />
+            </div>
+          </div>
+        </div>
+
+        {/* Admin Buttons (Desktop) */}
+        <div className="hidden md:flex items-center gap-4 flex-shrink-0">
+          {isAdminMode && (
+            <div className="relative" ref={adminMenuRef}>
+              <button
+                onClick={() => setIsAdminMenuOpen(prev => !prev)}
+                className="p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+              >
+                <Icon type="cog" className="w-6 h-6" />
+              </button>
+              {isAdminMenuOpen && (
+                <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg py-2 z-30 ring-1 ring-black ring-opacity-5">
+                  {visitorCount !== undefined && visitorCount !== null && (
+                    <div className="px-4 py-2 text-sm text-gray-600 border-b border-gray-100 mb-1 flex justify-between items-center">
+                      <span className="font-semibold">총 방문자 수</span>
+                      <span className="bg-blue-100 text-blue-800 py-0.5 px-2 rounded-full text-xs">{visitorCount.toLocaleString()}명</span>
+                    </div>
+                  )}
+                  <button
+                    onClick={() => { onOpenChangePasswordSettings(); setIsAdminMenuOpen(false); }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
+                  >
+                    <Icon type="key" className="w-5 h-5 text-gray-500" />
+                    <span>관리자 비밀번호 변경</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+          <button
+            onClick={onToggleAdminMode}
+            className={`p-2 rounded-full transition-colors duration-300 ${isAdminMode ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}
+          >
+            <Icon type="shield-check" className="w-6 h-6" />
+          </button>
         </div>
       </div>
     </header>
