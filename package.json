@@ -10,7 +10,8 @@
     "dev": "vite",
     "build": "chmod +x ./node_modules/.bin/vite && vite build",
     "preview": "vite preview",
-    "vercel-build": "npm run build"
+    "vercel-build": "npm run build",
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
     "@google/genai": "^0.15.0",

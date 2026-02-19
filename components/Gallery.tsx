@@ -22,9 +22,10 @@ const Gallery: React.FC<GalleryProps> = ({ artworks, onSelectArtwork, isAdminMod
   
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-6">
-      {artworks.map((artwork) => (
+      {artworks.map((artwork, index) => (
         <ArtworkCard 
           key={artwork.id} 
+          index={index}
           artwork={artwork} 
           onSelect={onSelectArtwork}
           isAdminMode={isAdminMode}

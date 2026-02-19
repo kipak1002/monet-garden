@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import type { ImaginationArtwork } from '../types';
-import Spinner from './Spinner';
 import Icon from './Icon';
 import VideoArtworkCard from './VideoArtworkCard';
 import AddImaginationModal from './AddImaginationModal';

@@ -142,12 +142,12 @@ const App: React.FC = () => {
       setAdminPassword(String(settingsMap.get('adminPassword') || '000000'));
       setLandingBackgroundUrl(String(settingsMap.get('landingBackgroundUrl') || ''));
 
-      // 2. 우선 순위 페칭: 최신 작품 4개만 먼저 가져오기
+      // 2. 우선 순위 페칭: 최신 작품 3개만 먼저 가져오기
       const { data: priorityArtworks, error: priorityError } = await supabase
         .from('artworks')
         .select('*')
         .order('created_at', { ascending: false })
-        .range(0, 3); // 0~3번 인덱스 (총 4개)
+        .range(0, 2); // 0~2번 인덱스 (총 3개)
 
       if (priorityError) throw priorityError;
       

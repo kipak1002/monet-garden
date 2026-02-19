@@ -4,17 +4,26 @@ import Icon from './Icon';
 
 interface ArtworkCardProps {
   artwork: Artwork;
+  index: number;
   onSelect: (artwork: Artwork) => void;
   isAdminMode: boolean;
   onEdit: (artwork: Artwork) => void;
   onDelete: (artwork: Artwork) => void;
 }
 
-const ArtworkCard: React.FC<ArtworkCardProps> = ({ artwork, onSelect, isAdminMode, onEdit, onDelete }) => {
+const ArtworkCard: React.FC<ArtworkCardProps> = ({ artwork, index, onSelect, isAdminMode, onEdit, onDelete }) => {
   const cardRef = useRef<HTMLDivElement | null>(null);
   const [isIntersecting, setIsIntersecting] = useState(false);
 
   useEffect(() => {
+    // 최신 3개 작품은 순차적으로 로딩 (0.4초 간격)
+    if (index < 3) {
+      const timer = setTimeout(() => {
+        setIsIntersecting(true);
+      }, index * 400);
+      return () => clearTimeout(timer);
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -23,7 +32,7 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ artwork, onSelect, isAdminMod
         }
       },
       {
-        rootMargin: '0px 0px 200px 0px', // Pre-load images 200px before they enter the viewport
+        rootMargin: '0px 0px 200px 0px',
       }
     );
 
@@ -83,6 +92,7 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ artwork, onSelect, isAdminMod
           <img
             src={thumbnailUrl}
             alt={artwork.title}
+            loading={index < 3 ? "eager" : "lazy"}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 animate-fade-in"
           />
         ) : (
