@@ -77,16 +77,16 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <header className="bg-white/80 backdrop-blur-md sticky top-0 z-10 shadow-sm p-4">
       <div className="container mx-auto flex justify-between items-center gap-4">
-        <div className="flex items-center gap-4 flex-shrink-0 mr-4">
+        <div className="flex items-center gap-2 md:gap-4 min-w-0 flex-shrink-1">
             {showHomeButton && (
                  <button
                     onClick={onNavigateHome}
-                    className="font-semibold text-blue-600 hover:text-blue-800 transition-colors pr-4 border-r border-gray-300"
+                    className="font-semibold text-blue-600 hover:text-blue-800 transition-colors pr-2 md:pr-4 border-r border-gray-300 flex-shrink-0"
                 >
                     HOME
                 </button>
             )}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0">
                 {isEditingTitle ? (
                      <input
                         ref={titleInputRef}
@@ -95,30 +95,30 @@ const Header: React.FC<HeaderProps> = ({
                         onChange={(e) => setEditableTitle(e.target.value)}
                         onBlur={handleTitleSave}
                         onKeyDown={handleKeyDown}
-                        className="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight bg-transparent border-b-2 border-blue-500 focus:outline-none w-full"
+                        className="text-xl md:text-3xl font-bold text-gray-800 tracking-tight bg-transparent border-b-2 border-blue-500 focus:outline-none w-full"
                     />
                 ) : isAdminMode ? (
                     <button
                         onClick={() => setIsEditingTitle(true)}
-                        className="flex items-center gap-2 group"
+                        className="flex items-center gap-2 group min-w-0"
                         title="갤러리 제목 편집"
                     >
-                        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight group-hover:text-blue-600 transition-colors">
+                        <h1 className="text-xl md:text-3xl font-bold text-gray-800 tracking-tight group-hover:text-blue-600 transition-colors truncate">
                             {galleryTitle}
                         </h1>
-                        <div className="text-gray-500 group-hover:text-blue-600 transition-colors">
-                            <Icon type="edit" className="w-5 h-5" />
+                        <div className="text-gray-500 group-hover:text-blue-600 transition-colors flex-shrink-0">
+                            <Icon type="edit" className="w-4 h-4 md:w-5 md:h-5" />
                         </div>
                     </button>
                 ) : (
-                    <h1 className="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">
+                    <h1 className="text-xl md:text-3xl font-bold text-gray-800 tracking-tight truncate">
                         {galleryTitle}
                     </h1>
                 )}
             </div>
         </div>
-        <div className="flex items-center gap-4">
-            <div className="relative w-full max-w-xs">
+        <div className="flex items-center gap-2 md:gap-4 flex-1 justify-end">
+            <div className="relative w-full max-w-[200px] md:max-w-xs">
               <input
                 type="text"
                 placeholder="작품 검색..."
