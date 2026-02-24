@@ -28,13 +28,17 @@ async function dataUrlToBlob(dataUrl: string): Promise<Blob> {
  */
 async function compressImageFile(file: File | Blob): Promise<File | Blob> {
     const options = {
-        maxSizeMB: 1,            // Max file size 1MB
-        maxWidthOrHeight: 1920, // Max width/height 1920px
+        maxSizeMB: 0.8,           // Target size under 800KB
+        maxWidthOrHeight: 1600, // Slightly smaller max dimension for better compression
         useWebWorker: true,
-        fileType: 'image/webp'  // Convert to webp
+        fileType: 'image/webp', // Force webp
+        initialQuality: 0.7,    // Start with 70% quality
+        alwaysKeepResolution: false // Allow resolution reduction to meet size target
     };
     try {
+        console.log(`Original size: ${(file.size / 1024 / 1024).toFixed(2)} MB`);
         const compressedFile = await imageCompression(file as File, options);
+        console.log(`Compressed size: ${(compressedFile.size / 1024 / 1024).toFixed(2)} MB`);
         return compressedFile;
     } catch (error) {
         console.error("Image compression error:", error);
