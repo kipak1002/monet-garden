@@ -1,17 +1,13 @@
 // services/supabaseClient.ts
 import { createClient } from '@supabase/supabase-js';
+import imageCompression from 'browser-image-compression';
 
 // Supabase 접속 정보는 .env.local 파일에서 안전하게 불러옵니다.
-// .env.local 파일이 없거나 내용이 비어있으면 앱이 작동하지 않습니다.
-// VITE_SUPABASE_URL="YOUR_URL"
-// VITE_SUPABASE_ANON_KEY="YOUR_KEY"
+// ... (existing comments)
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// ======================= 디버깅을 위한 임시 코드 =======================
-// 이 코드는 앱이 어떤 Supabase 주소로 연결을 시도하는지 브라우저 콘솔에 보여줍니다.
-console.log("현재 연결 시도 중인 Supabase URL:", supabaseUrl);
-// =====================================================================
+// ... (existing debug code)
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error("Supabase URL and Anon Key are required. Make sure you have a .env.local file with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY variables.");
@@ -26,18 +22,45 @@ async function dataUrlToBlob(dataUrl: string): Promise<Blob> {
 }
 
 /**
+ * Compresses an image file.
+ * @param file - The image file to compress.
+ * @returns A compressed Blob.
+ */
+async function compressImageFile(file: File | Blob): Promise<File | Blob> {
+    const options = {
+        maxSizeMB: 1,            // Max file size 1MB
+        maxWidthOrHeight: 1920, // Max width/height 1920px
+        useWebWorker: true,
+        fileType: 'image/webp'  // Convert to webp
+    };
+    try {
+        const compressedFile = await imageCompression(file as File, options);
+        return compressedFile;
+    } catch (error) {
+        console.error("Image compression error:", error);
+        return file; // Return original if compression fails
+    }
+}
+
+/**
  * Uploads an image file or a data URL to Supabase Storage.
  * @param file - The image file (as a File object or a data URL string).
  * @returns The public URL of the uploaded image.
  */
 export async function uploadImage(file: File | string): Promise<string> {
-    const fileToUpload = typeof file === 'string' ? await dataUrlToBlob(file) : file;
+    let fileToProcess = typeof file === 'string' ? await dataUrlToBlob(file) : file;
     
-    let fileExt = 'png';
+    // Compress the image before uploading
+    const compressedBlob = await compressImageFile(fileToProcess);
+    const fileToUpload = compressedBlob;
+
+    let fileExt = 'webp'; // Default to webp since we compress to it
     if (fileToUpload instanceof File && fileToUpload.name) {
-        fileExt = fileToUpload.name.split('.').pop() || 'png';
+        const nameParts = fileToUpload.name.split('.');
+        if (nameParts.length > 1) {
+            fileExt = nameParts.pop() || 'webp';
+        }
     } else if (fileToUpload.type) {
-        // Detect extension from mime type (e.g., "image/webp" -> "webp")
         const typeParts = fileToUpload.type.split('/');
         if (typeParts.length === 2) {
             fileExt = typeParts[1];
@@ -51,7 +74,7 @@ export async function uploadImage(file: File | string): Promise<string> {
     const { error: uploadError } = await supabase.storage
         .from('artworks')
         .upload(filePath, fileToUpload, {
-            contentType: fileToUpload.type || 'image/png',
+            contentType: fileToUpload.type || 'image/webp',
             cacheControl: '3600',
             upsert: false
         });
