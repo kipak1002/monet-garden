@@ -1,6 +1,5 @@
 // services/supabaseClient.ts
 import { createClient } from '@supabase/supabase-js';
-import imageCompression from 'browser-image-compression';
 
 // Supabase 접속 정보는 .env.local 파일에서 안전하게 불러옵니다.
 // ... (existing comments)
@@ -15,35 +14,63 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Helper function to convert data URL to a Blob
-async function dataUrlToBlob(dataUrl: string): Promise<Blob> {
-    const res = await fetch(dataUrl);
-    return await res.blob();
-}
-
 /**
- * Compresses an image file.
- * @param file - The image file to compress.
- * @returns A compressed Blob.
+ * Canvas를 사용하여 이미지를 강제로 리사이징하고 WebP로 변환합니다.
+ * 라이브러리가 실패할 경우를 대비한 가장 확실한 방법입니다.
  */
-async function compressImageFile(file: File | Blob): Promise<File | Blob> {
-    const options = {
-        maxSizeMB: 0.8,           // Target size under 800KB
-        maxWidthOrHeight: 1600, // Slightly smaller max dimension for better compression
-        useWebWorker: true,
-        fileType: 'image/webp', // Force webp
-        initialQuality: 0.7,    // Start with 70% quality
-        alwaysKeepResolution: false // Allow resolution reduction to meet size target
-    };
-    try {
-        console.log(`Original size: ${(file.size / 1024 / 1024).toFixed(2)} MB`);
-        const compressedFile = await imageCompression(file as File, options);
-        console.log(`Compressed size: ${(compressedFile.size / 1024 / 1024).toFixed(2)} MB`);
-        return compressedFile;
-    } catch (error) {
-        console.error("Image compression error:", error);
-        return file; // Return original if compression fails
-    }
+async function resizeAndConvertToWebP(file: File | Blob, maxDim: number = 1280, quality: number = 0.7): Promise<File> {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+
+            // 리사이징 계산
+            if (width > height) {
+                if (width > maxDim) {
+                    height *= maxDim / width;
+                    width = maxDim;
+                }
+            } else {
+                if (height > maxDim) {
+                    width *= maxDim / height;
+                    height = maxDim;
+                }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                reject(new Error("Canvas context를 생성할 수 없습니다."));
+                return;
+            }
+
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // WebP로 변환 및 압축
+            canvas.toBlob((blob) => {
+                if (blob) {
+                    const originalName = (file instanceof File) ? file.name : 'image.png';
+                    const newName = originalName.replace(/\.[^/.]+$/, "") + ".webp";
+                    const newFile = new File([blob], newName, { type: 'image/webp' });
+                    console.log(`[압축 완료] 원본: ${(file.size / 1024 / 1024).toFixed(2)}MB -> 결과: ${(newFile.size / 1024 / 1024).toFixed(2)}MB`);
+                    resolve(newFile);
+                } else {
+                    reject(new Error("Canvas 변환 실패"));
+                }
+            }, 'image/webp', quality);
+            
+            // 메모리 해제
+            URL.revokeObjectURL(img.src);
+        };
+        img.onerror = () => {
+            reject(new Error("이미지 로드 실패"));
+            URL.revokeObjectURL(img.src);
+        };
+        img.src = URL.createObjectURL(file);
+    });
 }
 
 /**
@@ -52,33 +79,49 @@ async function compressImageFile(file: File | Blob): Promise<File | Blob> {
  * @returns The public URL of the uploaded image.
  */
 export async function uploadImage(file: File | string): Promise<string> {
-    let fileToProcess = typeof file === 'string' ? await dataUrlToBlob(file) : file;
+    let fileToProcess: File | Blob;
     
-    // Compress the image before uploading
-    const compressedBlob = await compressImageFile(fileToProcess);
-    const fileToUpload = compressedBlob;
-
-    let fileExt = 'webp'; // Default to webp since we compress to it
-    if (fileToUpload instanceof File && fileToUpload.name) {
-        const nameParts = fileToUpload.name.split('.');
-        if (nameParts.length > 1) {
-            fileExt = nameParts.pop() || 'webp';
-        }
-    } else if (fileToUpload.type) {
-        const typeParts = fileToUpload.type.split('/');
-        if (typeParts.length === 2) {
-            fileExt = typeParts[1];
-        }
+    if (typeof file === 'string') {
+        // Data URL 처리
+        const res = await fetch(file);
+        fileToProcess = await res.blob();
+    } else {
+        fileToProcess = file;
     }
     
+    // 1. 먼저 라이브러리로 기본 압축 시도
+    let finalFile: File;
+    try {
+        // 비디오 파일 등 이미지가 아닌 경우 예외 처리
+        if (!fileToProcess.type.startsWith('image/')) {
+            // 이미지가 아니면 압축 없이 진행 (예: 비디오)
+            const randomString = Math.random().toString(36).substring(2, 8);
+            const fileName = `${Date.now()}_${randomString}_original`;
+            const { error: uploadError } = await supabase.storage.from('artworks').upload(fileName, fileToProcess);
+            if (uploadError) throw uploadError;
+            return supabase.storage.from('artworks').getPublicUrl(fileName).data.publicUrl;
+        }
+
+        // 이미지인 경우 Canvas를 사용하여 확실하게 WebP 변환 및 리사이징
+        finalFile = await resizeAndConvertToWebP(fileToProcess);
+    } catch (error) {
+        console.error("이미지 처리 중 오류 발생, 원본 업로드 시도:", error);
+        // 실패 시 원본 그대로 사용 (최후의 수단)
+        if (fileToProcess instanceof File) {
+            finalFile = fileToProcess;
+        } else {
+            finalFile = new File([fileToProcess], `upload_${Date.now()}.png`, { type: fileToProcess.type });
+        }
+    }
+
+    // 파일명 생성 (무조건 .webp)
     const randomString = Math.random().toString(36).substring(2, 8);
-    const fileName = `${Date.now()}_${randomString}.${fileExt}`;
-    const filePath = `${fileName}`;
+    const fileName = `${Date.now()}_${randomString}.webp`;
 
     const { error: uploadError } = await supabase.storage
         .from('artworks')
-        .upload(filePath, fileToUpload, {
-            contentType: fileToUpload.type || 'image/webp',
+        .upload(fileName, finalFile, {
+            contentType: 'image/webp',
             cacheControl: '3600',
             upsert: false
         });
@@ -90,7 +133,7 @@ export async function uploadImage(file: File | string): Promise<string> {
 
     const { data } = supabase.storage
         .from('artworks')
-        .getPublicUrl(filePath);
+        .getPublicUrl(fileName);
     
     return data.publicUrl;
 }
