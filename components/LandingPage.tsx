@@ -66,13 +66,22 @@ const LandingPage: React.FC<LandingPageProps> = ({
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center p-4 font-sans overflow-hidden">
       {/* Background Image & Scrim */}
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 z-0 bg-black overflow-hidden">
+        {/* Blurred background for PC to fill gaps without extreme zoom */}
+        <img
+          src={currentBackgroundImage}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover blur-3xl scale-110 opacity-50 hidden md:block"
+          referrerPolicy="no-referrer"
+        />
+        {/* Main background image - object-cover on mobile, object-contain on PC for full view */}
         <img
           src={currentBackgroundImage}
           alt="Art gallery background"
-          className="w-full h-full object-cover"
+          className="relative w-full h-full object-cover md:object-contain z-10"
+          referrerPolicy="no-referrer"
         />
-        <div className="absolute inset-0 bg-black/60"></div>
+        <div className="absolute inset-0 bg-black/40 z-20"></div>
       </div>
 
       {/* Content */}
