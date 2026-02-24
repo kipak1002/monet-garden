@@ -32,17 +32,29 @@ async function dataUrlToBlob(dataUrl: string): Promise<Blob> {
  */
 export async function uploadImage(file: File | string): Promise<string> {
     const fileToUpload = typeof file === 'string' ? await dataUrlToBlob(file) : file;
-    // FIX: Use `instanceof File` as a type guard to safely access the `name` property.
-    // The `name` property exists on `File` objects but not on plain `Blob` objects.
-    // This resolves the TypeScript error by ensuring we only access `.name` when
-    // `fileToUpload` is a `File`, while preserving the logic to default to 'png' for blobs.
-    const fileExt = (fileToUpload instanceof File && fileToUpload.name) ? fileToUpload.name.split('.').pop() : 'png';
-    const fileName = `${Date.now()}.${fileExt}`;
+    
+    let fileExt = 'png';
+    if (fileToUpload instanceof File && fileToUpload.name) {
+        fileExt = fileToUpload.name.split('.').pop() || 'png';
+    } else if (fileToUpload.type) {
+        // Detect extension from mime type (e.g., "image/webp" -> "webp")
+        const typeParts = fileToUpload.type.split('/');
+        if (typeParts.length === 2) {
+            fileExt = typeParts[1];
+        }
+    }
+    
+    const randomString = Math.random().toString(36).substring(2, 8);
+    const fileName = `${Date.now()}_${randomString}.${fileExt}`;
     const filePath = `${fileName}`;
 
     const { error: uploadError } = await supabase.storage
         .from('artworks')
-        .upload(filePath, fileToUpload);
+        .upload(filePath, fileToUpload, {
+            contentType: fileToUpload.type || 'image/png',
+            cacheControl: '3600',
+            upsert: false
+        });
 
     if (uploadError) {
         console.error("Image upload error:", uploadError);

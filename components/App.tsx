@@ -281,9 +281,17 @@ const App: React.FC = () => {
     const uploadPromises = newImageDataUrls.map(dataUrl => uploadImage(dataUrl));
     const newlyUploadedUrls = await Promise.all(uploadPromises);
     const finalImageUrls = [...existingImageUrls, ...newlyUploadedUrls];
-    const { data, error } = await supabase.from('artworks').update({ ...updatedArtwork, image_urls: finalImageUrls }).eq('id', updatedArtwork.id).select().single();
+    
+    const { id, created_at, ...updateData } = updatedArtwork;
+    const { data, error } = await supabase
+        .from('artworks')
+        .update({ ...updateData, image_urls: finalImageUrls })
+        .eq('id', id)
+        .select()
+        .single();
+    
     if (error) throw error;
-    setArtworks(prev => prev.map(a => (a.id === updatedArtwork.id ? processArtwork(data) : a)));
+    setArtworks(prev => prev.map(a => (a.id === id ? processArtwork(data) : a)));
     setIsEditModalOpen(false);
   };
 
@@ -321,19 +329,19 @@ const App: React.FC = () => {
     const newlyUploadedUrls = await Promise.all(uploadPromises);
     const finalImageUrls = [...existingImageUrls, ...newlyUploadedUrls];
     
+    const { id, created_at, ...updateData } = updatedExhibition;
     const { data, error } = await supabase
         .from('exhibitions')
         .update({ 
-            title: updatedExhibition.title, 
-            description: updatedExhibition.description, 
+            ...updateData,
             image_urls: finalImageUrls 
         })
-        .eq('id', updatedExhibition.id)
+        .eq('id', id)
         .select()
         .single();
         
     if (error) throw error;
-    setExhibitions(prev => prev.map(e => (e.id === updatedExhibition.id ? processExhibition(data) : e)));
+    setExhibitions(prev => prev.map(e => (e.id === id ? processExhibition(data) : e)));
     setIsEditExhibitionModalOpen(false);
   };
 
