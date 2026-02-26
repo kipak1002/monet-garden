@@ -147,6 +147,46 @@ export async function uploadImage(file: File | string): Promise<string> {
 }
 
 /**
+ * 기존 이미지 URL로부터 썸네일을 생성하여 업로드합니다.
+ * 일괄 처리를 위해 사용됩니다.
+ */
+export async function generateThumbnailFromUrl(url: string): Promise<boolean> {
+    if (!url || !url.includes('supabase.co') || !url.endsWith('.webp') || url.includes('_thumb.webp')) {
+        return false;
+    }
+
+    try {
+        // 1. 이미지 데이터 가져오기
+        const response = await fetch(url);
+        const blob = await response.blob();
+        
+        // 2. 썸네일 생성 (400px, 0.5 quality)
+        const thumbFile = await resizeAndConvertToWebP(blob, 400, 0.5, "_thumb");
+        
+        // 3. 파일명 결정 (원본 URL에서 추출)
+        const urlParts = url.split('/');
+        const originalFileName = urlParts[urlParts.length - 1];
+        const thumbFileName = originalFileName.replace('.webp', '_thumb.webp');
+        
+        // 4. 업로드
+        const { error } = await supabase.storage
+            .from('artworks')
+            .upload(thumbFileName, thumbFile, {
+                contentType: 'image/webp',
+                cacheControl: '3600',
+                upsert: true // 이미 있으면 덮어쓰기
+            });
+
+        if (error) throw error;
+        console.log(`[썸네일 생성 완료] ${thumbFileName}`);
+        return true;
+    } catch (error) {
+        console.error(`[썸네일 생성 실패] ${url}:`, error);
+        return false;
+    }
+}
+
+/**
  * Records a new visit in the visitor_logs table.
  * Uses sessionStorage to prevent counting page refreshes as new visits within the same session.
  */

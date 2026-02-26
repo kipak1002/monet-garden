@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { supabase, uploadImage } from '../services/supabaseClient.ts';
+import { supabase, uploadImage, generateThumbnailFromUrl } from '../services/supabaseClient.ts';
 import Spinner from './Spinner';
 import Icon from './Icon';
 import Linkify from './Linkify';
@@ -29,6 +29,9 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
   
+  const [isMigrating, setIsMigrating] = useState(false);
+  const [migrationProgress, setMigrationProgress] = useState({ current: 0, total: 0 });
+
   const adminMenuRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -49,17 +52,13 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
         const imageUrlsValue = settingsMap.get('artistProfile');
         if (imageUrlsValue) {
             try {
-                // FIX: Cast imageUrlsValue to string before parsing as JSON to prevent type errors.
                 const urls = JSON.parse(String(imageUrlsValue));
                 if (Array.isArray(urls)) {
                     setProfileImageUrls(urls);
                     setEditImageUrls(urls);
                 }
             } catch (e) {
-                // Handle non-JSON string value for backward compatibility
-                // FIX: Cast imageUrlsValue to string to prevent type errors.
                 setProfileImageUrls([String(imageUrlsValue)]);
-                // FIX: Cast imageUrlsValue to string to prevent type errors.
                 setEditImageUrls([String(imageUrlsValue)]);
             }
         } else {
@@ -67,12 +66,8 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
             setEditImageUrls([]);
         }
 
-        // Handle Text Info
-        // FIX: Cast infoValue to string to ensure type safety. The value from Supabase could be unknown.
         const infoValue = settingsMap.get('artistProfileInfo') || '';
-        // FIX: Cast infoValue to string to prevent type errors.
         setProfileInfo(String(infoValue));
-        // FIX: Cast infoValue to string to prevent type errors.
         setEditProfileInfo(String(infoValue));
 
       } catch (error) {
@@ -87,7 +82,6 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
   }, []);
   
   useEffect(() => {
-      // When exiting admin mode, revert any unsaved changes
       if (!isAdminMode) {
           setEditImageUrls(profileImageUrls);
           setEditProfileInfo(profileInfo);
@@ -96,7 +90,6 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
           setNewImagePreviewUrls([]);
       }
   }, [isAdminMode, profileImageUrls, profileInfo]);
-
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -113,7 +106,7 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const files = Array.from(e.target.files);
+      const files: File[] = Array.from(e.target.files);
       const previews = files.map(file => URL.createObjectURL(file));
       setNewImageFiles(prev => [...prev, ...files]);
       setNewImagePreviewUrls(prev => [...prev, ...previews]);
@@ -136,12 +129,10 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
   const handleSaveChanges = async () => {
     setIsSaving(true);
     try {
-      // Handle image uploads
       const uploadPromises = newImageFiles.map(file => uploadImage(file));
       const newlyUploadedUrls = await Promise.all(uploadPromises);
       const finalImageUrls = [...editImageUrls, ...newlyUploadedUrls];
 
-      // Prepare database updates
       const saveImagesPromise = supabase
         .from('settings')
         .upsert({ key: 'artistProfile', value: JSON.stringify(finalImageUrls) }, { onConflict: 'key' });
@@ -150,18 +141,15 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
         .from('settings')
         .upsert({ key: 'artistProfileInfo', value: editProfileInfo }, { onConflict: 'key' });
 
-      // Run updates in parallel
       const [imagesResult, infoResult] = await Promise.all([saveImagesPromise, saveInfoPromise]);
 
       if (imagesResult.error) throw imagesResult.error;
       if (infoResult.error) throw infoResult.error;
       
-      // Update local state on success
       setProfileImageUrls(finalImageUrls);
       setEditImageUrls(finalImageUrls);
       setProfileInfo(editProfileInfo);
       
-      // Clean up previews
       newImagePreviewUrls.forEach(URL.revokeObjectURL);
       setNewImageFiles([]);
       setNewImagePreviewUrls([]);
@@ -172,6 +160,54 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
       alert('프로필 저장 중 오류가 발생했습니다.');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleBatchGenerateThumbnails = async () => {
+    if (!confirm('모든 기존 작품의 썸네일을 일괄 생성하시겠습니까? (이미지가 많을 경우 시간이 걸릴 수 있습니다.)')) return;
+    
+    setIsMigrating(true);
+    try {
+        const { data: artworks } = await supabase.from('artworks').select('image_urls');
+        const { data: exhibitions } = await supabase.from('exhibitions').select('image_urls');
+        const { data: imagination } = await supabase.from('imagination_gallery').select('original_image_url');
+
+        const allUrls: string[] = [];
+        artworks?.forEach(a => {
+            const urls = typeof a.image_urls === 'string' ? JSON.parse(a.image_urls) : a.image_urls;
+            if (Array.isArray(urls)) allUrls.push(...urls);
+            else if (urls) allUrls.push(urls);
+        });
+        exhibitions?.forEach(e => {
+            const urls = typeof e.image_urls === 'string' ? JSON.parse(e.image_urls) : e.image_urls;
+            if (Array.isArray(urls)) allUrls.push(...urls);
+            else if (urls) allUrls.push(urls);
+        });
+        imagination?.forEach(i => {
+            if (i.original_image_url) allUrls.push(i.original_image_url);
+        });
+
+        const uniqueUrls = Array.from(new Set(allUrls)).filter(url => 
+            url && url.includes('supabase.co') && url.endsWith('.webp') && !url.includes('_thumb.webp')
+        );
+
+        setMigrationProgress({ current: 0, total: uniqueUrls.length });
+
+        let successCount = 0;
+        for (let i = 0; i < uniqueUrls.length; i++) {
+            const success = await generateThumbnailFromUrl(uniqueUrls[i]);
+            if (success) successCount++;
+            setMigrationProgress(prev => ({ ...prev, current: i + 1 }));
+        }
+
+        alert(`썸네일 생성 완료!\n대상: ${uniqueUrls.length}개 중 ${successCount}개 성공`);
+    } catch (error) {
+        console.error('Migration error:', error);
+        alert('썸네일 일괄 생성 중 오류가 발생했습니다.');
+    } finally {
+        setIsMigrating(false);
+        setMigrationProgress({ current: 0, total: 0 });
+        setIsAdminMenuOpen(false);
     }
   };
 
@@ -254,7 +290,7 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
         {profileImageUrls.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {profileImageUrls.map((url, index) => (
-                     <div key={index} className="aspect-w-1 aspect-h-1">
+                    <div key={index} className="aspect-w-1 aspect-h-1">
                         <img 
                             src={url} 
                             alt={`Profile image ${index + 1}`}
@@ -320,6 +356,14 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
                                 <Icon type="key" className="w-5 h-5 text-gray-500" />
                                 <span>관리자 비밀번호 변경</span>
                             </button>
+                            <button
+                                onClick={handleBatchGenerateThumbnails}
+                                disabled={isMigrating}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3 border-t"
+                            >
+                                <Icon type="sparkles" className="w-5 h-5 text-blue-500" />
+                                <span>{isMigrating ? `진행중 (${migrationProgress.current}/${migrationProgress.total})` : '기존 그림 썸네일 일괄 생성'}</span>
+                            </button>
                         </div>
                     )}
                 </div>
@@ -341,6 +385,25 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
           </div>
         ) : isAdminMode ? renderAdminView() : renderPublicView()}
       </main>
+
+      {isMigrating && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
+              <div className="bg-white rounded-xl p-8 max-w-md w-full text-center shadow-2xl">
+                  <Spinner size="h-12 w-12 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">썸네일 일괄 생성 중...</h3>
+                  <p className="text-gray-600 mb-4">기존 이미지들을 최적화하고 있습니다.<br/>잠시만 기다려 주세요.</p>
+                  <div className="w-full bg-gray-200 rounded-full h-4 mb-2">
+                      <div 
+                        className="bg-blue-600 h-4 rounded-full transition-all duration-300" 
+                        style={{ width: `${(migrationProgress.current / migrationProgress.total) * 100}%` }}
+                      ></div>
+                  </div>
+                  <p className="text-sm font-medium text-blue-600">
+                      {migrationProgress.current} / {migrationProgress.total} 처리 완료
+                  </p>
+              </div>
+          </div>
+      )}
     </div>
   );
 };
