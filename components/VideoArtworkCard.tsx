@@ -11,6 +11,29 @@ interface VideoArtworkCardProps {
 }
 
 const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({ item, isAdminMode, onEdit, onDelete }) => {
+  const [imgSrc, setImgSrc] = React.useState<string>('');
+
+  // 썸네일 URL 생성 함수
+  const getThumbnailUrl = (url: string) => {
+    if (!url) return '';
+    if (url.includes('supabase.co') && url.endsWith('.webp') && !url.includes('_thumb.webp')) {
+      return url.replace('.webp', '_thumb.webp');
+    }
+    return url;
+  };
+
+  const originalUrl = item.original_image_url;
+
+  React.useEffect(() => {
+    setImgSrc(getThumbnailUrl(originalUrl));
+  }, [originalUrl]);
+
+  const handleImageError = () => {
+    if (imgSrc !== originalUrl) {
+      setImgSrc(originalUrl);
+    }
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col group relative border border-gray-100 transition-all hover:shadow-2xl">
       {isAdminMode && (
@@ -41,7 +64,7 @@ const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({ item, isAdminMode, 
           muted
           playsInline
           className="w-full h-full object-contain"
-          poster={item.original_image_url}
+          poster={imgSrc}
         />
       </div>
 
@@ -57,10 +80,11 @@ const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({ item, isAdminMode, 
         <div className="flex items-center gap-4">
           <div className="w-24 h-24 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
             <img 
-              src={item.original_image_url} 
+              src={imgSrc} 
               alt="원화 이미지" 
+              onError={handleImageError}
               className="w-full h-full object-cover cursor-pointer hover:scale-110 transition-transform"
-              onClick={() => window.open(item.original_image_url, '_blank')}
+              onClick={() => window.open(originalUrl, '_blank')}
             />
           </div>
           <div className="flex flex-col text-sm text-gray-600">

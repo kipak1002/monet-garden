@@ -18,7 +18,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
  * Canvas를 사용하여 이미지를 강제로 리사이징하고 WebP로 변환합니다.
  * 라이브러리가 실패할 경우를 대비한 가장 확실한 방법입니다.
  */
-async function resizeAndConvertToWebP(file: File | Blob, maxDim: number = 1280, quality: number = 0.7): Promise<File> {
+async function resizeAndConvertToWebP(file: File | Blob, maxDim: number = 1280, quality: number = 0.7, suffix: string = ""): Promise<File> {
     return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => {
@@ -53,9 +53,10 @@ async function resizeAndConvertToWebP(file: File | Blob, maxDim: number = 1280, 
             canvas.toBlob((blob) => {
                 if (blob) {
                     const originalName = (file instanceof File) ? file.name : 'image.png';
-                    const newName = originalName.replace(/\.[^/.]+$/, "") + ".webp";
+                    const nameWithoutExt = originalName.replace(/\.[^/.]+$/, "");
+                    const newName = `${nameWithoutExt}${suffix}.webp`;
                     const newFile = new File([blob], newName, { type: 'image/webp' });
-                    console.log(`[압축 완료] 원본: ${(file.size / 1024 / 1024).toFixed(2)}MB -> 결과: ${(newFile.size / 1024 / 1024).toFixed(2)}MB`);
+                    console.log(`[압축 완료${suffix}] 원본: ${(file.size / 1024 / 1024).toFixed(2)}MB -> 결과: ${(newFile.size / 1024 / 1024).toFixed(2)}MB`);
                     resolve(newFile);
                 } else {
                     reject(new Error("Canvas 변환 실패"));
@@ -89,51 +90,58 @@ export async function uploadImage(file: File | string): Promise<string> {
         fileToProcess = file;
     }
     
-    // 1. 먼저 라이브러리로 기본 압축 시도
-    let finalFile: File;
-    try {
-        // 비디오 파일 등 이미지가 아닌 경우 예외 처리
-        if (!fileToProcess.type.startsWith('image/')) {
-            // 이미지가 아니면 압축 없이 진행 (예: 비디오)
-            const randomString = Math.random().toString(36).substring(2, 8);
-            const fileName = `${Date.now()}_${randomString}_original`;
-            const { error: uploadError } = await supabase.storage.from('artworks').upload(fileName, fileToProcess);
-            if (uploadError) throw uploadError;
-            return supabase.storage.from('artworks').getPublicUrl(fileName).data.publicUrl;
-        }
-
-        // 이미지인 경우 Canvas를 사용하여 확실하게 WebP 변환 및 리사이징
-        finalFile = await resizeAndConvertToWebP(fileToProcess);
-    } catch (error) {
-        console.error("이미지 처리 중 오류 발생, 원본 업로드 시도:", error);
-        // 실패 시 원본 그대로 사용 (최후의 수단)
-        if (fileToProcess instanceof File) {
-            finalFile = fileToProcess;
-        } else {
-            finalFile = new File([fileToProcess], `upload_${Date.now()}.png`, { type: fileToProcess.type });
-        }
+    // 비디오 파일 등 이미지가 아닌 경우 예외 처리
+    if (!fileToProcess.type.startsWith('image/')) {
+        // 이미지가 아니면 압축 없이 진행 (예: 비디오)
+        const randomString = Math.random().toString(36).substring(2, 8);
+        const fileName = `${Date.now()}_${randomString}_original`;
+        const { error: uploadError } = await supabase.storage.from('artworks').upload(fileName, fileToProcess);
+        if (uploadError) throw uploadError;
+        return supabase.storage.from('artworks').getPublicUrl(fileName).data.publicUrl;
     }
 
-    // 파일명 생성 (무조건 .webp)
+    // 파일명 공통 베이스 생성
     const randomString = Math.random().toString(36).substring(2, 8);
-    const fileName = `${Date.now()}_${randomString}.webp`;
+    const timestamp = Date.now();
+    const baseName = `${timestamp}_${randomString}`;
 
-    const { error: uploadError } = await supabase.storage
+    // 1. 메인 이미지 처리 및 업로드 (1280px, 0.7 quality)
+    const mainFile = await resizeAndConvertToWebP(fileToProcess, 1280, 0.7);
+    const mainFileName = `${baseName}.webp`;
+    
+    const { error: mainUploadError } = await supabase.storage
         .from('artworks')
-        .upload(fileName, finalFile, {
+        .upload(mainFileName, mainFile, {
             contentType: 'image/webp',
             cacheControl: '3600',
             upsert: false
         });
 
-    if (uploadError) {
-        console.error("Image upload error:", uploadError);
-        throw uploadError;
+    if (mainUploadError) {
+        console.error("Main image upload error:", mainUploadError);
+        throw mainUploadError;
+    }
+
+    // 2. 썸네일 이미지 처리 및 업로드 (400px, 0.5 quality) - 백그라운드에서 실행해도 되지만 안전을 위해 대기
+    try {
+        const thumbFile = await resizeAndConvertToWebP(fileToProcess, 400, 0.5, "_thumb");
+        const thumbFileName = `${baseName}_thumb.webp`;
+        
+        await supabase.storage
+            .from('artworks')
+            .upload(thumbFileName, thumbFile, {
+                contentType: 'image/webp',
+                cacheControl: '3600',
+                upsert: false
+            });
+    } catch (thumbError) {
+        console.warn("Thumbnail generation/upload failed, but main image succeeded:", thumbError);
+        // 썸네일 실패는 메인 업로드 성공을 막지 않음
     }
 
     const { data } = supabase.storage
         .from('artworks')
-        .getPublicUrl(fileName);
+        .getPublicUrl(mainFileName);
     
     return data.publicUrl;
 }

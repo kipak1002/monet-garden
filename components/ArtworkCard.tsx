@@ -14,6 +14,23 @@ interface ArtworkCardProps {
 const ArtworkCard: React.FC<ArtworkCardProps> = ({ artwork, index, onSelect, isAdminMode, onEdit, onDelete }) => {
   const cardRef = useRef<HTMLDivElement | null>(null);
   const [isIntersecting, setIsIntersecting] = useState(false);
+  const [imgSrc, setImgSrc] = useState<string>('');
+
+  // 썸네일 URL 생성 함수
+  const getThumbnailUrl = (url: string) => {
+    if (!url) return '';
+    // Supabase 스토리지 URL이고 .webp 확장자인 경우 _thumb.webp 시도
+    if (url.includes('supabase.co') && url.endsWith('.webp') && !url.includes('_thumb.webp')) {
+      return url.replace('.webp', '_thumb.webp');
+    }
+    return url;
+  };
+
+  const originalUrl = artwork.image_urls && artwork.image_urls.length > 0 ? artwork.image_urls[0] : '';
+  
+  useEffect(() => {
+    setImgSrc(getThumbnailUrl(originalUrl));
+  }, [originalUrl]);
 
   useEffect(() => {
     // 최신 3개 작품은 순차적으로 로딩 (0.4초 간격)
@@ -46,7 +63,7 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ artwork, index, onSelect, isA
         observer.unobserve(currentRef);
       }
     };
-  }, []);
+  }, [index]);
 
 
   const handleEditClick = (e: React.MouseEvent) => {
@@ -59,7 +76,12 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ artwork, index, onSelect, isA
     onDelete(artwork);
   };
 
-  const thumbnailUrl = artwork.image_urls && artwork.image_urls.length > 0 ? artwork.image_urls[0] : '';
+  const handleImageError = () => {
+    // 썸네일 로드 실패 시 원본으로 폴백
+    if (imgSrc !== originalUrl) {
+      setImgSrc(originalUrl);
+    }
+  };
 
   return (
     <div
@@ -88,11 +110,12 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ artwork, index, onSelect, isA
         </div>
       )}
       <div className="w-full h-64 bg-gray-200 overflow-hidden">
-        {isIntersecting && thumbnailUrl ? (
+        {isIntersecting && imgSrc ? (
           <img
-            src={thumbnailUrl}
+            src={imgSrc}
             alt={artwork.title}
             loading={index < 3 ? "eager" : "lazy"}
+            onError={handleImageError}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 animate-fade-in"
           />
         ) : (
