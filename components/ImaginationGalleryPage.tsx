@@ -80,8 +80,32 @@ const ImaginationGalleryPage: React.FC<ImaginationGalleryPageProps> = ({
         </div>
       </header>
 
-      <main className="md:h-[60vh] md:my-[15vh] md:flex md:items-center">
-        <div className="md:flex md:flex-row md:overflow-x-auto md:overflow-y-hidden md:h-full md:items-center md:gap-12 md:px-20 flex flex-col gap-16 p-4 custom-scrollbar w-full">
+      <main className="relative group/gallery md:h-[36vh] md:my-[25vh] md:flex md:items-center">
+        {/* Navigation Buttons (Desktop Only) */}
+        {!isAdminMode && (
+          <>
+            <button 
+              onClick={() => {
+                const container = document.querySelector('.imagination-scroll-container');
+                container?.scrollBy({ left: -window.innerWidth * 0.6, behavior: 'smooth' });
+              }}
+              className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 z-30 bg-white/10 hover:bg-white/30 backdrop-blur-md text-white p-4 rounded-full transition-all opacity-0 group-hover/gallery:opacity-100 border border-white/20"
+            >
+              <Icon type="chevron-left" className="w-8 h-8" />
+            </button>
+            <button 
+              onClick={() => {
+                const container = document.querySelector('.imagination-scroll-container');
+                container?.scrollBy({ left: window.innerWidth * 0.6, behavior: 'smooth' });
+              }}
+              className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-30 bg-white/10 hover:bg-white/30 backdrop-blur-md text-white p-4 rounded-full transition-all opacity-0 group-hover/gallery:opacity-100 border border-white/20"
+            >
+              <Icon type="chevron-right" className="w-8 h-8" />
+            </button>
+          </>
+        )}
+
+        <div className={`imagination-scroll-container md:flex md:flex-row md:overflow-x-auto md:overflow-y-hidden md:h-full md:items-center md:gap-16 md:px-[15vw] flex flex-col gap-16 p-4 w-full ${isAdminMode ? 'custom-scrollbar' : 'scrollbar-hide'}`}>
           {imaginationArtworks.length > 0 ? imaginationArtworks.map(item => (
             <VideoArtworkCard 
               key={item.id} 
@@ -97,6 +121,16 @@ const ImaginationGalleryPage: React.FC<ImaginationGalleryPageProps> = ({
             </div>
           )}
         </div>
+
+        <style>{`
+          .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+          }
+          .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+        `}</style>
       </main>
 
       {isAdminMode && (

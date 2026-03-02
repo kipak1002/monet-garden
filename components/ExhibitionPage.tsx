@@ -274,14 +274,39 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
                   </div>
 
                   {ex.image_urls && ex.image_urls.length > 0 ? (
-                    <div className="w-full bg-gray-100 p-4">
-                        <div className="flex overflow-x-auto space-x-4 py-2 custom-scrollbar snap-x snap-mandatory">
+                    <div className="w-full bg-gray-100 p-4 relative group/exhibition">
+                        {/* Navigation Buttons (Desktop Only) */}
+                        {!isAdminMode && (
+                          <>
+                            <button 
+                              onClick={(e) => {
+                                const container = e.currentTarget.parentElement?.querySelector('.exhibition-scroll-container');
+                                container?.scrollBy({ left: -400, behavior: 'smooth' });
+                              }}
+                              className="hidden md:flex absolute left-6 top-1/2 -translate-y-1/2 z-30 bg-white/20 hover:bg-white/40 backdrop-blur-md text-gray-800 p-3 rounded-full transition-all opacity-0 group-hover/exhibition:opacity-100 border border-white/30"
+                            >
+                              <Icon type="chevron-left" className="w-6 h-6" />
+                            </button>
+                            <button 
+                              onClick={(e) => {
+                                const container = e.currentTarget.parentElement?.querySelector('.exhibition-scroll-container');
+                                container?.scrollBy({ left: 400, behavior: 'smooth' });
+                              }}
+                              className="hidden md:flex absolute right-6 top-1/2 -translate-y-1/2 z-30 bg-white/20 hover:bg-white/40 backdrop-blur-md text-gray-800 p-3 rounded-full transition-all opacity-0 group-hover/exhibition:opacity-100 border border-white/30"
+                            >
+                              <Icon type="chevron-right" className="w-6 h-6" />
+                            </button>
+                          </>
+                        )}
+
+                        <div className={`exhibition-scroll-container flex overflow-x-auto space-x-6 py-4 snap-x snap-mandatory ${isAdminMode ? 'custom-scrollbar' : 'scrollbar-hide'}`}>
                             {ex.image_urls.map((url, index) => (
                                 <div key={index} className="flex-shrink-0 w-4/5 md:w-auto snap-center">
                                     <img 
                                         src={url} 
                                         alt={`${ex.title} image ${index + 1}`} 
-                                        className="h-64 md:h-[20rem] lg:h-[25rem] object-contain rounded-md" 
+                                        className="h-64 md:h-[30vh] lg:h-[36vh] object-contain rounded-md shadow-sm" 
+                                        referrerPolicy="no-referrer"
                                     />
                                 </div>
                             ))}
@@ -303,6 +328,15 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
           </div>
         )}
       </main>
+      <style>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </div>
   );
 };
