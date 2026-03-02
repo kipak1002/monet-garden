@@ -80,8 +80,8 @@ const ImaginationGalleryPage: React.FC<ImaginationGalleryPageProps> = ({
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto p-6 md:p-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <main className="md:h-[calc(100vh-120px)] md:flex md:items-center">
+        <div className="md:flex md:flex-row md:overflow-x-auto md:overflow-y-hidden md:h-full md:items-center md:gap-8 md:px-12 md:py-8 flex flex-col gap-12 p-4 custom-scrollbar w-full">
           {imaginationArtworks.length > 0 ? imaginationArtworks.map(item => (
             <VideoArtworkCard 
               key={item.id} 
@@ -91,7 +91,7 @@ const ImaginationGalleryPage: React.FC<ImaginationGalleryPageProps> = ({
               onDelete={() => onDeleteImagination(item)} 
             />
           )) : (
-            <div className="col-span-full text-center py-20">
+            <div className="w-full text-center py-20">
               <h2 className="text-2xl font-semibold text-gray-700">작품이 없습니다.</h2>
               <p className="text-gray-500 mt-2">상상 속의 작품을 비디오와 함께 등록해보세요.</p>
             </div>

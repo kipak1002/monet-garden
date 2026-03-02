@@ -35,7 +35,7 @@ const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({ item, isAdminMode, 
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col group relative border border-gray-100 transition-all hover:shadow-2xl">
+    <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col group relative border border-gray-100 transition-all hover:shadow-2xl flex-shrink-0 md:w-[450px] w-full">
       {isAdminMode && (
         <div className="absolute top-2 right-2 z-10 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <button 

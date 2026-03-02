@@ -488,7 +488,7 @@ const App: React.FC = () => {
               onNavigateHome={() => handleNavigate('landing')}
               visitorCount={visitorCount}
             />
-            <main className="container mx-auto">
+            <main className="w-full">
               <Gallery 
                 artworks={filteredArtworks}
                 onSelectArtwork={handleSelectArtwork}
