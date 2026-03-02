@@ -86,6 +86,25 @@ const App: React.FC = () => {
   const [isEditExhibitionModalOpen, setIsEditExhibitionModalOpen] = useState(false);
   const [editingExhibition, setEditingExhibition] = useState<Exhibition | null>(null);
 
+  const [editTitle, setEditTitle] = useState(galleryTitle);
+  const [editFont, setEditFont] = useState(galleryTitleFont);
+  const [editSize, setEditSize] = useState(galleryTitleSize);
+
+  useEffect(() => {
+    setEditTitle(galleryTitle);
+    setEditFont(galleryTitleFont);
+    setEditSize(galleryTitleSize);
+  }, [galleryTitle, galleryTitleFont, galleryTitleSize]);
+
+  const FONT_OPTIONS = [
+    { name: '기본 (Sans)', value: 'Inter, sans-serif' },
+    { name: '세리프 (Serif)', value: 'Georgia, serif' },
+    { name: '나눔명조', value: '"Nanum Myeongjo", serif' },
+    { name: '나눔고딕', value: '"Nanum Gothic", sans-serif' },
+    { name: '바탕체', value: 'Batang, serif' },
+    { name: '궁서체', value: 'Gungsuh, serif' },
+  ];
+
   const processArtwork = (artwork: any): Artwork => ({
     ...artwork,
     image_urls: parseImageUrls(artwork.image_urls),
@@ -412,8 +431,6 @@ const App: React.FC = () => {
   const openDeleteModal = (item: any, type: '작품' | '전시회' | '상상작품') => { setItemToDelete(item); setItemTypeToDelete(type); };
   const closeDeleteModal = () => { setItemToDelete(null); setItemTypeToDelete(''); };
 
-  if (isLoading) return <div className="min-h-screen bg-gray-100 flex items-center justify-center"><Spinner size="h-16 w-16" /></div>;
-
   const renderPage = () => {
     switch(currentPage) {
       case 'landing':
@@ -466,24 +483,7 @@ const App: React.FC = () => {
     }
   }
 
-  const FONT_OPTIONS = [
-    { name: '기본 (Sans)', value: 'Inter, sans-serif' },
-    { name: '세리프 (Serif)', value: 'Georgia, serif' },
-    { name: '나눔명조', value: '"Nanum Myeongjo", serif' },
-    { name: '나눔고딕', value: '"Nanum Gothic", sans-serif' },
-    { name: '바탕체', value: 'Batang, serif' },
-    { name: '궁서체', value: 'Gungsuh, serif' },
-  ];
-
-  const [editTitle, setEditTitle] = useState(galleryTitle);
-  const [editFont, setEditFont] = useState(galleryTitleFont);
-  const [editSize, setEditSize] = useState(galleryTitleSize);
-
-  useEffect(() => {
-    setEditTitle(galleryTitle);
-    setEditFont(galleryTitleFont);
-    setEditSize(galleryTitleSize);
-  }, [galleryTitle, galleryTitleFont, galleryTitleSize]);
+  if (isLoading) return <div className="min-h-screen bg-gray-100 flex items-center justify-center"><Spinner size="h-16 w-16" /></div>;
 
   return (
     <div className="bg-white min-h-screen font-sans">
