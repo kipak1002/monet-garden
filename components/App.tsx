@@ -64,9 +64,13 @@ const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>('landing');
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [isPasswordPromptOpen, setIsPasswordPromptOpen] = useState(false);
-  const [galleryTitle, setGalleryTitle] = useState('김명진 포트폴리오');
+  const [galleryTitle, setGalleryTitle] = useState('김명진');
   const [adminPassword, setAdminPassword] = useState('');
   const [landingBackgroundUrl, setLandingBackgroundUrl] = useState('');
+  const [artistKeywords, setArtistKeywords] = useState('');
+  const [artistStatement, setArtistStatement] = useState('');
+  const [galleryTitleFont, setGalleryTitleFont] = useState('Inter');
+  const [galleryTitleSize, setGalleryTitleSize] = useState('24');
   const [visitorCount, setVisitorCount] = useState<number | null>(null);
 
   // Modals State
@@ -138,9 +142,13 @@ const App: React.FC = () => {
       if (settingsError) throw settingsError;
       
       const settingsMap = new Map(settingsData.map(s => [s.key, s.value]));
-      setGalleryTitle(String(settingsMap.get('galleryTitle') || '김명진 포트폴리오'));
+      setGalleryTitle(String(settingsMap.get('galleryTitle') || '김명진'));
       setAdminPassword(String(settingsMap.get('adminPassword') || '000000'));
       setLandingBackgroundUrl(String(settingsMap.get('landingBackgroundUrl') || ''));
+      setArtistKeywords(String(settingsMap.get('artistKeywords') || ''));
+      setArtistStatement(String(settingsMap.get('artistStatement') || ''));
+      setGalleryTitleFont(String(settingsMap.get('galleryTitleFont') || 'Inter'));
+      setGalleryTitleSize(String(settingsMap.get('galleryTitleSize') || '24'));
 
       // 2. 우선 순위 페칭: 최신 작품 3개만 먼저 가져오기
       const { data: priorityArtworks, error: priorityError } = await supabase
@@ -249,6 +257,45 @@ const App: React.FC = () => {
       console.error('Error updating background:', error);
       alert('배경 이미지 업데이트 중 오류가 발생했습니다.');
       throw error;
+    }
+  };
+
+  const handleUpdateArtistStatement = async (keywords: string, statement: string) => {
+    try {
+      const saveKeywords = supabase.from('settings').upsert({ key: 'artistKeywords', value: keywords }, { onConflict: 'key' });
+      const saveStatement = supabase.from('settings').upsert({ key: 'artistStatement', value: statement }, { onConflict: 'key' });
+      
+      const [res1, res2] = await Promise.all([saveKeywords, saveStatement]);
+      if (res1.error) throw res1.error;
+      if (res2.error) throw res2.error;
+      
+      setArtistKeywords(keywords);
+      setArtistStatement(statement);
+      alert('작가 노트가 저장되었습니다.');
+    } catch (error) {
+      console.error('Error updating artist statement:', error);
+      alert('작가 노트 저장 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleUpdateGalleryTitleSettings = async (title: string, font: string, size: string) => {
+    try {
+      const saveTitle = supabase.from('settings').upsert({ key: 'galleryTitle', value: title }, { onConflict: 'key' });
+      const saveFont = supabase.from('settings').upsert({ key: 'galleryTitleFont', value: font }, { onConflict: 'key' });
+      const saveSize = supabase.from('settings').upsert({ key: 'galleryTitleSize', value: size }, { onConflict: 'key' });
+      
+      const [res1, res2, res3] = await Promise.all([saveTitle, saveFont, saveSize]);
+      if (res1.error) throw res1.error;
+      if (res2.error) throw res2.error;
+      if (res3.error) throw res3.error;
+      
+      setGalleryTitle(title);
+      setGalleryTitleFont(font);
+      setGalleryTitleSize(size);
+      alert('타이틀 설정이 저장되었습니다.');
+    } catch (error) {
+      console.error('Error updating title settings:', error);
+      alert('타이틀 설정 저장 중 오류가 발생했습니다.');
     }
   };
 
@@ -385,9 +432,15 @@ const App: React.FC = () => {
                   onEnterExhibition={() => handleNavigate('exhibition')}
                   onEnterImagination={() => handleNavigate('imagination')}
                   galleryTitle={galleryTitle}
+                  galleryTitleFont={galleryTitleFont}
+                  galleryTitleSize={galleryTitleSize}
                   backgroundImageUrl={landingBackgroundUrl}
+                  artistKeywords={artistKeywords}
+                  artistStatement={artistStatement}
                   isAdminMode={isAdminMode}
                   onUpdateBackground={handleUpdateLandingBackground}
+                  onUpdateArtistStatement={handleUpdateArtistStatement}
+                  onUpdateTitleSettings={handleUpdateGalleryTitleSettings}
                 />;
       case 'profile':
         return <ArtistProfilePage 
