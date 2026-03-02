@@ -21,7 +21,7 @@ const Gallery: React.FC<GalleryProps> = ({ artworks, onSelectArtwork, isAdminMod
   }
   
   return (
-    <div className="md:flex md:flex-row md:overflow-x-auto md:overflow-y-hidden md:h-[calc(100vh-120px)] md:items-center md:gap-8 md:px-12 md:py-8 flex flex-col gap-12 p-4 custom-scrollbar">
+    <div className="md:flex md:flex-row md:overflow-x-auto md:overflow-y-hidden md:h-[60vh] md:items-center md:gap-12 md:px-20 md:my-[15vh] flex flex-col gap-16 p-4 custom-scrollbar">
       {artworks.map((artwork, index) => (
         <ArtworkCard 
           key={artwork.id} 

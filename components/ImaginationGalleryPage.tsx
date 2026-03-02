@@ -80,8 +80,8 @@ const ImaginationGalleryPage: React.FC<ImaginationGalleryPageProps> = ({
         </div>
       </header>
 
-      <main className="md:h-[calc(100vh-120px)] md:flex md:items-center">
-        <div className="md:flex md:flex-row md:overflow-x-auto md:overflow-y-hidden md:h-full md:items-center md:gap-8 md:px-12 md:py-8 flex flex-col gap-12 p-4 custom-scrollbar w-full">
+      <main className="md:h-[60vh] md:my-[15vh] md:flex md:items-center">
+        <div className="md:flex md:flex-row md:overflow-x-auto md:overflow-y-hidden md:h-full md:items-center md:gap-12 md:px-20 flex flex-col gap-16 p-4 custom-scrollbar w-full">
           {imaginationArtworks.length > 0 ? imaginationArtworks.map(item => (
             <VideoArtworkCard 
               key={item.id} 

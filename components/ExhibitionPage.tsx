@@ -281,7 +281,7 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
                                     <img 
                                         src={url} 
                                         alt={`${ex.title} image ${index + 1}`} 
-                                        className="h-80 md:h-[30rem] lg:h-[40rem] object-contain rounded-md" 
+                                        className="h-64 md:h-[20rem] lg:h-[25rem] object-contain rounded-md" 
                                     />
                                 </div>
                             ))}

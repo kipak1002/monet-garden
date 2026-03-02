@@ -116,7 +116,7 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ artwork, index, onSelect, isA
             alt={artwork.title}
             loading={index < 3 ? "eager" : "lazy"}
             onError={handleImageError}
-            className="w-full h-full object-contain md:object-cover group-hover:scale-105 transition-transform duration-300 animate-fade-in"
+            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 animate-fade-in"
             referrerPolicy="no-referrer"
           />
         ) : (
