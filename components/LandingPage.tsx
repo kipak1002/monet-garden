@@ -4,10 +4,6 @@ import Icon from './Icon';
 import Spinner from './Spinner';
 
 interface LandingPageProps {
-  onEnterGallery: () => void;
-  onEnterProfile: () => void;
-  onEnterExhibition: () => void;
-  onEnterImagination: () => void;
   galleryTitle: string;
   galleryTitleFont: string;
   galleryTitleSize: string;
@@ -18,25 +14,12 @@ interface LandingPageProps {
   isAdminMode: boolean;
   onUpdateBackground: (imageFile: File) => Promise<void>;
   onUpdateArtistStatement: (keywords: string, statement: string) => Promise<void>;
-  onUpdateTitleSettings: (title: string, font: string, size: string) => Promise<void>;
+  onNavigate: (page: 'landing' | 'gallery' | 'profile' | 'exhibition' | 'imagination') => void;
 }
 
 const DEFAULT_BACKGROUND_IMAGE = "https://images.unsplash.com/photo-1531973576160-712526b6a629?q=80&w=2080&auto=format&fit=crop";
 
-const FONT_OPTIONS = [
-  { name: '기본 (Sans)', value: 'Inter, sans-serif' },
-  { name: '세리프 (Serif)', value: 'Georgia, serif' },
-  { name: '나눔명조', value: '"Nanum Myeongjo", serif' },
-  { name: '나눔고딕', value: '"Nanum Gothic", sans-serif' },
-  { name: '바탕체', value: 'Batang, serif' },
-  { name: '궁서체', value: 'Gungsuh, serif' },
-];
-
 const LandingPage: React.FC<LandingPageProps> = ({ 
-  onEnterGallery, 
-  onEnterProfile, 
-  onEnterExhibition,
-  onEnterImagination,
   galleryTitle, 
   galleryTitleFont,
   galleryTitleSize,
@@ -47,20 +30,15 @@ const LandingPage: React.FC<LandingPageProps> = ({
   isAdminMode,
   onUpdateBackground,
   onUpdateArtistStatement,
-  onUpdateTitleSettings
+  onNavigate,
 }) => {
   const [newBg, setNewBg] = useState<{ file: File; previewUrl: string } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditingStatement, setIsEditingStatement] = useState(false);
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
   
   const [editKeywords, setEditKeywords] = useState(artistKeywords);
   const [editStatement, setEditStatement] = useState(artistStatement);
   
-  const [editTitle, setEditTitle] = useState(galleryTitle);
-  const [editFont, setEditFont] = useState(galleryTitleFont);
-  const [editSize, setEditSize] = useState(galleryTitleSize);
-
   const fileInputRef = useRef<HTMLInputElement>(null);
   const statementRef = useRef<HTMLDivElement>(null);
 
@@ -68,12 +46,6 @@ const LandingPage: React.FC<LandingPageProps> = ({
     setEditKeywords(artistKeywords);
     setEditStatement(artistStatement);
   }, [artistKeywords, artistStatement]);
-
-  useEffect(() => {
-    setEditTitle(galleryTitle);
-    setEditFont(galleryTitleFont);
-    setEditSize(galleryTitleSize);
-  }, [galleryTitle, galleryTitleFont, galleryTitleSize]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -107,17 +79,6 @@ const LandingPage: React.FC<LandingPageProps> = ({
     }
   };
 
-  const handleSaveTitleSettings = async () => {
-    setIsSaving(true);
-    try {
-      await onUpdateTitleSettings(editTitle, editFont, editSize);
-      setIsEditingTitle(false);
-    } catch (error) {
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   const handleCancelBg = () => {
     if (newBg) {
       URL.revokeObjectURL(newBg.previewUrl);
@@ -133,98 +94,6 @@ const LandingPage: React.FC<LandingPageProps> = ({
 
   return (
     <div className="relative min-h-screen w-full font-sans bg-black overflow-x-hidden">
-      {/* Desktop Header Navigation */}
-      <header className="absolute top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-start pointer-events-none">
-        <div className="pointer-events-auto flex flex-col items-start gap-2">
-          <h1 
-            className="text-white font-bold tracking-[0.2em] uppercase drop-shadow-md cursor-pointer"
-            style={{ 
-              fontFamily: galleryTitleFont, 
-              fontSize: `${galleryTitleSize}px` 
-            }}
-            onClick={() => isAdminMode && setIsEditingTitle(true)}
-          >
-            {galleryTitle}
-          </h1>
-          {isAdminMode && (
-            <button 
-              onClick={() => setIsEditingTitle(true)}
-              className="text-[10px] text-white/40 hover:text-white/80 transition-colors flex items-center gap-1"
-            >
-              <Icon type="edit" className="w-3 h-3" />
-              타이틀 설정
-            </button>
-          )}
-        </div>
-        <nav className="hidden md:flex gap-10 pointer-events-auto">
-          <button onClick={onEnterGallery} className="text-white/70 hover:text-white text-xs font-bold tracking-[0.3em] uppercase transition-all duration-300 hover:translate-y-[-2px]">Gallery</button>
-          <button onClick={onEnterExhibition} className="text-white/70 hover:text-white text-xs font-bold tracking-[0.3em] uppercase transition-all duration-300 hover:translate-y-[-2px]">Exhibition</button>
-          <button onClick={onEnterImagination} className="text-white/70 hover:text-white text-xs font-bold tracking-[0.3em] uppercase transition-all duration-300 hover:translate-y-[-2px]">Imagination</button>
-          <button onClick={onEnterProfile} className="text-white/70 hover:text-white text-xs font-bold tracking-[0.3em] uppercase transition-all duration-300 hover:translate-y-[-2px]">About</button>
-        </nav>
-      </header>
-
-      {/* Title Settings Modal */}
-      {isEditingTitle && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl animate-slide-up-fade-in">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">타이틀 설정</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">문구</label>
-                <input 
-                  type="text"
-                  value={editTitle}
-                  onChange={(e) => setEditTitle(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">글자체</label>
-                <select 
-                  value={editFont}
-                  onChange={(e) => setEditFont(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                >
-                  {FONT_OPTIONS.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">글자 크기 (px)</label>
-                <div className="flex items-center gap-4">
-                  <input 
-                    type="range"
-                    min="12"
-                    max="64"
-                    value={editSize}
-                    onChange={(e) => setEditSize(e.target.value)}
-                    className="flex-1"
-                  />
-                  <span className="text-sm font-bold w-8">{editSize}</span>
-                </div>
-              </div>
-            </div>
-            <div className="mt-8 flex justify-end gap-3">
-              <button 
-                onClick={() => setIsEditingTitle(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                취소
-              </button>
-              <button 
-                onClick={handleSaveTitleSettings}
-                disabled={isSaving}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition-colors flex items-center gap-2"
-              >
-                {isSaving ? <Spinner size="h-4 w-4" /> : '저장하기'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Hero Section */}
       <section className="relative h-screen w-full flex items-center justify-center p-4">
         {/* Background Image & Scrim */}
@@ -264,19 +133,19 @@ const LandingPage: React.FC<LandingPageProps> = ({
           )}
           <div className="mt-12 flex flex-col items-center gap-6">
               <div className="flex flex-wrap justify-center gap-6">
-                  <div className="flex flex-col items-center gap-3 group cursor-pointer" onClick={onEnterProfile}>
+                  <div className="flex flex-col items-center gap-3 group cursor-pointer" onClick={() => onNavigate('profile')}>
                       <div className="w-20 h-20 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20 shadow-lg">
                           <Icon type="profile" className="w-10 h-10 text-white" />
                       </div>
                       <span className="font-medium text-gray-200">작가 프로필</span>
                   </div>
-                  <div className="flex flex-col items-center gap-3 group cursor-pointer" onClick={onEnterExhibition}>
+                  <div className="flex flex-col items-center gap-3 group cursor-pointer" onClick={() => onNavigate('exhibition')}>
                       <div className="w-20 h-20 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20 shadow-lg">
                           <Icon type="exhibition" className="w-10 h-10 text-white" />
                       </div>
                       <span className="font-medium text-gray-200">Exhibition</span>
                   </div>
-                  <div className="flex flex-col items-center gap-3 group cursor-pointer" onClick={onEnterImagination}>
+                  <div className="flex flex-col items-center gap-3 group cursor-pointer" onClick={() => onNavigate('imagination')}>
                       <div className="w-20 h-20 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20 shadow-lg">
                           <Icon type="video" className="w-10 h-10 text-white" />
                       </div>
@@ -284,7 +153,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
                   </div>
               </div>
               <button
-                onClick={onEnterGallery}
+                onClick={() => onNavigate('gallery')}
                 className="mt-4 inline-flex items-center justify-center bg-white text-blue-700 font-bold py-3 px-10 rounded-full shadow-lg"
               >
                 <Icon type="sparkles" className="w-6 h-6 mr-3" />

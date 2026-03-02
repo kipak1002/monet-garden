@@ -7,11 +7,13 @@ interface HeaderProps {
   isAdminMode: boolean;
   onToggleAdminMode: () => void;
   galleryTitle: string;
-  onTitleChange: (newTitle: string) => void;
+  galleryTitleFont: string;
+  galleryTitleSize: string;
   onOpenChangePasswordSettings: () => void;
-  showHomeButton?: boolean;
-  onNavigateHome?: () => void;
+  onNavigate: (page: 'landing' | 'gallery' | 'profile' | 'exhibition' | 'imagination') => void;
+  currentPage: string;
   visitorCount?: number | null;
+  onEditTitleSettings?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
@@ -20,29 +22,18 @@ const Header: React.FC<HeaderProps> = ({
   isAdminMode, 
   onToggleAdminMode,
   galleryTitle,
-  onTitleChange,
+  galleryTitleFont,
+  galleryTitleSize,
   onOpenChangePasswordSettings,
-  showHomeButton,
-  onNavigateHome,
-  visitorCount
+  onNavigate,
+  currentPage,
+  visitorCount,
+  onEditTitleSettings
 }) => {
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [editableTitle, setEditableTitle] = useState(galleryTitle);
-  const titleInputRef = useRef<HTMLInputElement>(null);
   const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const adminMenuRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    setEditableTitle(galleryTitle);
-  }, [galleryTitle]);
-  
-  useEffect(() => {
-    if (isEditingTitle && titleInputRef.current) {
-      titleInputRef.current.focus();
-      titleInputRef.current.select();
-    }
-  }, [isEditingTitle]);
-  
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (adminMenuRef.current && !adminMenuRef.current.contains(event.target as Node)) {
@@ -56,161 +47,145 @@ const Header: React.FC<HeaderProps> = ({
     };
   }, []);
 
-  const handleTitleSave = () => {
-    if (editableTitle.trim()) {
-      onTitleChange(editableTitle.trim());
-    } else {
-        setEditableTitle(galleryTitle); // revert if empty
-    }
-    setIsEditingTitle(false);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleTitleSave();
-    } else if (e.key === 'Escape') {
-      setEditableTitle(galleryTitle);
-      setIsEditingTitle(false);
-    }
-  };
+  const navItems = [
+    { id: 'gallery', label: 'Gallery' },
+    { id: 'exhibition', label: 'Exhibition' },
+    { id: 'imagination', label: 'Imagination' },
+    { id: 'profile', label: 'About' },
+  ];
 
   return (
-    <header className="bg-white/90 backdrop-blur-md sticky top-0 z-20 shadow-sm p-3 md:p-4">
-      <div className="container mx-auto flex flex-col md:flex-row md:items-center gap-3 md:gap-6">
-        {/* Top Row: Home, Title, and Admin Controls */}
-        <div className="flex justify-between items-center gap-2 min-w-0 flex-1">
-          <div className="flex items-center gap-2 md:gap-4 min-w-0">
-            {showHomeButton && (
-              <button
-                onClick={onNavigateHome}
-                className="font-semibold text-blue-600 hover:text-blue-800 transition-colors pr-2 md:pr-4 border-r border-gray-300 flex-shrink-0 text-sm md:text-base"
-              >
-                HOME
-              </button>
-            )}
-            <div className="flex items-center gap-2 min-w-0">
-              {isEditingTitle ? (
-                <input
-                  ref={titleInputRef}
-                  type="text"
-                  value={editableTitle}
-                  onChange={(e) => setEditableTitle(e.target.value)}
-                  onBlur={handleTitleSave}
-                  onKeyDown={handleKeyDown}
-                  className="text-lg md:text-2xl font-bold text-gray-800 tracking-tight bg-transparent border-b-2 border-blue-500 focus:outline-none w-full"
-                />
-              ) : isAdminMode ? (
-                <button
-                  onClick={() => setIsEditingTitle(true)}
-                  className="flex items-center gap-2 group min-w-0"
-                  title="갤러리 제목 편집"
-                >
-                  <h1 className="text-lg md:text-2xl font-serif font-bold text-gray-800 tracking-tight group-hover:text-blue-600 transition-colors truncate">
-                    {galleryTitle}
-                  </h1>
-                  <div className="text-gray-500 group-hover:text-blue-600 transition-colors flex-shrink-0">
-                    <Icon type="edit" className="w-4 h-4 md:w-5 md:h-5" />
-                  </div>
-                </button>
-              ) : (
-                <h1 className="text-lg md:text-2xl font-serif font-bold text-gray-800 tracking-tight truncate">
-                  {galleryTitle}
-                </h1>
-              )}
-            </div>
-          </div>
+    <header className={`fixed top-0 left-0 w-full z-[60] transition-all duration-300 ${currentPage === 'landing' ? 'bg-transparent' : 'bg-white/90 backdrop-blur-md shadow-sm'}`}>
+      <div className="max-w-[1920px] mx-auto px-6 md:px-12 py-6 md:py-8 flex justify-between items-center">
+        {/* Left: Artist Name */}
+        <div className="flex items-center gap-4">
+          <h1 
+            className={`cursor-pointer transition-colors ${currentPage === 'landing' ? 'text-white drop-shadow-md' : 'text-gray-900'}`}
+            style={{ 
+              fontFamily: galleryTitleFont, 
+              fontSize: `${Math.min(Number(galleryTitleSize), 32)}px`,
+              fontWeight: 'bold',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase'
+            }}
+            onClick={() => onNavigate('landing')}
+          >
+            {galleryTitle}
+          </h1>
+          {isAdminMode && onEditTitleSettings && (
+            <button 
+              onClick={onEditTitleSettings}
+              className={`p-1 rounded-full transition-colors ${currentPage === 'landing' ? 'text-white/40 hover:text-white' : 'text-gray-400 hover:text-gray-900'}`}
+              title="타이틀 설정"
+            >
+              <Icon type="edit" className="w-4 h-4" />
+            </button>
+          )}
+        </div>
 
-          {/* Admin Buttons (Mobile) */}
-          <div className="flex md:hidden items-center gap-2 flex-shrink-0">
+        {/* Right: Navigation & Controls */}
+        <div className="flex items-center gap-6 md:gap-10">
+          {/* Desktop Navigation */}
+          <nav className="hidden lg:flex items-center gap-10">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => onNavigate(item.id as any)}
+                className={`text-[11px] font-bold tracking-[0.3em] uppercase transition-all duration-300 hover:translate-y-[-2px] ${
+                  currentPage === item.id 
+                    ? (currentPage === 'landing' ? 'text-white border-b border-white' : 'text-blue-600 border-b border-blue-600')
+                    : (currentPage === 'landing' ? 'text-white/70 hover:text-white' : 'text-gray-500 hover:text-gray-900')
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
+
+          {/* Search & Admin Controls */}
+          <div className="flex items-center gap-3 md:gap-5">
+            {/* Search Toggle */}
+            <div className="relative flex items-center">
+              {isSearchOpen && (
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchTerm}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  autoFocus
+                  onBlur={() => !searchTerm && setIsSearchOpen(false)}
+                  className={`absolute right-full mr-4 w-40 md:w-64 py-1.5 px-4 bg-white/10 backdrop-blur-md border rounded-full text-sm outline-none transition-all ${
+                    currentPage === 'landing' ? 'border-white/30 text-white placeholder:text-white/50' : 'border-gray-200 text-gray-900 placeholder:text-gray-400'
+                  }`}
+                />
+              )}
+              <button 
+                onClick={() => setIsSearchOpen(!isSearchOpen)}
+                className={`p-2 transition-colors ${currentPage === 'landing' ? 'text-white/70 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}
+              >
+                <Icon type="search" className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Admin Menu */}
             {isAdminMode && (
               <div className="relative" ref={adminMenuRef}>
                 <button
-                  onClick={() => setIsAdminMenuOpen(prev => !prev)}
-                  className="p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+                  onClick={() => setIsAdminMenuOpen(!isAdminMenuOpen)}
+                  className={`p-2 rounded-full transition-colors ${currentPage === 'landing' ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                 >
                   <Icon type="cog" className="w-5 h-5" />
                 </button>
                 {isAdminMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-2 z-30 ring-1 ring-black ring-opacity-5">
+                  <div className="absolute right-0 mt-4 w-64 bg-white rounded-xl shadow-2xl py-3 z-[70] ring-1 ring-black ring-opacity-5 animate-slide-up-fade-in-slow">
                     {visitorCount !== undefined && visitorCount !== null && (
-                      <div className="px-4 py-2 text-xs text-gray-600 border-b border-gray-100 mb-1 flex justify-between items-center">
-                        <span className="font-semibold">방문자</span>
-                        <span className="bg-blue-100 text-blue-800 py-0.5 px-2 rounded-full">{visitorCount.toLocaleString()}</span>
+                      <div className="px-5 py-2 text-xs text-gray-500 border-b border-gray-100 mb-2 flex justify-between items-center">
+                        <span className="font-semibold uppercase tracking-wider">Visitors</span>
+                        <span className="bg-blue-50 text-blue-700 py-0.5 px-2 rounded-full font-bold">{visitorCount.toLocaleString()}</span>
                       </div>
                     )}
                     <button
                       onClick={() => { onOpenChangePasswordSettings(); setIsAdminMenuOpen(false); }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
+                      className="w-full text-left px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
                     >
-                      <Icon type="key" className="w-4 h-4 text-gray-500" />
+                      <Icon type="key" className="w-4 h-4 text-gray-400" />
                       <span>비밀번호 변경</span>
                     </button>
                   </div>
                 )}
               </div>
             )}
+
+            {/* Admin Toggle */}
             <button
               onClick={onToggleAdminMode}
-              className={`p-2 rounded-full transition-colors duration-300 ${isAdminMode ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}
+              className={`p-2 rounded-full transition-all duration-300 ${
+                isAdminMode 
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' 
+                  : (currentPage === 'landing' ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
+              }`}
+              title={isAdminMode ? "관리자 모드 종료" : "관리자 모드 시작"}
             >
               <Icon type="shield-check" className="w-5 h-5" />
             </button>
           </div>
         </div>
-
-        {/* Search Bar Row (Full width on mobile, max-w-xs on desktop) */}
-        <div className="w-full md:max-w-xs md:ml-auto">
-          <div className="relative w-full">
-            <input
-              type="text"
-              placeholder="작품 검색..."
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 md:py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors text-sm md:text-base bg-gray-50 md:bg-white"
-            />
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-              <Icon type="search" className="w-4 h-4 md:w-5 md:h-5" />
-            </div>
-          </div>
-        </div>
-
-        {/* Admin Buttons (Desktop) */}
-        <div className="hidden md:flex items-center gap-4 flex-shrink-0">
-          {isAdminMode && (
-            <div className="relative" ref={adminMenuRef}>
-              <button
-                onClick={() => setIsAdminMenuOpen(prev => !prev)}
-                className="p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
-              >
-                <Icon type="cog" className="w-6 h-6" />
-              </button>
-              {isAdminMenuOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg py-2 z-30 ring-1 ring-black ring-opacity-5">
-                  {visitorCount !== undefined && visitorCount !== null && (
-                    <div className="px-4 py-2 text-sm text-gray-600 border-b border-gray-100 mb-1 flex justify-between items-center">
-                      <span className="font-semibold">총 방문자 수</span>
-                      <span className="bg-blue-100 text-blue-800 py-0.5 px-2 rounded-full text-xs">{visitorCount.toLocaleString()}명</span>
-                    </div>
-                  )}
-                  <button
-                    onClick={() => { onOpenChangePasswordSettings(); setIsAdminMenuOpen(false); }}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
-                  >
-                    <Icon type="key" className="w-5 h-5 text-gray-500" />
-                    <span>관리자 비밀번호 변경</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-          <button
-            onClick={onToggleAdminMode}
-            className={`p-2 rounded-full transition-colors duration-300 ${isAdminMode ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}
-          >
-            <Icon type="shield-check" className="w-6 h-6" />
-          </button>
-        </div>
       </div>
+
+      {/* Mobile Navigation Rail (Bottom or simplified) */}
+      <nav className="lg:hidden flex justify-around items-center py-4 px-2 border-t border-white/10 bg-black/20 backdrop-blur-lg md:hidden">
+         {navItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => onNavigate(item.id as any)}
+              className={`text-[9px] font-bold tracking-[0.2em] uppercase transition-colors ${
+                currentPage === item.id ? 'text-white' : 'text-white/50'
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+      </nav>
     </header>
   );
 };

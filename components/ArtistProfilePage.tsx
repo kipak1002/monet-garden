@@ -1,21 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { supabase, uploadImage, generateThumbnailFromUrl } from '../services/supabaseClient.ts';
+import { supabase, uploadImage } from '../services/supabaseClient.ts';
 import Spinner from './Spinner';
 import Icon from './Icon';
 import Linkify from './Linkify';
 
 interface ArtistProfilePageProps {
-  onNavigateHome: () => void;
   isAdminMode: boolean;
-  onToggleAdminMode: () => void;
-  onOpenChangePasswordSettings: () => void;
 }
 
 const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
-  onNavigateHome,
   isAdminMode,
-  onToggleAdminMode,
-  onOpenChangePasswordSettings
 }) => {
   const [profileImageUrls, setProfileImageUrls] = useState<string[]>([]);
   const [profileInfo, setProfileInfo] = useState('');
@@ -27,12 +21,7 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
   
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
   
-  const [isMigrating, setIsMigrating] = useState(false);
-  const [migrationProgress, setMigrationProgress] = useState({ current: 0, total: 0 });
-
-  const adminMenuRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -90,19 +79,6 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
           setNewImagePreviewUrls([]);
       }
   }, [isAdminMode, profileImageUrls, profileInfo]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (adminMenuRef.current && !adminMenuRef.current.contains(event.target as Node)) {
-        setIsAdminMenuOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -160,54 +136,6 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
       alert('프로필 저장 중 오류가 발생했습니다.');
     } finally {
       setIsSaving(false);
-    }
-  };
-
-  const handleBatchGenerateThumbnails = async () => {
-    if (!confirm('모든 기존 작품의 썸네일을 일괄 생성하시겠습니까? (이미지가 많을 경우 시간이 걸릴 수 있습니다.)')) return;
-    
-    setIsMigrating(true);
-    try {
-        const { data: artworks } = await supabase.from('artworks').select('image_urls');
-        const { data: exhibitions } = await supabase.from('exhibitions').select('image_urls');
-        const { data: imagination } = await supabase.from('imagination_gallery').select('original_image_url');
-
-        const allUrls: string[] = [];
-        artworks?.forEach(a => {
-            const urls = typeof a.image_urls === 'string' ? JSON.parse(a.image_urls) : a.image_urls;
-            if (Array.isArray(urls)) allUrls.push(...urls);
-            else if (urls) allUrls.push(urls);
-        });
-        exhibitions?.forEach(e => {
-            const urls = typeof e.image_urls === 'string' ? JSON.parse(e.image_urls) : e.image_urls;
-            if (Array.isArray(urls)) allUrls.push(...urls);
-            else if (urls) allUrls.push(urls);
-        });
-        imagination?.forEach(i => {
-            if (i.original_image_url) allUrls.push(i.original_image_url);
-        });
-
-        const uniqueUrls = Array.from(new Set(allUrls)).filter(url => 
-            url && url.includes('supabase.co') && url.endsWith('.webp') && !url.includes('_thumb.webp')
-        );
-
-        setMigrationProgress({ current: 0, total: uniqueUrls.length });
-
-        let successCount = 0;
-        for (let i = 0; i < uniqueUrls.length; i++) {
-            const success = await generateThumbnailFromUrl(uniqueUrls[i]);
-            if (success) successCount++;
-            setMigrationProgress(prev => ({ ...prev, current: i + 1 }));
-        }
-
-        alert(`썸네일 생성 완료!\n대상: ${uniqueUrls.length}개 중 ${successCount}개 성공`);
-    } catch (error) {
-        console.error('Migration error:', error);
-        alert('썸네일 일괄 생성 중 오류가 발생했습니다.');
-    } finally {
-        setIsMigrating(false);
-        setMigrationProgress({ current: 0, total: 0 });
-        setIsAdminMenuOpen(false);
     }
   };
 
@@ -319,65 +247,7 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
   );
 
   return (
-    <div className="min-h-screen bg-white font-sans">
-      <header className="bg-white/80 backdrop-blur-md sticky top-0 z-10 shadow-sm p-4">
-        <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-2xl md:text-3xl font-serif font-bold text-gray-800 tracking-tight">
-            작가 프로필
-          </h1>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={onNavigateHome}
-              className="font-semibold text-blue-600 hover:text-blue-800 transition-colors"
-            >
-              HOME
-            </button>
-            {isAdminMode && (
-                <div className="relative" ref={adminMenuRef}>
-                    <button
-                        onClick={() => setIsAdminMenuOpen(prev => !prev)}
-                        title="관리자 설정"
-                        className="p-2 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 transition-colors"
-                        aria-haspopup="true"
-                        aria-expanded={isAdminMenuOpen}
-                        aria-label="관리자 설정"
-                    >
-                        <Icon type="cog" className="w-6 h-6" />
-                    </button>
-                    {isAdminMenuOpen && (
-                        <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-20 ring-1 ring-black ring-opacity-5">
-                            <button
-                                onClick={() => {
-                                    onOpenChangePasswordSettings();
-                                    setIsAdminMenuOpen(false);
-                                }}
-                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
-                            >
-                                <Icon type="key" className="w-5 h-5 text-gray-500" />
-                                <span>관리자 비밀번호 변경</span>
-                            </button>
-                            <button
-                                onClick={handleBatchGenerateThumbnails}
-                                disabled={isMigrating}
-                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3 border-t"
-                            >
-                                <Icon type="sparkles" className="w-5 h-5 text-blue-500" />
-                                <span>{isMigrating ? `진행중 (${migrationProgress.current}/${migrationProgress.total})` : '기존 그림 썸네일 일괄 생성'}</span>
-                            </button>
-                        </div>
-                    )}
-                </div>
-            )}
-            <button
-              onClick={onToggleAdminMode}
-              title={isAdminMode ? "관리자 모드 종료" : "관리자 모드 시작"}
-              className={`p-2 rounded-full transition-colors duration-300 ${isAdminMode ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}
-            >
-              <Icon type="shield-check" className="w-6 h-6" />
-            </button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-white font-sans pt-24 md:pt-32">
       <main className="container mx-auto p-6 md:p-8">
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
@@ -385,25 +255,6 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
           </div>
         ) : isAdminMode ? renderAdminView() : renderPublicView()}
       </main>
-
-      {isMigrating && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
-              <div className="bg-white rounded-xl p-8 max-w-md w-full text-center shadow-2xl">
-                  <Spinner size="h-12 w-12 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">썸네일 일괄 생성 중...</h3>
-                  <p className="text-gray-600 mb-4">기존 이미지들을 최적화하고 있습니다.<br/>잠시만 기다려 주세요.</p>
-                  <div className="w-full bg-gray-200 rounded-full h-4 mb-2">
-                      <div 
-                        className="bg-blue-600 h-4 rounded-full transition-all duration-300" 
-                        style={{ width: `${(migrationProgress.current / migrationProgress.total) * 100}%` }}
-                      ></div>
-                  </div>
-                  <p className="text-sm font-medium text-blue-600">
-                      {migrationProgress.current} / {migrationProgress.total} 처리 완료
-                  </p>
-              </div>
-          </div>
-      )}
     </div>
   );
 };

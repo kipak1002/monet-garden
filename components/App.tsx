@@ -77,6 +77,7 @@ const App: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editingArtwork, setEditingArtwork] = useState<Artwork | null>(null);
   const [itemToDelete, setItemToDelete] = useState<any | null>(null);
   const [itemTypeToDelete, setItemTypeToDelete] = useState<'작품' | '전시회' | '상상작품' | ''>('');
@@ -236,16 +237,6 @@ const App: React.FC = () => {
     return false;
   };
   
-  const handleTitleChange = async (newTitle: string) => {
-    setGalleryTitle(newTitle);
-    try {
-      await supabase.from('settings').upsert({ key: 'galleryTitle', value: newTitle }, { onConflict: 'key' });
-    } catch (error) {
-      console.error('Error updating title:', error);
-      alert('제목 업데이트 중 오류가 발생했습니다.');
-    }
-  };
-
   const handleUpdateLandingBackground = async (imageFile: File): Promise<void> => {
     try {
       const newUrl = await uploadImage(imageFile);
@@ -427,10 +418,6 @@ const App: React.FC = () => {
     switch(currentPage) {
       case 'landing':
         return <LandingPage 
-                  onEnterGallery={() => handleNavigate('gallery')} 
-                  onEnterProfile={() => handleNavigate('profile')}
-                  onEnterExhibition={() => handleNavigate('exhibition')}
-                  onEnterImagination={() => handleNavigate('imagination')}
                   galleryTitle={galleryTitle}
                   galleryTitleFont={galleryTitleFont}
                   galleryTitleSize={galleryTitleSize}
@@ -440,80 +427,155 @@ const App: React.FC = () => {
                   isAdminMode={isAdminMode}
                   onUpdateBackground={handleUpdateLandingBackground}
                   onUpdateArtistStatement={handleUpdateArtistStatement}
-                  onUpdateTitleSettings={handleUpdateGalleryTitleSettings}
+                  onNavigate={handleNavigate}
                 />;
       case 'profile':
         return <ArtistProfilePage 
-                  onNavigateHome={() => handleNavigate('landing')} 
                   isAdminMode={isAdminMode} 
-                  onToggleAdminMode={handleToggleAdminMode}
-                  onOpenChangePasswordSettings={() => setIsChangePasswordModalOpen(true)}
                 />;
       case 'exhibition':
         return <ExhibitionPage 
-                  onNavigateHome={() => handleNavigate('landing')} 
                   isAdminMode={isAdminMode} 
                   exhibitions={exhibitions}
                   onAddExhibition={handleAddExhibition}
                   onEditExhibition={openEditExhibitionModal} 
                   onDeleteExhibition={(ex) => openDeleteModal(ex, '전시회')}
                   isLoading={isLoading}
-                  onToggleAdminMode={handleToggleAdminMode}
-                  onOpenChangePasswordSettings={() => setIsChangePasswordModalOpen(true)}
                 />;
       case 'imagination':
         return <ImaginationGalleryPage 
-                  onNavigateHome={() => handleNavigate('landing')}
                   isAdminMode={isAdminMode}
                   imaginationArtworks={imaginationArtworks}
                   onAddImagination={handleAddImagination}
                   onUpdateImagination={handleUpdateImagination}
                   onDeleteImagination={(item) => openDeleteModal(item, '상상작품')}
-                  onToggleAdminMode={handleToggleAdminMode}
-                  onOpenChangePasswordSettings={() => setIsChangePasswordModalOpen(true)}
                 />;
       case 'gallery':
       default:
         return (
-          <>
-            <Header
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
+          <main className="w-full">
+            <Gallery 
+              artworks={filteredArtworks}
+              onSelectArtwork={handleSelectArtwork}
               isAdminMode={isAdminMode}
-              onToggleAdminMode={handleToggleAdminMode}
-              galleryTitle={galleryTitle}
-              onTitleChange={handleTitleChange}
-              onOpenChangePasswordSettings={() => setIsChangePasswordModalOpen(true)}
-              showHomeButton={true}
-              onNavigateHome={() => handleNavigate('landing')}
-              visitorCount={visitorCount}
+              onEditArtwork={openEditModal}
+              onDeleteArtwork={(art) => openDeleteModal(art, '작품')}
             />
-            <main className="w-full">
-              <Gallery 
-                artworks={filteredArtworks}
-                onSelectArtwork={handleSelectArtwork}
-                isAdminMode={isAdminMode}
-                onEditArtwork={openEditModal}
-                onDeleteArtwork={(art) => openDeleteModal(art, '작품')}
-              />
-            </main>
-            {isAdminMode && (
-              <button
-                  onClick={openAddModal}
-                  title="새 작품 추가"
-                  className="fixed bottom-8 right-8 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-110"
-              >
-                  <Icon type="plus" className="w-8 h-8" />
-              </button>
-            )}
-          </>
+          </main>
         );
     }
   }
 
+  const FONT_OPTIONS = [
+    { name: '기본 (Sans)', value: 'Inter, sans-serif' },
+    { name: '세리프 (Serif)', value: 'Georgia, serif' },
+    { name: '나눔명조', value: '"Nanum Myeongjo", serif' },
+    { name: '나눔고딕', value: '"Nanum Gothic", sans-serif' },
+    { name: '바탕체', value: 'Batang, serif' },
+    { name: '궁서체', value: 'Gungsuh, serif' },
+  ];
+
+  const [editTitle, setEditTitle] = useState(galleryTitle);
+  const [editFont, setEditFont] = useState(galleryTitleFont);
+  const [editSize, setEditSize] = useState(galleryTitleSize);
+
+  useEffect(() => {
+    setEditTitle(galleryTitle);
+    setEditFont(galleryTitleFont);
+    setEditSize(galleryTitleSize);
+  }, [galleryTitle, galleryTitleFont, galleryTitleSize]);
+
   return (
     <div className="bg-white min-h-screen font-sans">
+      <Header
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        isAdminMode={isAdminMode}
+        onToggleAdminMode={handleToggleAdminMode}
+        galleryTitle={galleryTitle}
+        galleryTitleFont={galleryTitleFont}
+        galleryTitleSize={galleryTitleSize}
+        onOpenChangePasswordSettings={() => setIsChangePasswordModalOpen(true)}
+        onNavigate={handleNavigate}
+        currentPage={currentPage}
+        visitorCount={visitorCount}
+        onEditTitleSettings={() => setIsEditingTitle(true)}
+      />
+      
       {renderPage()}
+
+      {/* Title Settings Modal */}
+      {isEditingTitle && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl animate-slide-up-fade-in">
+            <h3 className="text-xl font-bold text-gray-900 mb-6 font-serif">타이틀 설정</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">문구</label>
+                <input 
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">글자체</label>
+                <select 
+                  value={editFont}
+                  onChange={(e) => setEditFont(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                >
+                  {FONT_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">글자 크기 (px)</label>
+                <div className="flex items-center gap-4">
+                  <input 
+                    type="range"
+                    min="12"
+                    max="64"
+                    value={editSize}
+                    onChange={(e) => setEditSize(e.target.value)}
+                    className="flex-1"
+                  />
+                  <span className="text-sm font-bold w-8">{editSize}</span>
+                </div>
+              </div>
+            </div>
+            <div className="mt-8 flex justify-end gap-3">
+              <button 
+                onClick={() => setIsEditingTitle(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                취소
+              </button>
+              <button 
+                onClick={async () => {
+                  await handleUpdateGalleryTitleSettings(editTitle, editFont, editSize);
+                  setIsEditingTitle(false);
+                }}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+              >
+                저장하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isAdminMode && currentPage === 'gallery' && (
+        <button
+            onClick={openAddModal}
+            title="새 작품 추가"
+            className="fixed bottom-8 right-8 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-110 z-50"
+        >
+            <Icon type="plus" className="w-8 h-8" />
+        </button>
+      )}
       <ArtworkDetailModal artwork={selectedArtwork} onClose={() => handleSelectArtwork(null)} />
       <EditArtworkModal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} artworkToEdit={editingArtwork} onUpdate={handleUpdateArtwork} onDelete={(art) => { setIsEditModalOpen(false); openDeleteModal(art, '작품'); }} />
       <GenerateArtworkModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onAdd={handleAddNewArtwork} />

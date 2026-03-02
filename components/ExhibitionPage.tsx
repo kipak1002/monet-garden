@@ -1,51 +1,30 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import type { Exhibition } from '../types';
 import Spinner from './Spinner';
 import Icon from './Icon';
 import Linkify from './Linkify';
 
 interface ExhibitionPageProps {
-  onNavigateHome: () => void;
   isAdminMode: boolean;
   exhibitions: Exhibition[];
   onAddExhibition: (title: string, description: string, imageFiles: File[]) => Promise<void>;
   onEditExhibition: (exhibition: Exhibition) => void;
   onDeleteExhibition: (exhibition: Exhibition) => void;
   isLoading: boolean;
-  onToggleAdminMode: () => void;
-  onOpenChangePasswordSettings: () => void;
 }
 
 const ExhibitionPage: React.FC<ExhibitionPageProps> = ({ 
-  onNavigateHome, 
   isAdminMode,
   exhibitions,
   onAddExhibition,
   onEditExhibition,
   onDeleteExhibition,
   isLoading,
-  onToggleAdminMode,
-  onOpenChangePasswordSettings
 }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [newExhibition, setNewExhibition] = useState<{ title: string, description: string, images: File[], previewUrls: string[] }>({ title: '', description: '', images: [], previewUrls: [] });
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
-  const adminMenuRef = useRef<HTMLDivElement>(null);
-  
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (adminMenuRef.current && !adminMenuRef.current.contains(event.target as Node)) {
-        setIsAdminMenuOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -101,57 +80,7 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans">
-      <header className="bg-white/80 backdrop-blur-md sticky top-0 z-10 shadow-sm p-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <h1 className="text-2xl md:text-3xl font-serif font-bold text-gray-800 tracking-tight">
-            전시회
-          </h1>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={onNavigateHome}
-              className="font-semibold text-blue-600 hover:text-blue-800 transition-colors"
-            >
-              HOME
-            </button>
-            {isAdminMode && (
-                <div className="relative" ref={adminMenuRef}>
-                    <button
-                        onClick={() => setIsAdminMenuOpen(prev => !prev)}
-                        title="관리자 설정"
-                        className="p-2 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 transition-colors"
-                        aria-haspopup="true"
-                        aria-expanded={isAdminMenuOpen}
-                        aria-label="관리자 설정"
-                    >
-                        <Icon type="cog" className="w-6 h-6" />
-                    </button>
-                    {isAdminMenuOpen && (
-                        <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-20 ring-1 ring-black ring-opacity-5">
-                            <button
-                                onClick={() => {
-                                    onOpenChangePasswordSettings();
-                                    setIsAdminMenuOpen(false);
-                                }}
-                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
-                            >
-                                <Icon type="key" className="w-5 h-5 text-gray-500" />
-                                <span>관리자 비밀번호 변경</span>
-                            </button>
-                        </div>
-                    )}
-                </div>
-            )}
-            <button
-              onClick={onToggleAdminMode}
-              title={isAdminMode ? "관리자 모드 종료" : "관리자 모드 시작"}
-              className={`p-2 rounded-full transition-colors duration-300 ${isAdminMode ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}
-            >
-              <Icon type="shield-check" className="w-6 h-6" />
-            </button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-white font-sans pt-24 md:pt-32">
       <main className="max-w-7xl mx-auto p-6 md:p-8">
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
