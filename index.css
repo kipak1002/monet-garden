@@ -1,5 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700&family=Nanum+Myeongjo:wght@400;700&display=swap');
 
+@theme {
+  --font-serif: "Nanum Myeongjo", Georgia, serif;
+  --font-sans: "Nanum Gothic", Inter, sans-serif;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

@@ -405,14 +405,14 @@ const LandingPage: React.FC<LandingPageProps> = ({
             <div className="animate-fade-in">
               <div className="mb-12">
                 <h2 className="text-xs font-bold tracking-[0.3em] text-blue-600 uppercase mb-6">Artist Statement</h2>
-                <div className="text-xl md:text-2xl font-medium text-gray-800 leading-relaxed whitespace-pre-wrap italic">
+                <div className="text-xl md:text-2xl font-serif font-medium text-gray-800 leading-relaxed whitespace-pre-wrap italic">
                   {artistKeywords || "작품의 핵심 키워드를 입력해주세요."}
                 </div>
               </div>
               
               <div className="w-full h-px bg-gray-200 my-12"></div>
               
-              <div className="text-lg text-gray-600 leading-loose whitespace-pre-wrap font-light">
+              <div className="text-lg text-gray-600 leading-loose whitespace-pre-wrap font-serif font-light">
                 {artistStatement || "작가 노트를 작성해주세요."}
               </div>
             </div>

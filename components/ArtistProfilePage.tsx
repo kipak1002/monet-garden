@@ -308,8 +308,8 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
         {profileInfo && (
             <div className="mt-12 pt-8 border-t border-gray-200">
                 <div className="max-w-4xl">
-                    <h3 className="text-2xl font-bold text-gray-800 mb-4">CONTACT US</h3>
-                    <div className="text-gray-700 whitespace-pre-wrap leading-relaxed bg-gray-50 p-6 rounded-md">
+                    <h3 className="text-2xl font-serif font-bold text-gray-800 mb-4">CONTACT US</h3>
+                    <div className="text-gray-700 whitespace-pre-wrap leading-relaxed font-serif">
                         <Linkify text={profileInfo} />
                     </div>
                 </div>
@@ -322,7 +322,7 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
     <div className="min-h-screen bg-white font-sans">
       <header className="bg-white/80 backdrop-blur-md sticky top-0 z-10 shadow-sm p-4">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">
+          <h1 className="text-2xl md:text-3xl font-serif font-bold text-gray-800 tracking-tight">
             작가 프로필
           </h1>
           <div className="flex items-center gap-4">

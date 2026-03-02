@@ -86,7 +86,7 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ artwork, index, onSelect, isA
   return (
     <div
       ref={cardRef}
-      className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer group transform hover:-translate-y-1 transition-all duration-300 relative flex-shrink-0 md:h-full md:w-auto w-full flex flex-col"
+      className="bg-white overflow-hidden cursor-pointer group transform hover:-translate-y-1 transition-all duration-300 relative flex-shrink-0 md:h-full md:w-auto w-full flex flex-col"
       onClick={() => onSelect(artwork)}
     >
       {isAdminMode && (
@@ -109,7 +109,7 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ artwork, index, onSelect, isA
           </button>
         </div>
       )}
-      <div className="flex-1 bg-gray-200 overflow-hidden md:h-full">
+      <div className="flex-1 bg-white overflow-hidden md:h-full">
         {isIntersecting && imgSrc ? (
           <img
             src={imgSrc}
@@ -124,9 +124,13 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ artwork, index, onSelect, isA
         )}
       </div>
       <div className="p-4 bg-white">
-        <h3 className="text-lg font-semibold text-gray-800 truncate">{artwork.title}</h3>
-        <p className="text-sm text-gray-600">{artwork.artist}, {artwork.year}</p>
-        <p className="text-sm text-gray-500 mt-1">{artwork.size}</p>
+        <h3 className="text-base font-serif font-bold text-gray-900 tracking-tight truncate">{artwork.title}</h3>
+        <div className="flex items-center gap-2 mt-1">
+          <p className="text-[10px] uppercase tracking-widest text-gray-500 font-medium">{artwork.artist}</p>
+          <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+          <p className="text-[10px] tracking-widest text-gray-500 font-medium">{artwork.year}</p>
+        </div>
+        <p className="text-[10px] text-gray-400 mt-1 italic font-serif">{artwork.size}</p>
       </div>
     </div>
   );

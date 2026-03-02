@@ -101,10 +101,10 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 font-sans">
+    <div className="min-h-screen bg-white font-sans">
       <header className="bg-white/80 backdrop-blur-md sticky top-0 z-10 shadow-sm p-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">
+          <h1 className="text-2xl md:text-3xl font-serif font-bold text-gray-800 tracking-tight">
             전시회
           </h1>
           <div className="flex items-center gap-4">
@@ -265,16 +265,16 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
                   )}
                   
                   <div className="p-6">
-                    <h3 className="text-xl font-bold text-gray-800">{ex.title}</h3>
+                    <h3 className="text-xl font-serif font-bold text-gray-800">{ex.title}</h3>
                      {ex.description && (
-                      <p className="mt-2 text-base text-gray-700 whitespace-pre-wrap">
+                      <p className="mt-2 text-base text-gray-700 whitespace-pre-wrap font-serif">
                         <Linkify text={ex.description} />
                       </p>
                     )}
                   </div>
 
                   {ex.image_urls && ex.image_urls.length > 0 ? (
-                    <div className="w-full bg-gray-100 p-4 relative group/exhibition">
+                    <div className="w-full bg-white relative group/exhibition">
                         {/* Navigation Buttons (Desktop Only) */}
                         {!isAdminMode && (
                           <>
@@ -299,13 +299,13 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
                           </>
                         )}
 
-                        <div className={`exhibition-scroll-container flex overflow-x-auto space-x-6 py-4 snap-x snap-mandatory ${isAdminMode ? 'custom-scrollbar' : 'scrollbar-hide'}`}>
+                        <div className={`exhibition-scroll-container flex overflow-x-auto space-x-0 snap-x snap-mandatory ${isAdminMode ? 'custom-scrollbar' : 'scrollbar-hide'}`}>
                             {ex.image_urls.map((url, index) => (
                                 <div key={index} className="flex-shrink-0 w-4/5 md:w-auto snap-center">
                                     <img 
                                         src={url} 
                                         alt={`${ex.title} image ${index + 1}`} 
-                                        className="h-64 md:h-[30vh] lg:h-[36vh] object-contain rounded-md shadow-sm" 
+                                        className="h-64 md:h-[30vh] lg:h-[36vh] object-contain" 
                                         referrerPolicy="no-referrer"
                                     />
                                 </div>

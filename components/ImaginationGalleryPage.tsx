@@ -49,10 +49,10 @@ const ImaginationGalleryPage: React.FC<ImaginationGalleryPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
+    <div className="min-h-screen bg-white font-sans">
       <header className="bg-white/80 backdrop-blur-md sticky top-0 z-10 shadow-sm p-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl md:text-3xl font-serif font-bold text-gray-800 tracking-tight flex items-center gap-2">
             <Icon type="video" className="w-8 h-8 text-blue-600" />
             상상갤러리
           </h1>
@@ -105,7 +105,7 @@ const ImaginationGalleryPage: React.FC<ImaginationGalleryPageProps> = ({
           </>
         )}
 
-        <div className={`imagination-scroll-container md:flex md:flex-row md:overflow-x-auto md:overflow-y-hidden md:h-full md:items-center md:gap-16 md:px-[15vw] flex flex-col gap-16 p-4 w-full ${isAdminMode ? 'custom-scrollbar' : 'scrollbar-hide'}`}>
+        <div className={`imagination-scroll-container md:flex md:flex-row md:overflow-x-auto md:overflow-y-hidden md:h-full md:items-center md:gap-0 md:px-[10vw] flex flex-col gap-8 w-full ${isAdminMode ? 'custom-scrollbar' : 'scrollbar-hide'}`}>
           {imaginationArtworks.length > 0 ? imaginationArtworks.map(item => (
             <VideoArtworkCard 
               key={item.id} 

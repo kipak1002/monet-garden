@@ -66,7 +66,7 @@ const ArtworkDetailModal: React.FC<ArtworkDetailModalProps> = ({
         >
           <Icon type="close" className="w-8 h-8" />
         </button>
-        <div className="w-full md:w-2/3 h-96 md:h-auto bg-gray-100 relative flex items-center justify-center">
+        <div className="w-full md:w-2/3 h-96 md:h-auto bg-white relative flex items-center justify-center">
             {images.length > 0 ? (
                 <img src={images[currentIndex]} alt={`${artwork.title} - Image ${currentIndex + 1}`} className="w-full h-full object-contain" />
             ) : (
@@ -93,14 +93,14 @@ const ArtworkDetailModal: React.FC<ArtworkDetailModalProps> = ({
             )}
         </div>
         <div className="w-full md:w-1/3 p-6 md:p-8 flex flex-col overflow-y-auto">
-          <h2 className="text-3xl font-bold text-gray-900">{artwork.title}</h2>
-          <p className="text-lg text-gray-600 mt-1">{artwork.artist}, {artwork.year}</p>
-          <p className="text-md text-gray-500 mt-2"><strong>크기:</strong> {artwork.size}</p>
+          <h2 className="text-3xl font-serif font-bold text-gray-900">{artwork.title}</h2>
+          <p className="text-lg text-gray-600 mt-1 font-serif italic">{artwork.artist}, {artwork.year}</p>
+          <p className="text-md text-gray-500 mt-2 font-serif"><strong>크기:</strong> {artwork.size}</p>
           
           {artwork.memo && (
             <div className="mt-4 pt-4 border-t">
-              <h4 className="text-md font-semibold text-gray-800">메모:</h4>
-              <p className="text-gray-700 whitespace-pre-wrap leading-relaxed bg-gray-50 p-3 rounded-md mt-1">
+              <h4 className="text-md font-serif font-semibold text-gray-800">메모:</h4>
+              <p className="text-gray-700 whitespace-pre-wrap leading-relaxed mt-1 font-serif">
                 <Linkify text={artwork.memo} />
               </p>
             </div>

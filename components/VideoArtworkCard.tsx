@@ -35,7 +35,7 @@ const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({ item, isAdminMode, 
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col group relative border border-gray-100 transition-all hover:shadow-2xl flex-shrink-0 md:w-[380px] w-full">
+    <div className="bg-white overflow-hidden flex flex-col group relative transition-all hover:shadow-2xl flex-shrink-0 md:w-[380px] w-full">
       {isAdminMode && (
         <div className="absolute top-2 right-2 z-10 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <button 
@@ -56,7 +56,7 @@ const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({ item, isAdminMode, 
       )}
       
       {/* Video Section - Top */}
-      <div className="w-full aspect-video bg-black flex items-center justify-center">
+      <div className="w-full aspect-video bg-white flex items-center justify-center">
         <video 
           src={item.video_url} 
           controls 
@@ -69,16 +69,16 @@ const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({ item, isAdminMode, 
       </div>
 
       {/* Info Section - Bottom */}
-      <div className="p-5 flex flex-col gap-4">
-        <div className="flex justify-between items-start">
-          <h3 className="text-xl font-bold text-gray-900">{item.title}</h3>
-          <span className="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded-md">
-            {item.year}년
+      <div className="p-5 flex flex-col gap-3 bg-white">
+        <div className="flex justify-between items-baseline">
+          <h3 className="text-lg font-serif font-bold text-gray-900 tracking-tight">{item.title}</h3>
+          <span className="text-[10px] font-bold tracking-widest text-blue-600 uppercase">
+            {item.year}
           </span>
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="w-24 h-24 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+          <div className="w-16 h-16 flex-shrink-0 bg-gray-50 rounded-lg overflow-hidden border border-gray-100">
             <img 
               src={imgSrc} 
               alt="원화 이미지" 
@@ -87,8 +87,8 @@ const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({ item, isAdminMode, 
               onClick={() => window.open(originalUrl, '_blank')}
             />
           </div>
-          <div className="flex flex-col text-sm text-gray-600">
-            <p><span className="font-semibold text-gray-900">크기:</span> {item.size}</p>
+          <div className="flex flex-col">
+            <p className="text-[10px] text-gray-400 italic font-serif">{item.size}</p>
           </div>
         </div>
       </div>

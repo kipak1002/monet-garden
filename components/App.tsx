@@ -512,7 +512,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="bg-gray-100 min-h-screen font-sans">
+    <div className="bg-white min-h-screen font-sans">
       {renderPage()}
       <ArtworkDetailModal artwork={selectedArtwork} onClose={() => handleSelectArtwork(null)} />
       <EditArtworkModal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} artworkToEdit={editingArtwork} onUpdate={handleUpdateArtwork} onDelete={(art) => { setIsEditModalOpen(false); openDeleteModal(art, '작품'); }} />

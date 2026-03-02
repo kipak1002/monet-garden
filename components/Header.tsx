@@ -105,7 +105,7 @@ const Header: React.FC<HeaderProps> = ({
                   className="flex items-center gap-2 group min-w-0"
                   title="갤러리 제목 편집"
                 >
-                  <h1 className="text-lg md:text-2xl font-bold text-gray-800 tracking-tight group-hover:text-blue-600 transition-colors truncate">
+                  <h1 className="text-lg md:text-2xl font-serif font-bold text-gray-800 tracking-tight group-hover:text-blue-600 transition-colors truncate">
                     {galleryTitle}
                   </h1>
                   <div className="text-gray-500 group-hover:text-blue-600 transition-colors flex-shrink-0">
@@ -113,7 +113,7 @@ const Header: React.FC<HeaderProps> = ({
                   </div>
                 </button>
               ) : (
-                <h1 className="text-lg md:text-2xl font-bold text-gray-800 tracking-tight truncate">
+                <h1 className="text-lg md:text-2xl font-serif font-bold text-gray-800 tracking-tight truncate">
                   {galleryTitle}
                 </h1>
               )}
