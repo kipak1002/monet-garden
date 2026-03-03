@@ -435,16 +435,12 @@ const App: React.FC = () => {
     switch(currentPage) {
       case 'landing':
         return <LandingPage 
-                  galleryTitle={galleryTitle}
-                  galleryTitleFont={galleryTitleFont}
-                  galleryTitleSize={galleryTitleSize}
                   backgroundImageUrl={landingBackgroundUrl}
                   artistKeywords={artistKeywords}
                   artistStatement={artistStatement}
                   isAdminMode={isAdminMode}
                   onUpdateBackground={handleUpdateLandingBackground}
                   onUpdateArtistStatement={handleUpdateArtistStatement}
-                  onNavigate={handleNavigate}
                 />;
       case 'profile':
         return <ArtistProfilePage 

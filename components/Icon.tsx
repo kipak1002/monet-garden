@@ -2,11 +2,23 @@
 import React from 'react';
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
-  type: 'search' | 'close' | 'sparkles' | 'edit' | 'shield-check' | 'upload' | 'trash' | 'plus' | 'key' | 'cog' | 'profile' | 'exhibition' | 'collection' | 'chevron-left' | 'chevron-right' | 'video';
+  type: 'search' | 'close' | 'sparkles' | 'edit' | 'shield-check' | 'upload' | 'trash' | 'plus' | 'key' | 'cog' | 'profile' | 'exhibition' | 'collection' | 'chevron-left' | 'chevron-right' | 'chevron-down' | 'video' | 'menu';
 }
 
 const Icon: React.FC<IconProps> = ({ type, ...props }) => {
   switch (type) {
+    case 'menu':
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+        </svg>
+      );
+    case 'chevron-down':
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+        </svg>
+      );
     case 'video':
       return (
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>

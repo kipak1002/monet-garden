@@ -4,9 +4,6 @@ import Icon from './Icon';
 import Spinner from './Spinner';
 
 interface LandingPageProps {
-  galleryTitle: string;
-  galleryTitleFont: string;
-  galleryTitleSize: string;
   subtitle?: string;
   backgroundImageUrl: string;
   artistKeywords: string;
@@ -14,15 +11,11 @@ interface LandingPageProps {
   isAdminMode: boolean;
   onUpdateBackground: (imageFile: File) => Promise<void>;
   onUpdateArtistStatement: (keywords: string, statement: string) => Promise<void>;
-  onNavigate: (page: 'landing' | 'gallery' | 'profile' | 'exhibition' | 'imagination') => void;
 }
 
 const DEFAULT_BACKGROUND_IMAGE = "https://images.unsplash.com/photo-1531973576160-712526b6a629?q=80&w=2080&auto=format&fit=crop";
 
 const LandingPage: React.FC<LandingPageProps> = ({ 
-  galleryTitle, 
-  galleryTitleFont,
-  galleryTitleSize,
   subtitle,
   backgroundImageUrl,
   artistKeywords,
@@ -30,7 +23,6 @@ const LandingPage: React.FC<LandingPageProps> = ({
   isAdminMode,
   onUpdateBackground,
   onUpdateArtistStatement,
-  onNavigate,
 }) => {
   const [newBg, setNewBg] = useState<{ file: File; previewUrl: string } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -115,51 +107,13 @@ const LandingPage: React.FC<LandingPageProps> = ({
           <div className="absolute inset-0 bg-black/30 z-20"></div>
         </div>
 
-        {/* Content - Only visible on mobile or as a subtle title on PC if needed */}
-        <div className="relative z-30 text-center transform transition-all duration-500 animate-slide-up-fade-in md:hidden">
-          <h1 
-            className="font-extrabold text-white tracking-tight drop-shadow-lg"
-            style={{ 
-              fontFamily: galleryTitleFont,
-              fontSize: `${Math.min(Number(galleryTitleSize), 40)}px` // Limit size on mobile
-            }}
-          >
-            {galleryTitle}
-          </h1>
+        {/* Content - Hidden on mobile as it's in the header, subtle on PC if needed */}
+        <div className="relative z-30 text-center transform transition-all duration-500 animate-slide-up-fade-in hidden md:block">
           {subtitle && (
             <p className="mt-4 text-lg text-gray-200 max-w-2xl mx-auto drop-shadow-sm">
               {subtitle}
             </p>
           )}
-          <div className="mt-12 flex flex-col items-center gap-6">
-              <div className="flex flex-wrap justify-center gap-6">
-                  <div className="flex flex-col items-center gap-3 group cursor-pointer" onClick={() => onNavigate('profile')}>
-                      <div className="w-20 h-20 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20 shadow-lg">
-                          <Icon type="profile" className="w-10 h-10 text-white" />
-                      </div>
-                      <span className="font-medium text-gray-200">작가 프로필</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-3 group cursor-pointer" onClick={() => onNavigate('exhibition')}>
-                      <div className="w-20 h-20 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20 shadow-lg">
-                          <Icon type="exhibition" className="w-10 h-10 text-white" />
-                      </div>
-                      <span className="font-medium text-gray-200">Exhibition</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-3 group cursor-pointer" onClick={() => onNavigate('imagination')}>
-                      <div className="w-20 h-20 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20 shadow-lg">
-                          <Icon type="video" className="w-10 h-10 text-white" />
-                      </div>
-                      <span className="font-medium text-gray-200">상상갤러리</span>
-                  </div>
-              </div>
-              <button
-                onClick={() => onNavigate('gallery')}
-                className="mt-4 inline-flex items-center justify-center bg-white text-blue-700 font-bold py-3 px-10 rounded-full shadow-lg"
-              >
-                <Icon type="sparkles" className="w-6 h-6 mr-3" />
-                갤러리 입장
-              </button>
-          </div>
         </div>
 
         {/* Scroll Indicator */}
@@ -167,7 +121,6 @@ const LandingPage: React.FC<LandingPageProps> = ({
           className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2 cursor-pointer animate-bounce"
           onClick={scrollToStatement}
         >
-          <span className="text-white/60 text-[10px] font-bold tracking-[0.4em] uppercase">Artist Statement</span>
           <Icon type="chevron-down" className="w-5 h-5 text-white/60" />
         </div>
 
@@ -273,7 +226,6 @@ const LandingPage: React.FC<LandingPageProps> = ({
           ) : (
             <div className="animate-fade-in">
               <div className="mb-12">
-                <h2 className="text-xs font-bold tracking-[0.3em] text-blue-600 uppercase mb-6">Artist Statement</h2>
                 <div className="text-xl md:text-2xl font-serif font-medium text-gray-800 leading-relaxed whitespace-pre-wrap italic">
                   {artistKeywords || "작품의 핵심 키워드를 입력해주세요."}
                 </div>
@@ -288,42 +240,6 @@ const LandingPage: React.FC<LandingPageProps> = ({
           )}
         </div>
       </section>
-
-      <style>{`
-        @keyframes slide-up-fade-in {
-          from { 
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to { 
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-slide-up-fade-in {
-          animation: slide-up-fade-in 0.6s ease-out forwards;
-        }
-        @keyframes slide-up-fade-in-slow {
-          from { 
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to { 
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-slide-up-fade-in-slow {
-          animation: slide-up-fade-in-slow 0.3s ease-out forwards;
-        }
-        @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.5s ease-out forwards;
-        }
-      `}</style>
     </div>
   );
 };
