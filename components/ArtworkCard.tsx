@@ -16,20 +16,12 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ artwork, index, onSelect, isA
   const [isIntersecting, setIsIntersecting] = useState(false);
   const [imgSrc, setImgSrc] = useState<string>('');
 
-  // 썸네일 URL 생성 함수
-  const getThumbnailUrl = (url: string) => {
-    if (!url) return '';
-    // Supabase 스토리지 URL이고 .webp 확장자인 경우 _thumb.webp 시도
-    if (url.includes('supabase.co') && url.endsWith('.webp') && !url.includes('_thumb.webp')) {
-      return url.replace('.webp', '_thumb.webp');
-    }
-    return url;
-  };
-
   const originalUrl = artwork.image_urls && artwork.image_urls.length > 0 ? artwork.image_urls[0] : '';
   
   useEffect(() => {
-    setImgSrc(getThumbnailUrl(originalUrl));
+    // 모바일에서는 이미지가 화면 전체 너비를 차지하므로 400px 썸네일은 해상도가 떨어짐.
+    // 1280px로 압축된 원본 이미지를 그대로 사용하는 것이 모바일 해상도에 적합함.
+    setImgSrc(originalUrl);
   }, [originalUrl]);
 
   useEffect(() => {

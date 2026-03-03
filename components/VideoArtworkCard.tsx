@@ -13,19 +13,11 @@ interface VideoArtworkCardProps {
 const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({ item, isAdminMode, onEdit, onDelete }) => {
   const [imgSrc, setImgSrc] = React.useState<string>('');
 
-  // 썸네일 URL 생성 함수
-  const getThumbnailUrl = (url: string) => {
-    if (!url) return '';
-    if (url.includes('supabase.co') && url.endsWith('.webp') && !url.includes('_thumb.webp')) {
-      return url.replace('.webp', '_thumb.webp');
-    }
-    return url;
-  };
-
   const originalUrl = item.original_image_url;
 
   React.useEffect(() => {
-    setImgSrc(getThumbnailUrl(originalUrl));
+    // 모바일 해상도를 위해 1280px 원본 이미지를 사용합니다.
+    setImgSrc(originalUrl);
   }, [originalUrl]);
 
   const handleImageError = () => {
