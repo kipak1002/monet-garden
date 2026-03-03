@@ -36,6 +36,13 @@ const Header: React.FC<HeaderProps> = ({
   const adminMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (currentPage !== 'gallery') {
+      setIsSearchOpen(false);
+      onSearchChange('');
+    }
+  }, [currentPage, onSearchChange]);
+
+  useEffect(() => {
     if (isMobileMenuOpen) {
       document.body.style.overflow = 'hidden';
     } else {
@@ -122,28 +129,30 @@ const Header: React.FC<HeaderProps> = ({
 
             {/* Search & Admin Controls */}
             <div className="flex items-center gap-2 md:gap-5">
-              {/* Search Toggle */}
-              <div className="relative flex items-center">
-                {isSearchOpen && (
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    value={searchTerm}
-                    onChange={(e) => onSearchChange(e.target.value)}
-                    autoFocus
-                    onBlur={() => !searchTerm && setIsSearchOpen(false)}
-                    className={`absolute right-full mr-4 w-40 md:w-64 py-1.5 px-4 bg-white/10 backdrop-blur-md border rounded-full text-sm outline-none transition-all ${
-                      currentPage === 'landing' ? 'border-white/30 text-white placeholder:text-white/50' : 'border-gray-200 text-gray-900 placeholder:text-gray-400'
-                    }`}
-                  />
-                )}
-                <button 
-                  onClick={() => setIsSearchOpen(!isSearchOpen)}
-                  className={`p-2 transition-colors ${currentPage === 'landing' ? 'text-white/70 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}
-                >
-                  <Icon type="search" className="w-5 h-5" />
-                </button>
-              </div>
+              {/* Search Toggle - Only visible on Gallery page */}
+              {currentPage === 'gallery' && (
+                <div className="relative flex items-center">
+                  <div className="hidden lg:block">
+                    {isSearchOpen && (
+                      <input
+                        type="text"
+                        placeholder="Search..."
+                        value={searchTerm}
+                        onChange={(e) => onSearchChange(e.target.value)}
+                        autoFocus
+                        onBlur={() => !searchTerm && setIsSearchOpen(false)}
+                        className="absolute right-full mr-4 w-40 md:w-64 py-1.5 px-4 bg-white/10 backdrop-blur-md border border-gray-200 rounded-full text-sm outline-none transition-all text-gray-900 placeholder:text-gray-400"
+                      />
+                    )}
+                  </div>
+                  <button 
+                    onClick={() => setIsSearchOpen(!isSearchOpen)}
+                    className="p-2 transition-colors text-gray-500 hover:text-gray-900"
+                  >
+                    <Icon type="search" className="w-5 h-5" />
+                  </button>
+                </div>
+              )}
 
               {/* Admin Menu */}
               {isAdminMode && (
@@ -197,6 +206,28 @@ const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Mobile Search Bar - Only visible on Gallery page when search is open */}
+        {currentPage === 'gallery' && isSearchOpen && (
+          <div className="lg:hidden px-6 pb-6 animate-slide-up-fade-in-slow">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search artworks..."
+                value={searchTerm}
+                onChange={(e) => onSearchChange(e.target.value)}
+                autoFocus
+                className="w-full py-2.5 px-5 bg-gray-100 border border-gray-200 rounded-full text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              />
+              <button 
+                onClick={() => { onSearchChange(''); setIsSearchOpen(false); }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
+              >
+                <Icon type="close" className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Mobile Menu Overlay */}
