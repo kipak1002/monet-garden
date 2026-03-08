@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "node node_modules/vite/bin/vite.js build",
+    "build": "vite build",
     "preview": "vite preview",
     "vercel-build": "npm run build",
     "lint": "tsc --noEmit"
@@ -16,6 +16,7 @@
   "dependencies": {
     "@google/genai": "^0.15.0",
     "@supabase/supabase-js": "^2.45.0",
+    "@vercel/analytics": "^1.6.1",
     "browser-image-compression": "^2.0.2",
     "buffer": "^6.0.3",
     "react": "^18.2.0",
