@@ -126,6 +126,9 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ artwork, index, onSelect, isA
           <p className="text-[10px] tracking-widest text-gray-500 font-medium">{artwork.year}</p>
         </div>
         <p className="text-[10px] text-gray-400 mt-1 italic font-serif">{artwork.size}</p>
+        {artwork.memo && (
+          <p className="text-[10px] text-gray-400 mt-1 font-serif line-clamp-1">{artwork.memo}</p>
+        )}
       </div>
     </div>
   );
