@@ -5,6 +5,7 @@ import { generateArtworkMemo } from '../services/geminiService.ts';
 
 export type NewArtworkData = {
     title: string;
+    title_en?: string | null;
     artist: string;
     year: number;
     images: File[];
@@ -20,6 +21,7 @@ interface GenerateArtworkModalProps {
 
 const DEFAULT_FORM_STATE = {
   title: '',
+  title_en: '',
   artist: '김명진',
   year: new Date().getFullYear(),
   images: [] as File[],
@@ -64,7 +66,7 @@ const GenerateArtworkModal: React.FC<GenerateArtworkModalProps> = ({ isOpen, onC
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
+      const newFiles: File[] = Array.from(e.target.files);
       const newPreviews = newFiles.map(file => URL.createObjectURL(file));
       setFormData(prev => ({
           ...prev,
@@ -144,6 +146,10 @@ const GenerateArtworkModal: React.FC<GenerateArtworkModalProps> = ({ isOpen, onC
             <div>
                 <label htmlFor="add-title" className="block text-sm font-medium text-gray-700">제목</label>
                 <input type="text" name="title" id="add-title" value={formData.title} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100" disabled={isDisabled}/>
+            </div>
+            <div>
+                <label htmlFor="add-title-en" className="block text-sm font-medium text-gray-700">영문 제목</label>
+                <input type="text" name="title_en" id="add-title-en" value={formData.title_en} onChange={handleChange} placeholder="English Title" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100" disabled={isDisabled}/>
             </div>
             
             <div className='space-y-4'>

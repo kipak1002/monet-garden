@@ -219,6 +219,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const results = artworks.filter(artwork =>
       artwork.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (artwork.title_en && artwork.title_en.toLowerCase().includes(searchTerm.toLowerCase())) ||
       artwork.artist.toLowerCase().includes(searchTerm.toLowerCase()) ||
       artwork.year.toString().includes(searchTerm)
     );

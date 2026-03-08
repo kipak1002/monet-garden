@@ -3,6 +3,7 @@ export interface Artwork {
   id: number;
   created_at: string;
   title: string;
+  title_en?: string | null;
   artist: string;
   year: number;
   image_urls: string[];

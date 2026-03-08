@@ -15,7 +15,7 @@ interface EditArtworkModalProps {
 type ArtworkEditData = Omit<Artwork, 'id' | 'created_at'>;
 
 const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, artworkToEdit, onUpdate, onDelete }) => {
-  const [formData, setFormData] = useState<ArtworkEditData>({ title: '', artist: '', year: 0, image_urls: [], size: '', memo: '' });
+  const [formData, setFormData] = useState<ArtworkEditData>({ title: '', title_en: '', artist: '', year: 0, image_urls: [], size: '', memo: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingMemo, setIsGeneratingMemo] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -24,6 +24,7 @@ const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, ar
     if (artworkToEdit) {
       setFormData({
         title: artworkToEdit.title,
+        title_en: artworkToEdit.title_en || '',
         artist: artworkToEdit.artist,
         year: artworkToEdit.year,
         image_urls: artworkToEdit.image_urls,
@@ -56,7 +57,7 @@ const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, ar
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-        const files = Array.from(e.target.files);
+        const files: File[] = Array.from(e.target.files);
         files.forEach(file => {
             const reader = new FileReader();
             reader.onloadend = () => {
@@ -81,7 +82,7 @@ const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, ar
   
   const handleGenerateMemo = async () => {
     if (formData.image_urls.length === 0) {
-      alert("AI 메모를 생성하려면 먼저 이미지가 있어야 합니다.");
+      alert("AI 메모를 생성하려면 먼저 이미지를 있어야 합니다.");
       return;
     }
     setIsGeneratingMemo(true);
@@ -140,6 +141,10 @@ const EditArtworkModal: React.FC<EditArtworkModalProps> = ({ isOpen, onClose, ar
             <div>
                 <label htmlFor="title" className="block text-sm font-medium text-gray-700">제목</label>
                 <input type="text" name="title" id="title" value={formData.title} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100" disabled={isDisabled}/>
+            </div>
+            <div>
+                <label htmlFor="title_en" className="block text-sm font-medium text-gray-700">영문 제목</label>
+                <input type="text" name="title_en" id="title_en" value={formData.title_en || ''} onChange={handleChange} placeholder="English Title" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100" disabled={isDisabled}/>
             </div>
 
             <div className='space-y-4'>

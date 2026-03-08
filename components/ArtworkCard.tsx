@@ -117,6 +117,9 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ artwork, index, onSelect, isA
       </div>
       <div className="p-4 bg-white">
         <h3 className="text-base font-serif font-bold text-gray-900 tracking-tight truncate">{artwork.title}</h3>
+        {artwork.title_en && (
+          <p className="text-[11px] text-gray-400 font-serif italic truncate -mt-0.5">{artwork.title_en}</p>
+        )}
         <div className="flex items-center gap-2 mt-1">
           <p className="text-[10px] uppercase tracking-widest text-gray-500 font-medium">{artwork.artist}</p>
           <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
