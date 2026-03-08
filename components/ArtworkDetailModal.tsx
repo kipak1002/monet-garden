@@ -95,7 +95,7 @@ const ArtworkDetailModal: React.FC<ArtworkDetailModalProps> = ({
         <div className="w-full md:w-1/3 p-6 md:p-8 flex flex-col overflow-y-auto">
           <h2 className="text-3xl font-serif font-bold text-gray-900">{artwork.title}</h2>
           {artwork.title_en && (
-            <p className="text-xl font-serif text-gray-400 italic -mt-1">{artwork.title_en}</p>
+            <p className="text-2xl font-serif text-gray-400 italic -mt-1">{artwork.title_en}</p>
           )}
           <p className="text-lg text-gray-600 mt-1 font-serif italic">{artwork.artist}, {artwork.year}</p>
           <p className="text-md text-gray-500 mt-2 font-serif"><strong>크기:</strong> {artwork.size}</p>
