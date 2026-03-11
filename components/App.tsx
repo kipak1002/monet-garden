@@ -17,8 +17,10 @@ import ArtistProfilePage from './ArtistProfilePage';
 import ExhibitionPage from './ExhibitionPage';
 import EditExhibitionModal from './EditExhibitionModal';
 import ImaginationGalleryPage from './ImaginationGalleryPage';
+import ContactPage from './ContactPage';
+import AdminInquiryPage from './AdminInquiryPage';
 
-type Page = 'landing' | 'gallery' | 'profile' | 'exhibition' | 'imagination';
+type Page = 'landing' | 'gallery' | 'profile' | 'exhibition' | 'imagination' | 'contact' | 'admin-inquiry';
 
 interface HistoryState {
   page: Page;
@@ -463,6 +465,17 @@ const App: React.FC = () => {
                   onAddImagination={handleAddImagination}
                   onUpdateImagination={handleUpdateImagination}
                   onDeleteImagination={(item) => openDeleteModal(item, '상상작품')}
+                />;
+      case 'contact':
+        return <ContactPage />;
+      case 'admin-inquiry':
+        return isAdminMode ? <AdminInquiryPage /> : <LandingPage 
+                  backgroundImageUrl={landingBackgroundUrl}
+                  artistKeywords={artistKeywords}
+                  artistStatement={artistStatement}
+                  isAdminMode={isAdminMode}
+                  onUpdateBackground={handleUpdateLandingBackground}
+                  onUpdateArtistStatement={handleUpdateArtistStatement}
                 />;
       case 'gallery':
       default:

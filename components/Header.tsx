@@ -10,7 +10,7 @@ interface HeaderProps {
   galleryTitleFont: string;
   galleryTitleSize: string;
   onOpenChangePasswordSettings: () => void;
-  onNavigate: (page: 'landing' | 'gallery' | 'profile' | 'exhibition' | 'imagination') => void;
+  onNavigate: (page: 'landing' | 'gallery' | 'profile' | 'exhibition' | 'imagination' | 'contact' | 'admin-inquiry') => void;
   currentPage: string;
   visitorCount?: number | null;
   onEditTitleSettings?: () => void;
@@ -71,6 +71,7 @@ const Header: React.FC<HeaderProps> = ({
     { id: 'exhibition', label: 'Exhibition' },
     { id: 'imagination', label: 'Imagination' },
     { id: 'profile', label: 'About' },
+    { id: 'contact', label: 'Contact' },
   ];
 
   const handleMobileNavigate = (page: any) => {
@@ -177,6 +178,13 @@ const Header: React.FC<HeaderProps> = ({
                       >
                         <Icon type="key" className="w-4 h-4 text-gray-400" />
                         <span>비밀번호 변경</span>
+                      </button>
+                      <button
+                        onClick={() => { onNavigate('admin-inquiry'); setIsAdminMenuOpen(false); }}
+                        className="w-full text-left px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
+                      >
+                        <Icon type="mail" className="w-4 h-4 text-gray-400" />
+                        <span>문의 내역 확인</span>
                       </button>
                     </div>
                   )}

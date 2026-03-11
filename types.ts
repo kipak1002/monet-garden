@@ -11,6 +11,15 @@ export interface Artwork {
   memo?: string | null;
 }
 
+export interface Inquiry {
+  id: number;
+  created_at: string;
+  name: string;
+  email: string;
+  type: 'Commission' | 'Exhibition' | 'Collaboration' | 'Purchase' | 'Other';
+  message: string;
+}
+
 export interface Exhibition {
   id: number;
   created_at: string;
