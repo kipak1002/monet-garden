@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabaseClient';
 import Spinner from './Spinner';
 import Icon from './Icon';
+import Linkify from './Linkify';
 
-const ContactPage: React.FC = () => {
+interface ContactPageProps {
+  isAdminMode?: boolean;
+}
+
+const ContactPage: React.FC<ContactPageProps> = ({ isAdminMode }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -12,6 +17,35 @@ const ContactPage: React.FC = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  
+  const [contactInfo, setContactInfo] = useState('');
+  const [editContactInfo, setEditContactInfo] = useState('');
+  const [isSavingInfo, setIsSavingInfo] = useState(false);
+  const [isLoadingInfo, setIsLoadingInfo] = useState(true);
+
+  useEffect(() => {
+    const fetchContactInfo = async () => {
+      setIsLoadingInfo(true);
+      try {
+        const { data, error } = await supabase
+          .from('settings')
+          .select('value')
+          .eq('key', 'artistProfileInfo')
+          .single();
+        
+        if (error && error.code !== 'PGRST116') throw error;
+        
+        const info = data?.value || '';
+        setContactInfo(info);
+        setEditContactInfo(info);
+      } catch (error) {
+        console.error('Error fetching contact info:', error);
+      } finally {
+        setIsLoadingInfo(false);
+      }
+    };
+    fetchContactInfo();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -48,6 +82,25 @@ const ContactPage: React.FC = () => {
     }
   };
 
+  const handleSaveContactInfo = async () => {
+    setIsSavingInfo(true);
+    try {
+      const { error } = await supabase
+        .from('settings')
+        .upsert({ key: 'artistProfileInfo', value: editContactInfo }, { onConflict: 'key' });
+
+      if (error) throw error;
+      
+      setContactInfo(editContactInfo);
+      alert('연락처 정보가 저장되었습니다. (Contact info saved.)');
+    } catch (error) {
+      console.error('Error saving contact info:', error);
+      alert('저장 중 오류가 발생했습니다.');
+    } finally {
+      setIsSavingInfo(false);
+    }
+  };
+
   if (isSuccess) {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center animate-fade-in">
@@ -80,7 +133,7 @@ const ContactPage: React.FC = () => {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6 bg-gray-50 p-8 md:p-10 rounded-2xl shadow-sm border border-gray-100">
+        <form onSubmit={handleSubmit} className="space-y-6 bg-gray-50 p-8 md:p-10 rounded-2xl shadow-sm border border-gray-100 mb-16">
           <div>
             <label htmlFor="name" className="block text-sm font-bold text-gray-700 mb-2">
               이름 (Name) *
@@ -170,6 +223,38 @@ const ContactPage: React.FC = () => {
             </button>
           </div>
         </form>
+
+        {/* Contact Info Section moved from About page */}
+        <div className="mt-12 pt-12 border-t border-gray-200">
+          {isAdminMode ? (
+            <div className="space-y-4">
+              <h3 className="text-xl font-serif font-bold text-gray-900">연락처 정보 관리 (Contact Info Management)</h3>
+              <textarea
+                value={editContactInfo}
+                onChange={(e) => setEditContactInfo(e.target.value)}
+                rows={5}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all bg-white"
+                placeholder="인스타그램 링크, 이메일, 연락처 등 추가 정보를 입력하세요."
+              />
+              <button
+                onClick={handleSaveContactInfo}
+                disabled={isSavingInfo}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all disabled:bg-blue-300 flex items-center gap-2"
+              >
+                {isSavingInfo ? <Spinner size="h-4 w-4" /> : '정보 저장 (Save Info)'}
+              </button>
+            </div>
+          ) : (
+            !isLoadingInfo && contactInfo && (
+              <div className="animate-fade-in">
+                <h3 className="text-2xl font-serif font-bold text-gray-900 mb-6">CONTACT US</h3>
+                <div className="text-gray-700 whitespace-pre-wrap leading-relaxed font-serif text-lg">
+                  <Linkify text={contactInfo} />
+                </div>
+              </div>
+            )
+          )}
+        </div>
       </div>
     </div>
   );

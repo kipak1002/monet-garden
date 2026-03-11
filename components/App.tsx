@@ -467,7 +467,7 @@ const App: React.FC = () => {
                   onDeleteImagination={(item) => openDeleteModal(item, '상상작품')}
                 />;
       case 'contact':
-        return <ContactPage />;
+        return <ContactPage isAdminMode={isAdminMode} />;
       case 'admin-inquiry':
         return isAdminMode ? <AdminInquiryPage /> : <LandingPage 
                   backgroundImageUrl={landingBackgroundUrl}

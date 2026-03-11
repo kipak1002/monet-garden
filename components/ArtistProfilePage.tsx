@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase, uploadImage } from '../services/supabaseClient.ts';
 import Spinner from './Spinner';
 import Icon from './Icon';
-import Linkify from './Linkify';
 
 interface ArtistProfilePageProps {
   isAdminMode: boolean;
@@ -190,17 +189,6 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
             </div>
         </div>
 
-        <div className="py-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">CONTACT US</h3>
-            <textarea
-                value={editProfileInfo}
-                onChange={(e) => setEditProfileInfo(e.target.value)}
-                rows={5}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
-                placeholder="인스타그램 링크, 이메일, 연락처 등 추가 정보를 입력하세요."
-            />
-        </div>
-
         <div className="pt-8 flex justify-end">
             <button
             onClick={handleSaveChanges}
@@ -231,16 +219,6 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
             <div className="text-center py-20 text-gray-500">
                 <p>등록된 프로필 이미지가 없습니다.</p>
                 <p className="text-sm mt-2">관리자 모드에서 이미지를 추가해주세요.</p>
-            </div>
-        )}
-        {profileInfo && (
-            <div className="mt-12 pt-8 border-t border-gray-200">
-                <div className="max-w-4xl">
-                    <h3 className="text-2xl font-serif font-bold text-gray-800 mb-4">CONTACT US</h3>
-                    <div className="text-gray-700 whitespace-pre-wrap leading-relaxed font-serif">
-                        <Linkify text={profileInfo} />
-                    </div>
-                </div>
             </div>
         )}
     </div>
