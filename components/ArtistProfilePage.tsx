@@ -216,13 +216,13 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({
   const renderPublicView = () => (
     <div className="max-w-7xl mx-auto">
         {profileImageUrls.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
                 {profileImageUrls.map((url, index) => (
-                    <div key={index} className="aspect-w-1 aspect-h-1">
+                    <div key={index} className="w-full">
                         <img 
                             src={url} 
                             alt={`Profile image ${index + 1}`}
-                            className="w-full h-full object-cover rounded-lg shadow-sm"
+                            className="w-full h-auto rounded-lg shadow-md"
                         />
                     </div>
                 ))}
