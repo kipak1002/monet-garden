@@ -92,7 +92,9 @@ const Header: React.FC<HeaderProps> = ({
                 fontSize: `${Math.min(Number(galleryTitleSize), 32)}px`,
                 fontWeight: 'bold',
                 letterSpacing: '0.1em',
-                textTransform: 'uppercase'
+                textTransform: 'uppercase',
+                whiteSpace: 'pre-wrap',
+                lineHeight: '1.2'
               }}
               onClick={() => onNavigate('landing')}
             >
@@ -250,7 +252,9 @@ const Header: React.FC<HeaderProps> = ({
                   fontSize: `24px`,
                   fontWeight: 'bold',
                   letterSpacing: '0.1em',
-                  textTransform: 'uppercase'
+                  textTransform: 'uppercase',
+                  whiteSpace: 'pre-wrap',
+                  lineHeight: '1.2'
                 }}
                 onClick={() => handleMobileNavigate('landing')}
               >
