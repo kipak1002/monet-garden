@@ -74,6 +74,7 @@ const App: React.FC = () => {
   const [artistStatement, setArtistStatement] = useState('');
   const [galleryTitleFont, setGalleryTitleFont] = useState('Inter');
   const [galleryTitleSize, setGalleryTitleSize] = useState('24');
+  const [instagramUrl, setInstagramUrl] = useState('');
   const [visitorCount, setVisitorCount] = useState<number | null>(null);
 
   // Modals State
@@ -92,12 +93,14 @@ const App: React.FC = () => {
   const [editTitle, setEditTitle] = useState(galleryTitle);
   const [editFont, setEditFont] = useState(galleryTitleFont);
   const [editSize, setEditSize] = useState(galleryTitleSize);
+  const [editInstagram, setEditInstagram] = useState(instagramUrl);
 
   useEffect(() => {
     setEditTitle(galleryTitle);
     setEditFont(galleryTitleFont);
     setEditSize(galleryTitleSize);
-  }, [galleryTitle, galleryTitleFont, galleryTitleSize]);
+    setEditInstagram(instagramUrl);
+  }, [galleryTitle, galleryTitleFont, galleryTitleSize, instagramUrl]);
 
   const FONT_OPTIONS = [
     { name: '기본 (Sans)', value: 'Inter, sans-serif' },
@@ -172,6 +175,7 @@ const App: React.FC = () => {
       setArtistStatement(String(settingsMap.get('artistStatement') || ''));
       setGalleryTitleFont(String(settingsMap.get('galleryTitleFont') || 'Inter'));
       setGalleryTitleSize(String(settingsMap.get('galleryTitleSize') || '24'));
+      setInstagramUrl(String(settingsMap.get('instagramUrl') || ''));
 
       // 2. 우선 순위 페칭: 최신 작품 3개만 먼저 가져오기
       const { data: priorityArtworks, error: priorityError } = await supabase
@@ -292,20 +296,23 @@ const App: React.FC = () => {
     }
   };
 
-  const handleUpdateGalleryTitleSettings = async (title: string, font: string, size: string) => {
+  const handleUpdateGalleryTitleSettings = async (title: string, font: string, size: string, instagram: string) => {
     try {
       const saveTitle = supabase.from('settings').upsert({ key: 'galleryTitle', value: title }, { onConflict: 'key' });
       const saveFont = supabase.from('settings').upsert({ key: 'galleryTitleFont', value: font }, { onConflict: 'key' });
       const saveSize = supabase.from('settings').upsert({ key: 'galleryTitleSize', value: size }, { onConflict: 'key' });
+      const saveInstagram = supabase.from('settings').upsert({ key: 'instagramUrl', value: instagram }, { onConflict: 'key' });
       
-      const [res1, res2, res3] = await Promise.all([saveTitle, saveFont, saveSize]);
+      const [res1, res2, res3, res4] = await Promise.all([saveTitle, saveFont, saveSize, saveInstagram]);
       if (res1.error) throw res1.error;
       if (res2.error) throw res2.error;
       if (res3.error) throw res3.error;
+      if (res4.error) throw res4.error;
       
       setGalleryTitle(title);
       setGalleryTitleFont(font);
       setGalleryTitleSize(size);
+      setInstagramUrl(instagram);
       alert('타이틀 설정이 저장되었습니다.');
     } catch (error) {
       console.error('Error updating title settings:', error);
@@ -511,6 +518,7 @@ const App: React.FC = () => {
         currentPage={currentPage}
         visitorCount={visitorCount}
         onEditTitleSettings={() => setIsEditingTitle(true)}
+        instagramUrl={instagramUrl}
       />
       
       <AnimatePresence mode="wait">
@@ -567,6 +575,16 @@ const App: React.FC = () => {
                   <span className="text-sm font-bold w-8">{editSize}</span>
                 </div>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">인스타그램 주소</label>
+                <input 
+                  type="text"
+                  value={editInstagram}
+                  onChange={(e) => setEditInstagram(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="https://instagram.com/username"
+                />
+              </div>
             </div>
             <div className="mt-8 flex justify-end gap-3">
               <button 
@@ -577,7 +595,7 @@ const App: React.FC = () => {
               </button>
               <button 
                 onClick={async () => {
-                  await handleUpdateGalleryTitleSettings(editTitle, editFont, editSize);
+                  await handleUpdateGalleryTitleSettings(editTitle, editFont, editSize, editInstagram);
                   setIsEditingTitle(false);
                 }}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"

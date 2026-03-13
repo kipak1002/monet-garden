@@ -2,11 +2,19 @@
 import React from 'react';
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
-  type: 'search' | 'close' | 'sparkles' | 'edit' | 'shield-check' | 'upload' | 'trash' | 'plus' | 'key' | 'cog' | 'profile' | 'exhibition' | 'collection' | 'chevron-left' | 'chevron-right' | 'chevron-down' | 'video' | 'menu' | 'check' | 'refresh' | 'mail' | 'user';
+  type: 'search' | 'close' | 'sparkles' | 'edit' | 'shield-check' | 'upload' | 'trash' | 'plus' | 'key' | 'cog' | 'profile' | 'exhibition' | 'collection' | 'chevron-left' | 'chevron-right' | 'chevron-down' | 'video' | 'menu' | 'check' | 'refresh' | 'mail' | 'user' | 'instagram';
 }
 
 const Icon: React.FC<IconProps> = ({ type, ...props }) => {
   switch (type) {
+    case 'instagram':
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 6a2.25 2.25 0 0 1 2.25-2.25h6a2.25 2.25 0 0 1 2.25 2.25v6a2.25 2.25 0 0 1-2.25 2.25h-6A2.25 2.25 0 0 1 6.75 12V6Z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 15.75a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M17.625 6.375a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+        </svg>
+      );
     case 'menu':
       return (
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>

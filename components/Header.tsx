@@ -14,6 +14,7 @@ interface HeaderProps {
   currentPage: string;
   visitorCount?: number | null;
   onEditTitleSettings?: () => void;
+  instagramUrl?: string;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
@@ -28,7 +29,8 @@ const Header: React.FC<HeaderProps> = ({
   onNavigate,
   currentPage,
   visitorCount,
-  onEditTitleSettings
+  onEditTitleSettings,
+  instagramUrl
 }) => {
   const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -191,6 +193,21 @@ const Header: React.FC<HeaderProps> = ({
                     </div>
                   )}
                 </div>
+              )}
+
+              {/* Instagram Button */}
+              {instagramUrl && (
+                <a
+                  href={instagramUrl.startsWith('http') ? instagramUrl : `https://instagram.com/${instagramUrl.replace('@', '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`p-2 rounded-full transition-all duration-300 ${
+                    currentPage === 'landing' ? 'text-white hover:bg-white/20' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
+                  }`}
+                  title="Instagram"
+                >
+                  <Icon type="instagram" className="w-5 h-5" />
+                </a>
               )}
 
               {/* Admin Toggle */}
