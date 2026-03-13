@@ -5,7 +5,6 @@ interface HeaderProps {
   searchTerm: string;
   onSearchChange: (term: string) => void;
   isAdminMode: boolean;
-  onToggleAdminMode: () => void;
   galleryTitle: string;
   galleryTitleFont: string;
   galleryTitleSize: string;
@@ -21,7 +20,6 @@ const Header: React.FC<HeaderProps> = ({
   searchTerm, 
   onSearchChange, 
   isAdminMode, 
-  onToggleAdminMode,
   galleryTitle,
   galleryTitleFont,
   galleryTitleSize,
@@ -215,19 +213,6 @@ const Header: React.FC<HeaderProps> = ({
                   <Icon type="instagram" className="w-5 h-5" />
                 </a>
               )}
-
-              {/* Admin Toggle */}
-              <button
-                onClick={onToggleAdminMode}
-                className={`p-2 rounded-full transition-all duration-300 ${
-                  isAdminMode 
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' 
-                    : (currentPage === 'landing' ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
-                }`}
-                title={isAdminMode ? "관리자 모드 종료" : "관리자 모드 시작"}
-              >
-                <Icon type="shield-check" className="w-5 h-5" />
-              </button>
 
               {/* Mobile Hamburger Menu Button */}
               <button
