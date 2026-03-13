@@ -452,6 +452,7 @@ const App: React.FC = () => {
                   isAdminMode={isAdminMode}
                   onUpdateBackground={handleUpdateLandingBackground}
                   onUpdateArtistStatement={handleUpdateArtistStatement}
+                  onNavigate={handleNavigate}
                 />;
       case 'profile':
         return <ArtistProfilePage 
@@ -484,6 +485,7 @@ const App: React.FC = () => {
                   isAdminMode={isAdminMode}
                   onUpdateBackground={handleUpdateLandingBackground}
                   onUpdateArtistStatement={handleUpdateArtistStatement}
+                  onNavigate={handleNavigate}
                 />;
       case 'gallery':
       default:

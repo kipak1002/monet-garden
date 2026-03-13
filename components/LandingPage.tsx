@@ -11,6 +11,7 @@ interface LandingPageProps {
   isAdminMode: boolean;
   onUpdateBackground: (imageFile: File) => Promise<void>;
   onUpdateArtistStatement: (keywords: string, statement: string) => Promise<void>;
+  onNavigate: (page: 'landing' | 'gallery' | 'profile' | 'exhibition' | 'imagination' | 'contact' | 'admin-inquiry') => void;
 }
 
 const DEFAULT_BACKGROUND_IMAGE = "https://images.unsplash.com/photo-1531973576160-712526b6a629?q=80&w=2080&auto=format&fit=crop";
@@ -23,6 +24,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
   isAdminMode,
   onUpdateBackground,
   onUpdateArtistStatement,
+  onNavigate,
 }) => {
   const [newBg, setNewBg] = useState<{ file: File; previewUrl: string } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -107,10 +109,20 @@ const LandingPage: React.FC<LandingPageProps> = ({
           <div className="absolute inset-0 bg-black/30 z-20"></div>
         </div>
 
+        {/* Mobile View Works Button - Positioned at 2/3 height */}
+        <div className="absolute top-[66%] left-1/2 -translate-x-1/2 z-30 md:hidden">
+          <button
+            onClick={() => onNavigate('gallery')}
+            className="px-8 py-3 bg-white/10 backdrop-blur-md border border-white/30 rounded-full text-white text-sm font-bold tracking-[0.2em] uppercase hover:bg-white/20 transition-all active:scale-95"
+          >
+            [ View Works ]
+          </button>
+        </div>
+
         {/* Content - Hidden on mobile as it's in the header, subtle on PC if needed */}
         <div className="relative z-30 text-center transform transition-all duration-500 animate-slide-up-fade-in hidden md:block">
           {subtitle && (
-            <p className="mt-4 text-lg text-gray-200 max-w-2xl mx-auto drop-shadow-sm">
+            <p className="mt-4 text-lg text-gray-200 max-w-2xl mx-auto drop-shadow-sm whitespace-pre-wrap">
               {subtitle}
             </p>
           )}
