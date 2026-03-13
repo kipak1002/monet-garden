@@ -69,7 +69,7 @@ const Gallery: React.FC<GalleryProps> = ({ artworks, onSelectArtwork, isAdminMod
             }
           }
         }}
-        className={`md:flex md:flex-row md:overflow-x-auto md:overflow-y-hidden md:h-[36vh] md:items-center md:gap-0 md:px-[10vw] md:my-[25vh] flex flex-col gap-8 ${isAdminMode ? 'custom-scrollbar' : 'scrollbar-hide'}`}
+        className={`md:flex md:flex-row md:overflow-x-auto md:overflow-y-hidden md:h-[32rem] md:items-center md:gap-0 md:px-[10vw] flex flex-col gap-8 w-full ${isAdminMode ? 'custom-scrollbar' : 'scrollbar-hide'}`}
       >
         {artworks.map((artwork, index) => (
           <ArtworkCard 

@@ -262,7 +262,7 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
                                     <img 
                                         src={url} 
                                         alt={`${ex.title} image ${index + 1}`} 
-                                        className="h-64 md:h-[30vh] lg:h-[36vh] object-contain brightness-90 group-hover:brightness-100 group-hover:scale-[1.03] transition-all duration-500 ease-out" 
+                                        className="h-64 md:h-[24rem] lg:h-[30rem] object-contain brightness-90 group-hover:brightness-100 group-hover:scale-[1.03] transition-all duration-500 ease-out" 
                                         referrerPolicy="no-referrer"
                                     />
                                 </div>
