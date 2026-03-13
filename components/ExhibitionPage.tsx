@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import type { Exhibition } from '../types';
 import Spinner from './Spinner';
 import Icon from './Icon';
