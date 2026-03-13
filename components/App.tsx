@@ -20,7 +20,6 @@ import EditExhibitionModal from './EditExhibitionModal';
 import ImaginationGalleryPage from './ImaginationGalleryPage';
 import ContactPage from './ContactPage';
 import AdminInquiryPage from './AdminInquiryPage';
-import CustomCursor from './CustomCursor';
 
 type Page = 'landing' | 'gallery' | 'profile' | 'exhibition' | 'imagination' | 'contact' | 'admin-inquiry';
 
@@ -498,8 +497,7 @@ const App: React.FC = () => {
   if (isLoading) return <div className="min-h-screen bg-gray-100 flex items-center justify-center"><Spinner size="h-16 w-16" /></div>;
 
   return (
-    <div className="bg-white min-h-screen font-sans cursor-none">
-      <CustomCursor />
+    <div className="bg-white min-h-screen font-sans">
       <Header
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
