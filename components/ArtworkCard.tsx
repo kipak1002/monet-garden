@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import type { Artwork } from '../types';
 import Icon from './Icon';
 
@@ -75,9 +76,22 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ artwork, index, onSelect, isA
     }
   };
 
+  const itemVariants: any = {
+    hidden: { opacity: 0, y: 20 },
+    show: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        duration: 0.8,
+        ease: [0.25, 0.1, 0.25, 1.0]
+      }
+    }
+  };
+
   return (
-    <div
+    <motion.div
       ref={cardRef}
+      variants={itemVariants}
       className="bg-white overflow-hidden cursor-pointer group transform hover:-translate-y-1 transition-all duration-300 relative flex-shrink-0 md:h-full md:w-auto w-full flex flex-col"
       onClick={() => onSelect(artwork)}
     >
@@ -116,9 +130,9 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ artwork, index, onSelect, isA
         )}
       </div>
       <div className="p-4 bg-white">
-        <h3 className="text-base font-serif font-bold text-gray-900 tracking-tight truncate">{artwork.title}</h3>
+        <h3 className="text-base font-serif font-bold text-gray-900 tracking-tight whitespace-pre-wrap">{artwork.title}</h3>
         {artwork.title_en && (
-          <p className="text-sm text-gray-400 font-serif italic truncate -mt-0.5">{artwork.title_en}</p>
+          <p className="text-sm text-gray-400 font-serif italic whitespace-pre-wrap -mt-0.5">{artwork.title_en}</p>
         )}
         <div className="flex items-center gap-2 mt-1">
           <p className="text-[10px] uppercase tracking-widest text-gray-500 font-medium">{artwork.artist}</p>
@@ -130,7 +144,7 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ artwork, index, onSelect, isA
           <p className="text-[10px] text-gray-400 mt-1 font-serif line-clamp-1">{artwork.memo}</p>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 };
 

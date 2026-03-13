@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import type { ImaginationArtwork } from '../types';
 import Icon from './Icon';
 import VideoArtworkCard from './VideoArtworkCard';
@@ -57,7 +58,21 @@ const ImaginationGalleryPage: React.FC<ImaginationGalleryPageProps> = ({
           </>
         )}
 
-        <div className={`imagination-scroll-container md:flex md:flex-row md:overflow-x-auto md:overflow-y-hidden md:h-full md:items-center md:gap-0 md:px-[10vw] flex flex-col gap-8 w-full ${isAdminMode ? 'custom-scrollbar' : 'scrollbar-hide'}`}>
+        <motion.div 
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.1 }}
+          variants={{
+            hidden: { opacity: 0 },
+            show: {
+              opacity: 1,
+              transition: {
+                staggerChildren: 0.1
+              }
+            }
+          }}
+          className={`imagination-scroll-container md:flex md:flex-row md:overflow-x-auto md:overflow-y-hidden md:h-full md:items-center md:gap-0 md:px-[10vw] flex flex-col gap-8 w-full ${isAdminMode ? 'custom-scrollbar' : 'scrollbar-hide'}`}
+        >
           {imaginationArtworks.length > 0 ? imaginationArtworks.map(item => (
             <VideoArtworkCard 
               key={item.id} 
@@ -72,7 +87,7 @@ const ImaginationGalleryPage: React.FC<ImaginationGalleryPageProps> = ({
               <p className="text-gray-500 mt-2">상상 속의 작품을 비디오와 함께 등록해보세요.</p>
             </div>
           )}
-        </div>
+        </motion.div>
 
         <style>{`
           .scrollbar-hide::-webkit-scrollbar {

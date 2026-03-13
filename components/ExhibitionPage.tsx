@@ -1,5 +1,6 @@
 
 import React, { useState, useRef } from 'react';
+import { motion } from 'framer-motion';
 import type { Exhibition } from '../types';
 import Spinner from './Spinner';
 import Icon from './Icon';
@@ -94,11 +95,11 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
                 <form onSubmit={handleAddExhibition} className="space-y-4">
                   <div>
                     <label htmlFor="ex-title" className="block text-sm font-medium text-gray-700">전시회 제목</label>
-                    <input
-                      type="text"
+                    <textarea
                       id="ex-title"
                       value={newExhibition.title}
                       onChange={(e) => setNewExhibition(prev => ({ ...prev, title: e.target.value }))}
+                      rows={2}
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                       required
                       disabled={isUploading}
@@ -169,9 +170,37 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
               </div>
             )}
             
-            <div className="space-y-12">
+            <motion.div 
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true, amount: 0.1 }}
+              variants={{
+                hidden: { opacity: 0 },
+                show: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: 0.1
+                  }
+                }
+              }}
+              className="space-y-12"
+            >
               {exhibitions.length > 0 ? exhibitions.map(ex => (
-                <div key={ex.id} className="bg-white rounded-lg shadow-md overflow-hidden group relative">
+                <motion.div 
+                  key={ex.id} 
+                  variants={{
+                    hidden: { opacity: 0, y: 20 },
+                    show: { 
+                      opacity: 1, 
+                      y: 0,
+                      transition: {
+                        duration: 0.8,
+                        ease: [0.25, 0.1, 0.25, 1.0]
+                      }
+                    }
+                  }}
+                  className="bg-white rounded-lg shadow-md overflow-hidden group relative"
+                >
                    {isAdminMode && (
                     <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <button 
@@ -194,7 +223,7 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
                   )}
                   
                   <div className="p-6">
-                    <h3 className="text-xl font-serif font-bold text-gray-800">{ex.title}</h3>
+                    <h3 className="text-xl font-serif font-bold text-gray-800 whitespace-pre-wrap">{ex.title}</h3>
                      {ex.description && (
                       <p className="mt-2 text-base text-gray-700 whitespace-pre-wrap font-serif">
                         <Linkify text={ex.description} />
@@ -246,14 +275,14 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
                         이미지가 없습니다.
                     </div>
                   )}
-                </div>
+                </motion.div>
               )) : (
                 <div className="text-center py-20">
                     <h2 className="text-2xl font-semibold text-gray-700">전시회가 없습니다.</h2>
                     <p className="text-gray-500 mt-2">관리자 모드에서 새 전시회를 추가해주세요.</p>
                 </div>
               )}
-            </div>
+            </motion.div>
           </div>
         )}
       </main>

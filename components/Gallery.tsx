@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import type { Artwork } from '../types';
 import ArtworkCard from './ArtworkCard';
 import Icon from './Icon';
@@ -55,8 +56,20 @@ const Gallery: React.FC<GalleryProps> = ({ artworks, onSelectArtwork, isAdminMod
         </>
       )}
 
-      <div 
+      <motion.div 
         ref={scrollContainerRef}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, amount: 0.1 }}
+        variants={{
+          hidden: { opacity: 0 },
+          show: {
+            opacity: 1,
+            transition: {
+              staggerChildren: 0.1
+            }
+          }
+        }}
         className={`md:flex md:flex-row md:overflow-x-auto md:overflow-y-hidden md:h-[36vh] md:items-center md:gap-0 md:px-[10vw] md:my-[25vh] flex flex-col gap-8 ${isAdminMode ? 'custom-scrollbar' : 'scrollbar-hide'}`}
       >
         {artworks.map((artwork, index) => (
@@ -70,7 +83,7 @@ const Gallery: React.FC<GalleryProps> = ({ artworks, onSelectArtwork, isAdminMod
             onDelete={onDeleteArtwork}
           />
         ))}
-      </div>
+      </motion.div>
       
       <style>{`
         .scrollbar-hide::-webkit-scrollbar {

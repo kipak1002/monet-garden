@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { motion } from 'framer-motion';
 import type { ImaginationArtwork } from '../types';
 import Icon from './Icon';
 
@@ -26,8 +27,23 @@ const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({ item, isAdminMode, 
     }
   };
 
+  const itemVariants: any = {
+    hidden: { opacity: 0, y: 20 },
+    show: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        duration: 0.8,
+        ease: [0.25, 0.1, 0.25, 1.0]
+      }
+    }
+  };
+
   return (
-    <div className="bg-white overflow-hidden flex flex-col group relative transition-all hover:shadow-2xl flex-shrink-0 md:w-[380px] w-full">
+    <motion.div 
+      variants={itemVariants}
+      className="bg-white overflow-hidden flex flex-col group relative transition-all hover:shadow-2xl flex-shrink-0 md:w-[380px] w-full"
+    >
       {isAdminMode && (
         <div className="absolute top-2 right-2 z-10 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <button 
@@ -63,7 +79,7 @@ const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({ item, isAdminMode, 
       {/* Info Section - Bottom */}
       <div className="p-5 flex flex-col gap-3 bg-white">
         <div className="flex justify-between items-baseline">
-          <h3 className="text-lg font-serif font-bold text-gray-900 tracking-tight">{item.title}</h3>
+          <h3 className="text-lg font-serif font-bold text-gray-900 tracking-tight whitespace-pre-wrap">{item.title}</h3>
           <span className="text-[10px] font-bold tracking-widest text-blue-600 uppercase">
             {item.year}
           </span>
@@ -84,7 +100,7 @@ const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({ item, isAdminMode, 
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
