@@ -509,7 +509,6 @@ const App: React.FC = () => {
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         isAdminMode={isAdminMode}
-        onToggleAdminMode={handleToggleAdminMode}
         galleryTitle={galleryTitle}
         galleryTitleFont={galleryTitleFont}
         galleryTitleSize={galleryTitleSize}
@@ -623,6 +622,22 @@ const App: React.FC = () => {
       <AdminPasswordModal isOpen={isPasswordPromptOpen} onClose={() => setIsPasswordPromptOpen(false)} onSubmit={handleAdminPasswordSubmit} />
       <ChangePasswordModal isOpen={isChangePasswordModalOpen} onClose={() => setIsChangePasswordModalOpen(false)} onUpdatePassword={handleUpdatePassword} />
       <EditExhibitionModal isOpen={isEditExhibitionModalOpen} onClose={() => setIsEditExhibitionModalOpen(false)} exhibitionToEdit={editingExhibition} onUpdate={handleUpdateExhibition} />
+
+      {/* Footer with Admin Trigger */}
+      <footer className="w-full py-16 px-6 mt-auto border-t border-gray-100 bg-white">
+        <div className="max-w-[1920px] mx-auto flex justify-center items-center">
+          <p className="text-[10px] sm:text-[11px] tracking-[0.4em] text-gray-500 uppercase font-semibold">
+            <button 
+              onClick={handleToggleAdminMode}
+              className={`hover:text-gray-900 transition-colors duration-500 mr-2 outline-none ${isAdminMode ? 'text-blue-600' : ''}`}
+              title={isAdminMode ? "관리자 모드 종료" : "Admin Login"}
+            >
+              ©
+            </button>
+            2024 {galleryTitle} All images © the artist
+          </p>
+        </div>
+      </footer>
     </div>
   );
 };
