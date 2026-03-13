@@ -59,8 +59,7 @@ const Gallery: React.FC<GalleryProps> = ({ artworks, onSelectArtwork, isAdminMod
       <motion.div 
         ref={scrollContainerRef}
         initial="hidden"
-        whileInView="show"
-        viewport={{ once: true, amount: 0.1 }}
+        animate="show"
         variants={{
           hidden: { opacity: 0 },
           show: {

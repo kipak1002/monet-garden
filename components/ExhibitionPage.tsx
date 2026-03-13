@@ -172,8 +172,7 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
             
             <motion.div 
               initial="hidden"
-              whileInView="show"
-              viewport={{ once: true, amount: 0.1 }}
+              animate="show"
               variants={{
                 hidden: { opacity: 0 },
                 show: {
@@ -185,7 +184,7 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
               }}
               className="space-y-12"
             >
-              {exhibitions.length > 0 ? exhibitions.map(ex => (
+              {(exhibitions && exhibitions.length > 0) ? exhibitions.map(ex => (
                 <motion.div 
                   key={ex.id} 
                   variants={{
@@ -277,10 +276,14 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
                   )}
                 </motion.div>
               )) : (
-                <div className="text-center py-20">
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-20"
+                >
                     <h2 className="text-2xl font-semibold text-gray-700">전시회가 없습니다.</h2>
                     <p className="text-gray-500 mt-2">관리자 모드에서 새 전시회를 추가해주세요.</p>
-                </div>
+                </motion.div>
               )}
             </motion.div>
           </div>

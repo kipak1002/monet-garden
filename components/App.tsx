@@ -191,7 +191,7 @@ const App: React.FC = () => {
 
       // 전시회 및 상상갤러리 정보도 기초 로딩에 포함 (데이터 양이 적으므로)
       const { data: exhibitionsData } = await supabase.from('exhibitions').select('*').order('display_order', { ascending: false });
-      if (exhibitionsData) setExhibitions((exhibitionsData || []).map(processExhibition));
+      setExhibitions((exhibitionsData || []).map(processExhibition));
 
       const { data: imaginationData } = await supabase.from('imagination_gallery').select('*').order('display_order', { ascending: false });
       if (imaginationData) setImaginationArtworks(imaginationData);
