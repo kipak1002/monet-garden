@@ -71,7 +71,7 @@ const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({ item, isAdminMode, 
           loop
           muted
           playsInline
-          className="w-full h-full object-contain"
+          className="w-full h-full object-contain brightness-90 group-hover:brightness-100 group-hover:scale-[1.03] transition-all duration-500 ease-out"
           poster={imgSrc}
         />
       </div>
@@ -91,7 +91,7 @@ const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({ item, isAdminMode, 
               src={imgSrc} 
               alt="원화 이미지" 
               onError={handleImageError}
-              className="w-full h-full object-cover cursor-pointer hover:scale-110 transition-transform"
+              className="w-full h-full object-cover cursor-pointer brightness-90 hover:brightness-100 hover:scale-[1.03] transition-all duration-500 ease-out"
               onClick={() => window.open(originalUrl, '_blank')}
             />
           </div>
