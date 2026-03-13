@@ -9,6 +9,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@media (pointer: fine) {
+  * {
+    cursor: none !important;
+  }
+}
+
 @layer components {
     @keyframes fadeIn {
         from {

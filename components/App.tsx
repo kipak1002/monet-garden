@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import type { Artwork, Exhibition, ImaginationArtwork } from '../types';
 import { supabase, uploadImage, recordVisit, getVisitorCount } from '../services/supabaseClient.ts';
 import Header from './Header';
@@ -19,6 +20,7 @@ import EditExhibitionModal from './EditExhibitionModal';
 import ImaginationGalleryPage from './ImaginationGalleryPage';
 import ContactPage from './ContactPage';
 import AdminInquiryPage from './AdminInquiryPage';
+import CustomCursor from './CustomCursor';
 
 type Page = 'landing' | 'gallery' | 'profile' | 'exhibition' | 'imagination' | 'contact' | 'admin-inquiry';
 
@@ -496,7 +498,8 @@ const App: React.FC = () => {
   if (isLoading) return <div className="min-h-screen bg-gray-100 flex items-center justify-center"><Spinner size="h-16 w-16" /></div>;
 
   return (
-    <div className="bg-white min-h-screen font-sans">
+    <div className="bg-white min-h-screen font-sans cursor-none">
+      <CustomCursor />
       <Header
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
@@ -512,7 +515,17 @@ const App: React.FC = () => {
         onEditTitleSettings={() => setIsEditingTitle(true)}
       />
       
-      {renderPage()}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentPage}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.5, ease: "easeInOut" }}
+        >
+          {renderPage()}
+        </motion.div>
+      </AnimatePresence>
 
       {/* Title Settings Modal */}
       {isEditingTitle && (
