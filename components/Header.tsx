@@ -202,15 +202,15 @@ const Header: React.FC<HeaderProps> = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => {
-                    if (!instagramUrl && isAdminMode) {
+                    if (isAdminMode) {
                       e.preventDefault();
                       onEditTitleSettings?.();
                     }
                   }}
                   className={`p-2 rounded-full transition-all duration-300 ${
                     currentPage === 'landing' ? 'text-white hover:bg-white/20' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
-                  } ${!instagramUrl && isAdminMode ? 'opacity-40 cursor-pointer' : ''}`}
-                  title={instagramUrl ? "Instagram" : (isAdminMode ? "인스타그램 주소 설정" : "")}
+                  } ${isAdminMode && !instagramUrl ? 'opacity-40 cursor-pointer' : ''}`}
+                  title={isAdminMode ? "인스타그램 주소 설정" : "Instagram"}
                 >
                   <Icon type="instagram" className="w-5 h-5" />
                 </a>
@@ -308,13 +308,13 @@ const Header: React.FC<HeaderProps> = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => {
-                    if (!instagramUrl && isAdminMode) {
+                    if (isAdminMode) {
                       e.preventDefault();
                       setIsMobileMenuOpen(false);
                       onEditTitleSettings?.();
                     }
                   }}
-                  className={`flex items-center gap-3 transition-colors ${!instagramUrl && isAdminMode ? 'opacity-40' : 'text-gray-400 hover:text-gray-900'}`}
+                  className={`flex items-center gap-3 transition-colors ${isAdminMode && !instagramUrl ? 'opacity-40' : 'text-gray-400 hover:text-gray-900'}`}
                 >
                   <Icon type="instagram" className="w-8 h-8" />
                   <span className="text-sm font-bold tracking-[0.2em] uppercase">Instagram</span>
