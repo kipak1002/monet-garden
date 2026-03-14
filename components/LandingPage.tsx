@@ -113,7 +113,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
         <div className="absolute top-[66%] left-1/2 -translate-x-1/2 z-30 md:hidden">
           <button
             onClick={() => onNavigate('gallery')}
-            className="px-8 py-3 bg-white/10 backdrop-blur-md border border-white/30 rounded-full text-white text-sm font-bold tracking-[0.2em] uppercase hover:bg-white/20 transition-all active:scale-95"
+            className="px-6 py-2 border border-white/40 rounded-full text-white text-[10px] font-bold tracking-[0.2em] uppercase transition-all active:scale-95 whitespace-nowrap"
           >
             [ View Works ]
           </button>
