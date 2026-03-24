@@ -64,14 +64,14 @@ const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({ item, isAdminMode, 
       )}
       
       {/* Video Section - Top */}
-      <div className="w-full h-[220px] md:h-[280px] bg-gray-950 flex items-center justify-center flex-shrink-0 relative">
+      <div className="w-full h-[220px] md:h-[280px] bg-black flex items-center justify-center flex-shrink-0 relative">
         <video 
           src={item.video_url} 
           controls 
           loop
           muted
           playsInline
-          className="w-full h-full object-cover brightness-90 group-hover:brightness-100 group-hover:scale-[1.03] transition-all duration-500 ease-out"
+          className="w-full h-full object-contain brightness-90 group-hover:brightness-100 transition-all duration-500 ease-out"
           poster={imgSrc}
         />
       </div>

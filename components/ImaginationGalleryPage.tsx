@@ -33,7 +33,7 @@ const ImaginationGalleryPage: React.FC<ImaginationGalleryPageProps> = ({
 
   return (
     <div className="min-h-screen bg-white font-sans pt-24 md:pt-32">
-      <main className="relative group/gallery md:h-[40rem] md:flex md:items-center">
+      <main className="relative group/gallery md:min-h-[45rem] md:flex md:items-center py-10">
         {/* Navigation Buttons (Desktop Only) */}
         {!isAdminMode && (
           <>
@@ -70,17 +70,23 @@ const ImaginationGalleryPage: React.FC<ImaginationGalleryPageProps> = ({
               }
             }
           }}
-          className={`imagination-scroll-container md:flex md:flex-row md:overflow-x-auto md:h-full md:items-center md:gap-12 md:px-[10vw] flex flex-col gap-8 w-full ${isAdminMode ? 'custom-scrollbar' : 'scrollbar-hide'}`}
+          className={`imagination-scroll-container md:flex md:flex-row md:overflow-x-auto md:items-center md:gap-12 md:px-[10vw] flex flex-col gap-8 w-full ${isAdminMode ? 'custom-scrollbar' : 'scrollbar-hide'}`}
         >
-          {(imaginationArtworks && imaginationArtworks.length > 0) ? imaginationArtworks.map(item => (
-            <VideoArtworkCard 
-              key={item.id} 
-              item={item} 
-              isAdminMode={isAdminMode} 
-              onEdit={() => handleEditClick(item)}
-              onDelete={() => onDeleteImagination(item)} 
-            />
-          )) : (
+          {(imaginationArtworks && imaginationArtworks.length > 0) ? (
+            <>
+              {imaginationArtworks.map(item => (
+                <VideoArtworkCard 
+                  key={item.id} 
+                  item={item} 
+                  isAdminMode={isAdminMode} 
+                  onEdit={() => handleEditClick(item)}
+                  onDelete={() => onDeleteImagination(item)} 
+                />
+              ))}
+              {/* Spacer for scroll padding at the end */}
+              <div className="hidden md:block flex-shrink-0 w-[10vw]" />
+            </>
+          ) : (
             <div className="w-full text-center py-20">
               <h2 className="text-2xl font-semibold text-gray-700">작품이 없습니다.</h2>
               <p className="text-gray-500 mt-2">상상 속의 작품을 비디오와 함께 등록해보세요.</p>
