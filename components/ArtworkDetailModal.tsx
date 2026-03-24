@@ -53,7 +53,7 @@ const ArtworkDetailModal: React.FC<ArtworkDetailModalProps> = ({
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 transition-opacity duration-300 animate-fade-in"
-      onClick={onClose}
+      onClick={(e) => e.stopPropagation()}
     >
       <div
         className="bg-white rounded-lg shadow-2xl w-full max-w-7xl max-h-[90vh] flex flex-col md:flex-row overflow-hidden relative transform animate-slide-up"
@@ -93,9 +93,9 @@ const ArtworkDetailModal: React.FC<ArtworkDetailModalProps> = ({
             )}
         </div>
         <div className="w-full md:w-1/3 p-6 md:p-8 flex flex-col overflow-y-auto">
-          <h2 className="text-3xl font-serif font-bold text-gray-900">{artwork.title}</h2>
+          <h2 className="text-3xl font-serif font-bold text-gray-900 whitespace-pre-wrap">{artwork.title}</h2>
           {artwork.title_en && (
-            <p className="text-2xl font-serif text-gray-400 italic -mt-1">{artwork.title_en}</p>
+            <p className="text-2xl font-serif text-gray-400 italic whitespace-pre-wrap -mt-1">{artwork.title_en}</p>
           )}
           <p className="text-lg text-gray-600 mt-1 font-serif italic">{artwork.artist}, {artwork.year}</p>
           <p className="text-md text-gray-500 mt-2 font-serif"><strong>크기:</strong> {artwork.size}</p>

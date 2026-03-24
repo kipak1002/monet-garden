@@ -59,7 +59,7 @@ const EditImaginationModal: React.FC<EditImaginationModalProps> = ({ isOpen, onC
   if (!isOpen || !itemToEdit) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={(e) => e.stopPropagation()}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-slide-up" onClick={e => e.stopPropagation()}>
         <div className="p-6 border-b flex justify-between items-center bg-gray-50">
           <h2 className="text-xl font-bold text-gray-900">상상갤러리 작품 수정</h2>
@@ -69,12 +69,12 @@ const EditImaginationModal: React.FC<EditImaginationModalProps> = ({ isOpen, onC
         <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
           <div>
             <label className="block text-sm font-semibold text-gray-700">작품 제목 *</label>
-            <input 
-              type="text" 
+            <textarea 
               required
               className="mt-1 block w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
               value={formData.title}
               onChange={e => setFormData({...formData, title: e.target.value})}
+              rows={2}
             />
           </div>
 

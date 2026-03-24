@@ -50,7 +50,7 @@ const EditExhibitionModal: React.FC<EditExhibitionModalProps> = ({ isOpen, onClo
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const files = Array.from(e.target.files);
+      const files: File[] = Array.from(e.target.files);
       files.forEach(file => {
           const reader = new FileReader();
           reader.onloadend = () => {
@@ -95,7 +95,7 @@ const EditExhibitionModal: React.FC<EditExhibitionModalProps> = ({ isOpen, onClo
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 transition-opacity duration-300 animate-fade-in"
-      onClick={onClose}
+      onClick={(e) => e.stopPropagation()}
     >
       <div
         className="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden relative transform animate-slide-up"
@@ -114,7 +114,7 @@ const EditExhibitionModal: React.FC<EditExhibitionModalProps> = ({ isOpen, onClo
         <div className='p-6 md:p-8 overflow-y-auto space-y-6 flex-1 min-h-0'>
             <div>
                 <label htmlFor="ex-edit-title" className="block text-sm font-medium text-gray-700">전시회 제목</label>
-                <input type="text" name="title" id="ex-edit-title" value={formData.title} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100" disabled={isSubmitting}/>
+                <textarea name="title" id="ex-edit-title" value={formData.title} onChange={handleChange} rows={2} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100" disabled={isSubmitting}/>
             </div>
 
             <div>

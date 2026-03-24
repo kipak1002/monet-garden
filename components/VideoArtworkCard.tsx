@@ -42,7 +42,7 @@ const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({ item, isAdminMode, 
   return (
     <motion.div 
       variants={itemVariants}
-      className="bg-white overflow-hidden flex flex-col group relative transition-all hover:shadow-2xl flex-shrink-0 md:w-[380px] w-full"
+      className="bg-white overflow-hidden flex flex-col group relative transition-all hover:shadow-2xl flex-shrink-0 md:w-[380px] md:h-[480px] w-full"
     >
       {isAdminMode && (
         <div className="absolute top-2 right-2 z-10 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -64,7 +64,7 @@ const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({ item, isAdminMode, 
       )}
       
       {/* Video Section - Top */}
-      <div className="w-full aspect-video bg-white flex items-center justify-center">
+      <div className="w-full aspect-video bg-white flex items-center justify-center flex-shrink-0">
         <video 
           src={item.video_url} 
           controls 
@@ -77,7 +77,7 @@ const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({ item, isAdminMode, 
       </div>
 
       {/* Info Section - Bottom */}
-      <div className="p-5 flex flex-col gap-3 bg-white">
+      <div className="p-5 flex flex-col gap-3 bg-white flex-1">
         <div className="flex justify-between items-baseline">
           <h3 className="text-lg font-serif font-bold text-gray-900 tracking-tight whitespace-pre-wrap">{item.title}</h3>
           <span className="text-[10px] font-bold tracking-widest text-blue-600 uppercase">
