@@ -33,7 +33,7 @@ const ImaginationGalleryPage: React.FC<ImaginationGalleryPageProps> = ({
 
   return (
     <div className="min-h-screen bg-white font-sans pt-24 md:pt-32">
-      <main className="relative group/gallery md:h-[30rem] md:flex md:items-center">
+      <main className="relative group/gallery md:h-[40rem] md:flex md:items-center">
         {/* Navigation Buttons (Desktop Only) */}
         {!isAdminMode && (
           <>
@@ -70,7 +70,7 @@ const ImaginationGalleryPage: React.FC<ImaginationGalleryPageProps> = ({
               }
             }
           }}
-          className={`imagination-scroll-container md:flex md:flex-row md:overflow-x-auto md:overflow-y-hidden md:h-full md:items-center md:gap-12 md:px-[10vw] flex flex-col gap-8 w-full ${isAdminMode ? 'custom-scrollbar' : 'scrollbar-hide'}`}
+          className={`imagination-scroll-container md:flex md:flex-row md:overflow-x-auto md:h-full md:items-center md:gap-12 md:px-[10vw] flex flex-col gap-8 w-full ${isAdminMode ? 'custom-scrollbar' : 'scrollbar-hide'}`}
         >
           {(imaginationArtworks && imaginationArtworks.length > 0) ? imaginationArtworks.map(item => (
             <VideoArtworkCard 

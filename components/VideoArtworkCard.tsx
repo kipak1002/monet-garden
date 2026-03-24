@@ -42,7 +42,7 @@ const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({ item, isAdminMode, 
   return (
     <motion.div 
       variants={itemVariants}
-      className="bg-white overflow-hidden flex flex-col group relative transition-all hover:shadow-2xl flex-shrink-0 md:w-[380px] md:h-[480px] w-full"
+      className="bg-white overflow-hidden flex flex-col group relative transition-all hover:shadow-2xl flex-shrink-0 md:w-[380px] md:h-[560px] w-full"
     >
       {isAdminMode && (
         <div className="absolute top-2 right-2 z-10 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -64,14 +64,14 @@ const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({ item, isAdminMode, 
       )}
       
       {/* Video Section - Top */}
-      <div className="w-full aspect-video bg-white flex items-center justify-center flex-shrink-0">
+      <div className="w-full h-[220px] md:h-[280px] bg-gray-950 flex items-center justify-center flex-shrink-0 relative">
         <video 
           src={item.video_url} 
           controls 
           loop
           muted
           playsInline
-          className="w-full h-full object-contain brightness-90 group-hover:brightness-100 group-hover:scale-[1.03] transition-all duration-500 ease-out"
+          className="w-full h-full object-cover brightness-90 group-hover:brightness-100 group-hover:scale-[1.03] transition-all duration-500 ease-out"
           poster={imgSrc}
         />
       </div>
