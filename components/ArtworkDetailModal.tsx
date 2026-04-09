@@ -52,41 +52,35 @@ const ArtworkDetailModal: React.FC<ArtworkDetailModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black/95 flex items-center justify-center z-50 p-0 md:p-4 transition-opacity duration-300 animate-fade-in"
+      className="fixed inset-0 bg-[#000000]/98 flex items-center justify-center z-[99999] p-0 md:p-12 transition-opacity duration-300 animate-fade-in"
       onClick={onClose}
     >
-      {/* Fixed Close Button for Mobile */}
+      {/* EXTREME Close Button - Fixed to viewport corner, huge, and highest z-index */}
       <button
         onClick={(e) => { e.stopPropagation(); onClose(); }}
-        className="fixed top-6 right-6 z-[100] bg-white/10 hover:bg-white/20 backdrop-blur-md text-white p-3 rounded-full transition-all border border-white/20 shadow-xl md:hidden"
+        className="fixed top-4 right-4 z-[100000] bg-white text-black p-5 rounded-full shadow-[0_0_50px_rgba(255,255,255,0.3)] hover:scale-110 active:scale-90 transition-all border-4 border-black"
         aria-label="닫기"
       >
-        <Icon type="close" className="w-8 h-8" />
+        <Icon type="close" className="w-8 h-8 md:w-10 md:h-10" />
       </button>
 
       <div
-        className="bg-white md:rounded-xl shadow-2xl w-full max-w-7xl h-full md:h-auto md:max-h-[92vh] flex flex-col md:flex-row overflow-hidden relative transform animate-slide-up"
+        className="bg-white md:rounded-[3rem] shadow-2xl w-full max-w-7xl h-full md:h-auto md:max-h-[85vh] flex flex-col md:flex-row overflow-hidden relative transform animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Desktop Close Button */}
-        <button
-          onClick={onClose}
-          className="hidden md:flex absolute top-6 right-6 text-gray-400 hover:text-gray-900 z-50 transition-all p-2 hover:bg-gray-100 rounded-full"
-          aria-label="닫기"
-        >
-          <Icon type="close" className="w-8 h-8" />
-        </button>
-
-        <div className="w-full md:w-2/3 h-[55vh] md:h-auto bg-[#fdfdfd] md:bg-white relative flex items-center justify-center flex-shrink-0 p-4 md:p-0">
+        <div className="w-full md:w-2/3 h-[45vh] sm:h-[50vh] md:h-[70vh] bg-[#f0f0f0] relative flex items-center justify-center p-8 md:p-20">
             {images.length > 0 ? (
                 <img 
                   src={images[currentIndex]} 
                   alt={`${artwork.title} - Image ${currentIndex + 1}`} 
-                  className="w-full h-full object-contain drop-shadow-md" 
+                  className="max-w-full max-h-full w-auto h-auto object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.2)] select-none" 
+                  referrerPolicy="no-referrer"
                 />
             ) : (
                 <div className='text-gray-400 font-serif italic'>이미지가 없습니다.</div>
             )}
+            {/* Version marker for cache check */}
+            <div className="absolute bottom-2 right-2 text-[8px] text-gray-300 opacity-20">v1.2.3-fold-fix</div>
             {hasMultipleImages && (
               <>
                 <button onClick={goToPrevious} className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full p-2 hover:bg-black/60 transition-colors z-10" aria-label="이전 이미지">
