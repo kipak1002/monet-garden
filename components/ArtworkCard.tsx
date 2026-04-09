@@ -152,18 +152,18 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({
           </button>
         </div>
       )}
-      <div className="flex-1 bg-white overflow-hidden md:h-full">
+      <div className="relative bg-white overflow-hidden md:h-full aspect-[3/4] md:aspect-auto flex-shrink-0">
         {isIntersecting && imgSrc ? (
           <img
             src={imgSrc}
             alt={artwork.title}
             loading={index < 3 ? "eager" : "lazy"}
             onError={handleImageError}
-            className="w-full h-full object-contain brightness-90 group-hover:brightness-100 group-hover:scale-[1.03] transition-all duration-500 ease-out animate-fade-in"
+            className="w-full h-full object-contain brightness-95 group-hover:brightness-100 transition-all duration-500 ease-out animate-fade-in"
             referrerPolicy="no-referrer"
           />
         ) : (
-          <div className="w-full h-full bg-gray-300 animate-pulse"></div>
+          <div className="w-full h-full bg-gray-100 animate-pulse"></div>
         )}
       </div>
       <div className="p-4 bg-white">

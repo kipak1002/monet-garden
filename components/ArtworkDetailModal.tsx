@@ -52,25 +52,40 @@ const ArtworkDetailModal: React.FC<ArtworkDetailModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-0 md:p-4 transition-opacity duration-300 animate-fade-in"
+      className="fixed inset-0 bg-black/95 flex items-center justify-center z-50 p-0 md:p-4 transition-opacity duration-300 animate-fade-in"
       onClick={onClose}
     >
+      {/* Fixed Close Button for Mobile */}
+      <button
+        onClick={(e) => { e.stopPropagation(); onClose(); }}
+        className="fixed top-6 right-6 z-[100] bg-white/10 hover:bg-white/20 backdrop-blur-md text-white p-3 rounded-full transition-all border border-white/20 shadow-xl md:hidden"
+        aria-label="닫기"
+      >
+        <Icon type="close" className="w-8 h-8" />
+      </button>
+
       <div
-        className="bg-white md:rounded-lg shadow-2xl w-full max-w-7xl h-full md:h-auto md:max-h-[90vh] flex flex-col md:flex-row overflow-hidden relative transform animate-slide-up"
+        className="bg-white md:rounded-xl shadow-2xl w-full max-w-7xl h-full md:h-auto md:max-h-[92vh] flex flex-col md:flex-row overflow-hidden relative transform animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Desktop Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 md:top-6 md:right-6 text-white md:text-gray-500 bg-black/50 md:bg-transparent p-2 rounded-full hover:bg-black/70 md:hover:text-gray-800 z-50 transition-all shadow-lg md:shadow-none"
+          className="hidden md:flex absolute top-6 right-6 text-gray-400 hover:text-gray-900 z-50 transition-all p-2 hover:bg-gray-100 rounded-full"
           aria-label="닫기"
         >
-          <Icon type="close" className="w-6 h-6 md:w-8 md:h-8" />
+          <Icon type="close" className="w-8 h-8" />
         </button>
-        <div className="w-full md:w-2/3 h-[60vh] md:h-auto bg-gray-50 md:bg-white relative flex items-center justify-center flex-shrink-0">
+
+        <div className="w-full md:w-2/3 h-[55vh] md:h-auto bg-[#fdfdfd] md:bg-white relative flex items-center justify-center flex-shrink-0 p-4 md:p-0">
             {images.length > 0 ? (
-                <img src={images[currentIndex]} alt={`${artwork.title} - Image ${currentIndex + 1}`} className="w-full h-full object-contain" />
+                <img 
+                  src={images[currentIndex]} 
+                  alt={`${artwork.title} - Image ${currentIndex + 1}`} 
+                  className="w-full h-full object-contain drop-shadow-md" 
+                />
             ) : (
-                <div className='text-gray-500'>이미지가 없습니다.</div>
+                <div className='text-gray-400 font-serif italic'>이미지가 없습니다.</div>
             )}
             {hasMultipleImages && (
               <>
