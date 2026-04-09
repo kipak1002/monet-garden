@@ -2,11 +2,17 @@
 import React from 'react';
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
-  type: 'search' | 'close' | 'sparkles' | 'edit' | 'shield-check' | 'upload' | 'trash' | 'plus' | 'key' | 'cog' | 'profile' | 'exhibition' | 'collection' | 'chevron-left' | 'chevron-right' | 'chevron-down' | 'video' | 'menu' | 'check' | 'refresh' | 'mail' | 'user' | 'instagram';
+  type: 'search' | 'close' | 'sparkles' | 'edit' | 'shield-check' | 'upload' | 'trash' | 'plus' | 'key' | 'cog' | 'profile' | 'exhibition' | 'collection' | 'chevron-left' | 'chevron-right' | 'chevron-down' | 'chevron-up' | 'video' | 'menu' | 'check' | 'refresh' | 'mail' | 'user' | 'instagram';
 }
 
 const Icon: React.FC<IconProps> = ({ type, ...props }) => {
   switch (type) {
+    case 'chevron-up':
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+        </svg>
+      );
     case 'instagram':
       return (
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>

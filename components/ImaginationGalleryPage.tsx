@@ -13,6 +13,7 @@ interface ImaginationGalleryPageProps {
   onAddImagination: (title: string, size: string, year: number, videoFile: File, originalImage: File) => Promise<void>;
   onUpdateImagination: (id: number, title: string, size: string, year: number, videoFile?: File, originalImage?: File) => Promise<void>;
   onDeleteImagination: (item: ImaginationArtwork) => void;
+  onReorder: (items: ImaginationArtwork[]) => void;
 }
 
 const ImaginationGalleryPage: React.FC<ImaginationGalleryPageProps> = ({
@@ -21,6 +22,7 @@ const ImaginationGalleryPage: React.FC<ImaginationGalleryPageProps> = ({
   onAddImagination,
   onUpdateImagination,
   onDeleteImagination,
+  onReorder,
 }) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -29,6 +31,16 @@ const ImaginationGalleryPage: React.FC<ImaginationGalleryPageProps> = ({
   const handleEditClick = (item: ImaginationArtwork) => {
     setEditingItem(item);
     setIsEditModalOpen(true);
+  };
+
+  const handleMove = (index: number, direction: 'left' | 'right') => {
+    const newItems = [...imaginationArtworks];
+    const targetIndex = direction === 'left' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= newItems.length) return;
+    
+    const [movedItem] = newItems.splice(index, 1);
+    newItems.splice(targetIndex, 0, movedItem);
+    onReorder(newItems);
   };
 
   return (
@@ -74,13 +86,17 @@ const ImaginationGalleryPage: React.FC<ImaginationGalleryPageProps> = ({
         >
           {(imaginationArtworks && imaginationArtworks.length > 0) ? (
             <>
-              {imaginationArtworks.map(item => (
+              {imaginationArtworks.map((item, index) => (
                 <VideoArtworkCard 
                   key={item.id} 
                   item={item} 
                   isAdminMode={isAdminMode} 
                   onEdit={() => handleEditClick(item)}
                   onDelete={() => onDeleteImagination(item)} 
+                  onMoveLeft={() => handleMove(index, 'left')}
+                  onMoveRight={() => handleMove(index, 'right')}
+                  isFirst={index === 0}
+                  isLast={index === imaginationArtworks.length - 1}
                 />
               ))}
               {/* Spacer for scroll padding at the end */}

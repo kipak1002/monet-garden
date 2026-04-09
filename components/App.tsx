@@ -181,6 +181,7 @@ const App: React.FC = () => {
       const { data: priorityArtworks, error: priorityError } = await supabase
         .from('artworks')
         .select('*')
+        .order('display_order', { ascending: false, nullsFirst: false })
         .order('created_at', { ascending: false })
         .range(0, 2); // 0~2번 인덱스 (총 3개)
 
@@ -206,6 +207,7 @@ const App: React.FC = () => {
       const { data: allArtworks, error: allArtworksError } = await supabase
         .from('artworks')
         .select('*')
+        .order('display_order', { ascending: false, nullsFirst: false })
         .order('created_at', { ascending: false });
       
       if (!allArtworksError && allArtworks) {
@@ -334,10 +336,11 @@ const App: React.FC = () => {
   };
 
   const handleAddNewArtwork = async (newArtworkData: NewArtworkData) => {
+    const maxOrder = artworks.length > 0 ? Math.max(...artworks.map(a => a.display_order || 0)) : 0;
     const uploadPromises = newArtworkData.images.map(imageFile => uploadImage(imageFile));
     const imageUrls = await Promise.all(uploadPromises);
     const { images, ...artworkDetails } = newArtworkData;
-    const { data, error } = await supabase.from('artworks').insert([{ ...artworkDetails, image_urls: imageUrls }]).select().single();
+    const { data, error } = await supabase.from('artworks').insert([{ ...artworkDetails, image_urls: imageUrls, display_order: maxOrder + 1 }]).select().single();
     if (error) throw error;
     setArtworks(prev => [processArtwork(data), ...prev]);
     setIsAddModalOpen(false);
@@ -436,6 +439,52 @@ const App: React.FC = () => {
     setImaginationArtworks(prev => prev.map(i => (i.id === id ? data : i)));
   };
 
+  const handleReorder = async (type: 'artworks' | 'exhibitions' | 'imagination_gallery', items: any[]) => {
+    try {
+      const updates = items.map((item, index) => ({
+        id: item.id,
+        display_order: items.length - index // Higher order first
+      }));
+
+      // Supabase doesn't support bulk update with different values easily in one call without a RPC
+      // So we do it in a loop or multiple calls. For small lists, multiple calls are okay.
+      // But better to use upsert if possible, or just individual updates.
+      
+      const promises = updates.map(update => 
+        supabase.from(type).update({ display_order: update.display_order }).eq('id', update.id)
+      );
+
+      await Promise.all(promises);
+
+      // Update local state
+      if (type === 'artworks') {
+        const newArtworks = [...artworks];
+        updates.forEach(u => {
+          const art = newArtworks.find(a => a.id === u.id);
+          if (art) art.display_order = u.display_order;
+        });
+        setArtworks(newArtworks.sort((a, b) => (b.display_order || 0) - (a.display_order || 0) || new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+      } else if (type === 'exhibitions') {
+        const newExhibitions = [...exhibitions];
+        updates.forEach(u => {
+          const ex = newExhibitions.find(e => e.id === u.id);
+          if (ex) ex.display_order = u.display_order;
+        });
+        setExhibitions(newExhibitions.sort((a, b) => (b.display_order || 0) - (a.display_order || 0)));
+      } else if (type === 'imagination_gallery') {
+        const newImagination = [...imaginationArtworks];
+        updates.forEach(u => {
+          const img = newImagination.find(i => i.id === u.id);
+          if (img) img.display_order = u.display_order;
+        });
+        setImaginationArtworks(newImagination.sort((a, b) => (b.display_order || 0) - (a.display_order || 0)));
+      }
+    } catch (error) {
+      console.error(`Error reordering ${type}:`, error);
+      alert('순서 변경 중 오류가 발생했습니다.');
+    }
+  };
+
   const openEditModal = (artwork: Artwork) => { setEditingArtwork(artwork); setIsEditModalOpen(true); };
   const openEditExhibitionModal = (exhibition: Exhibition) => { setEditingExhibition(exhibition); setIsEditExhibitionModalOpen(true); };
   const openAddModal = () => setIsAddModalOpen(true);
@@ -465,6 +514,7 @@ const App: React.FC = () => {
                   onAddExhibition={handleAddExhibition}
                   onEditExhibition={openEditExhibitionModal} 
                   onDeleteExhibition={(ex) => openDeleteModal(ex, '전시회')}
+                  onReorder={(items) => handleReorder('exhibitions', items)}
                   isLoading={isLoading}
                 />;
       case 'imagination':
@@ -474,6 +524,7 @@ const App: React.FC = () => {
                   onAddImagination={handleAddImagination}
                   onUpdateImagination={handleUpdateImagination}
                   onDeleteImagination={(item) => openDeleteModal(item, '상상작품')}
+                  onReorder={(items) => handleReorder('imagination_gallery', items)}
                 />;
       case 'contact':
         return <ContactPage isAdminMode={isAdminMode} />;
@@ -497,6 +548,7 @@ const App: React.FC = () => {
               isAdminMode={isAdminMode}
               onEditArtwork={openEditModal}
               onDeleteArtwork={(art) => openDeleteModal(art, '작품')}
+              onReorder={(items) => handleReorder('artworks', items)}
             />
           </main>
         );

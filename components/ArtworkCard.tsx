@@ -10,9 +10,24 @@ interface ArtworkCardProps {
   isAdminMode: boolean;
   onEdit: (artwork: Artwork) => void;
   onDelete: (artwork: Artwork) => void;
+  onMoveLeft: () => void;
+  onMoveRight: () => void;
+  isFirst: boolean;
+  isLast: boolean;
 }
 
-const ArtworkCard: React.FC<ArtworkCardProps> = ({ artwork, index, onSelect, isAdminMode, onEdit, onDelete }) => {
+const ArtworkCard: React.FC<ArtworkCardProps> = ({ 
+  artwork, 
+  index, 
+  onSelect, 
+  isAdminMode, 
+  onEdit, 
+  onDelete,
+  onMoveLeft,
+  onMoveRight,
+  isFirst,
+  isLast
+}) => {
   const cardRef = useRef<HTMLDivElement | null>(null);
   const [isIntersecting, setIsIntersecting] = useState(false);
   const [imgSrc, setImgSrc] = useState<string>('');
@@ -97,6 +112,28 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ artwork, index, onSelect, isA
     >
       {isAdminMode && (
         <div className="absolute top-2 right-2 z-10 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="flex gap-2">
+            {!isFirst && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); onMoveLeft(); }}
+                className="bg-white/80 backdrop-blur-sm p-2 rounded-full text-gray-700 hover:bg-blue-500 hover:text-white transition-all"
+                aria-label="왼쪽으로 이동"
+                title="왼쪽으로 이동"
+              >
+                <Icon type="chevron-left" className="w-5 h-5" />
+              </button>
+            )}
+            {!isLast && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); onMoveRight(); }}
+                className="bg-white/80 backdrop-blur-sm p-2 rounded-full text-gray-700 hover:bg-blue-500 hover:text-white transition-all"
+                aria-label="오른쪽으로 이동"
+                title="오른쪽으로 이동"
+              >
+                <Icon type="chevron-right" className="w-5 h-5" />
+              </button>
+            )}
+          </div>
           <button 
             onClick={handleEditClick}
             className="bg-white/80 backdrop-blur-sm p-2 rounded-full text-gray-700 hover:bg-blue-500 hover:text-white transition-all"

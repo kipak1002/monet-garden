@@ -9,6 +9,7 @@ export interface Artwork {
   image_urls: string[];
   size: string;
   memo?: string | null;
+  display_order?: number;
 }
 
 export interface Inquiry {

@@ -12,6 +12,7 @@ interface ExhibitionPageProps {
   onAddExhibition: (title: string, description: string, imageFiles: File[]) => Promise<void>;
   onEditExhibition: (exhibition: Exhibition) => void;
   onDeleteExhibition: (exhibition: Exhibition) => void;
+  onReorder: (items: Exhibition[]) => void;
   isLoading: boolean;
 }
 
@@ -21,6 +22,7 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
   onAddExhibition,
   onEditExhibition,
   onDeleteExhibition,
+  onReorder,
   isLoading,
 }) => {
   const [isUploading, setIsUploading] = useState(false);
@@ -78,6 +80,16 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const handleMove = (index: number, direction: 'up' | 'down') => {
+    const newItems = [...exhibitions];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= newItems.length) return;
+    
+    const [movedItem] = newItems.splice(index, 1);
+    newItems.splice(targetIndex, 0, movedItem);
+    onReorder(newItems);
   };
 
   return (
@@ -184,7 +196,7 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
               }}
               className="space-y-12"
             >
-              {(exhibitions && exhibitions.length > 0) ? exhibitions.map(ex => (
+              {(exhibitions && exhibitions.length > 0) ? exhibitions.map((ex, index) => (
                 <motion.div 
                   key={ex.id} 
                   variants={{
@@ -202,6 +214,28 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
                 >
                    {isAdminMode && (
                     <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div className="flex gap-2">
+                            {index > 0 && (
+                                <button 
+                                    onClick={() => handleMove(index, 'up')}
+                                    className="bg-white/80 backdrop-blur-sm p-2 rounded-full text-gray-700 hover:bg-blue-500 hover:text-white transition-all"
+                                    aria-label="위로 이동"
+                                    title="위로 이동"
+                                >
+                                    <Icon type="chevron-up" className="w-5 h-5" />
+                                </button>
+                            )}
+                            {index < exhibitions.length - 1 && (
+                                <button 
+                                    onClick={() => handleMove(index, 'down')}
+                                    className="bg-white/80 backdrop-blur-sm p-2 rounded-full text-gray-700 hover:bg-blue-500 hover:text-white transition-all"
+                                    aria-label="아래로 이동"
+                                    title="아래로 이동"
+                                >
+                                    <Icon type="chevron-down" className="w-5 h-5" />
+                                </button>
+                            )}
+                        </div>
                         <button 
                             onClick={() => onEditExhibition(ex)}
                             className="bg-white/80 backdrop-blur-sm p-2 rounded-full text-gray-700 hover:bg-blue-500 hover:text-white transition-all"

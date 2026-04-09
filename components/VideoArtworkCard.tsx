@@ -9,9 +9,22 @@ interface VideoArtworkCardProps {
   isAdminMode: boolean;
   onEdit: () => void;
   onDelete: () => void;
+  onMoveLeft: () => void;
+  onMoveRight: () => void;
+  isFirst: boolean;
+  isLast: boolean;
 }
 
-const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({ item, isAdminMode, onEdit, onDelete }) => {
+const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({ 
+  item, 
+  isAdminMode, 
+  onEdit, 
+  onDelete,
+  onMoveLeft,
+  onMoveRight,
+  isFirst,
+  isLast
+}) => {
   const [imgSrc, setImgSrc] = React.useState<string>('');
 
   const originalUrl = item.original_image_url;
@@ -46,6 +59,26 @@ const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({ item, isAdminMode, 
     >
       {isAdminMode && (
         <div className="absolute top-2 right-2 z-10 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex gap-2">
+            {!isFirst && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); onMoveLeft(); }}
+                className="bg-white text-gray-700 p-2 rounded-full shadow-md hover:bg-blue-500 hover:text-white transition-all"
+                title="왼쪽으로 이동"
+              >
+                <Icon type="chevron-left" className="w-5 h-5" />
+              </button>
+            )}
+            {!isLast && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); onMoveRight(); }}
+                className="bg-white text-gray-700 p-2 rounded-full shadow-md hover:bg-blue-500 hover:text-white transition-all"
+                title="오른쪽으로 이동"
+              >
+                <Icon type="chevron-right" className="w-5 h-5" />
+              </button>
+            )}
+          </div>
           <button 
             onClick={(e) => { e.stopPropagation(); onEdit(); }}
             className="bg-white text-gray-700 p-2 rounded-full shadow-md hover:bg-blue-500 hover:text-white transition-all"

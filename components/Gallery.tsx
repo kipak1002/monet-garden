@@ -10,9 +10,10 @@ interface GalleryProps {
   isAdminMode: boolean;
   onEditArtwork: (artwork: Artwork) => void;
   onDeleteArtwork: (artwork: Artwork) => void;
+  onReorder: (items: Artwork[]) => void;
 }
 
-const Gallery: React.FC<GalleryProps> = ({ artworks, onSelectArtwork, isAdminMode, onEditArtwork, onDeleteArtwork }) => {
+const Gallery: React.FC<GalleryProps> = ({ artworks, onSelectArtwork, isAdminMode, onEditArtwork, onDeleteArtwork, onReorder }) => {
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
   const scroll = (direction: 'left' | 'right') => {
@@ -23,6 +24,16 @@ const Gallery: React.FC<GalleryProps> = ({ artworks, onSelectArtwork, isAdminMod
         behavior: 'smooth'
       });
     }
+  };
+
+  const handleMove = (index: number, direction: 'left' | 'right') => {
+    const newItems = [...artworks];
+    const targetIndex = direction === 'left' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= newItems.length) return;
+    
+    const [movedItem] = newItems.splice(index, 1);
+    newItems.splice(targetIndex, 0, movedItem);
+    onReorder(newItems);
   };
 
   if (artworks.length === 0) {
@@ -80,6 +91,10 @@ const Gallery: React.FC<GalleryProps> = ({ artworks, onSelectArtwork, isAdminMod
             isAdminMode={isAdminMode}
             onEdit={onEditArtwork}
             onDelete={onDeleteArtwork}
+            onMoveLeft={() => handleMove(index, 'left')}
+            onMoveRight={() => handleMove(index, 'right')}
+            isFirst={index === 0}
+            isLast={index === artworks.length - 1}
           />
         ))}
       </motion.div>
