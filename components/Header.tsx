@@ -81,7 +81,7 @@ const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
-      <header className={`fixed top-0 left-0 w-full z-[60] transition-all duration-300 ${currentPage === 'landing' ? 'bg-transparent' : 'bg-white/90 backdrop-blur-md shadow-sm'}`}>
+      <header className={`fixed top-0 left-0 w-full z-[50] transition-all duration-300 ${currentPage === 'landing' ? 'bg-transparent' : 'bg-white/90 backdrop-blur-md shadow-sm'}`}>
         <div className="max-w-[1920px] mx-auto px-6 md:px-12 py-6 md:py-8 flex justify-between items-center">
           {/* Left: Artist Name */}
           <div className="flex items-center gap-4">

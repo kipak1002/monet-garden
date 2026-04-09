@@ -541,7 +541,7 @@ const App: React.FC = () => {
       case 'gallery':
       default:
         return (
-          <main className="w-full">
+          <main className="w-full pt-28 md:pt-36">
             <Gallery 
               artworks={filteredArtworks}
               onSelectArtwork={handleSelectArtwork}

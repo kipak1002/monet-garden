@@ -123,7 +123,7 @@ const ContactPage: React.FC<ContactPageProps> = ({ isAdminMode }) => {
   }
 
   return (
-    <div className="min-h-screen bg-white pt-24 md:pt-32 pb-20">
+    <div className="min-h-screen bg-white pt-28 md:pt-36 pb-20">
       <div className="container mx-auto px-6 md:px-8 max-w-2xl">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-serif font-bold text-gray-900 mb-4 tracking-tight">CONTACT</h1>

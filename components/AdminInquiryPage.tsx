@@ -66,7 +66,7 @@ const AdminInquiryPage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto py-10">
+    <div className="max-w-7xl mx-auto pt-28 md:pt-36 pb-10 px-6">
       <div className="flex justify-between items-center mb-8">
         <h2 className="text-3xl font-serif font-bold text-gray-900">문의 내역 관리 (Inquiry Management)</h2>
         <button 

@@ -44,7 +44,7 @@ const ImaginationGalleryPage: React.FC<ImaginationGalleryPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans pt-24 md:pt-32">
+    <div className="min-h-screen bg-white font-sans pt-28 md:pt-36">
       <main className="relative group/gallery md:min-h-[45rem] md:flex md:items-center py-10">
         {/* Navigation Buttons (Desktop Only) */}
         {!isAdminMode && (

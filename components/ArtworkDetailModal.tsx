@@ -52,16 +52,16 @@ const ArtworkDetailModal: React.FC<ArtworkDetailModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 bg-[#000000]/98 flex items-center justify-center z-[99999] p-0 md:p-12 transition-opacity duration-300 animate-fade-in"
+      className="fixed inset-0 bg-[#000000]/98 flex items-center justify-center z-[1000] p-0 md:p-12 transition-opacity duration-300 animate-fade-in"
       onClick={onClose}
     >
-      {/* EXTREME Close Button - Fixed to viewport corner, huge, and highest z-index */}
+      {/* Universal Close Button - Reduced size as requested */}
       <button
         onClick={(e) => { e.stopPropagation(); onClose(); }}
-        className="fixed top-4 right-4 z-[100000] bg-white text-black p-5 rounded-full shadow-[0_0_50px_rgba(255,255,255,0.3)] hover:scale-110 active:scale-90 transition-all border-4 border-black"
+        className="fixed top-4 right-4 z-[1001] bg-white text-black p-2.5 md:p-3 rounded-full shadow-xl hover:scale-110 active:scale-90 transition-all border-2 border-black"
         aria-label="닫기"
       >
-        <Icon type="close" className="w-8 h-8 md:w-10 md:h-10" />
+        <Icon type="close" className="w-5 h-5 md:w-6 md:h-6" />
       </button>
 
       <div

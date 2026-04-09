@@ -93,7 +93,7 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans pt-24 md:pt-32">
+    <div className="min-h-screen bg-white font-sans pt-28 md:pt-36">
       <main className="max-w-7xl mx-auto p-6 md:p-8">
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
