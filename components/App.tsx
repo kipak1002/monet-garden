@@ -688,7 +688,7 @@ const App: React.FC = () => {
             >
               ©
             </button>
-            2024 {galleryTitle} All images © the artist
+            2021 {galleryTitle} All images © the artist
           </p>
         </div>
       </footer>
