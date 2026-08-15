@@ -53,7 +53,8 @@ const TEXT_ALIGN_OPTIONS: { name: string; value: 'left' | 'center' | 'justify' }
 
 /**
  * Parses markdown-like text and single/double newlines into semantic HTML elements.
- * This guarantees line breaks and paragraph spacing remain 100% intact even during automatic browser translation.
+ * Correctly renders bold (**text**), links ([title](url)), raw URLs (http/https/instagram),
+ * emails, headings, lists, blockquotes, and keeps line breaks intact during translation.
  */
 const FormattedProfileContent: React.FC<{
   text: string;
@@ -64,24 +65,158 @@ const FormattedProfileContent: React.FC<{
   // Split into paragraph blocks by 2 or more newlines
   const rawBlocks = text.split(/\n{2,}/);
 
-  const renderInlineFormatted = (lineText: string) => {
-    // Parse bold text **bold**
-    const parts = lineText.split(/(\*\*[^*]+\*\*)/g);
-    return parts.map((part, index) => {
-      if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+  /**
+   * Helper to format inline elements:
+   * 1. Markdown links: [Title](url)
+   * 2. Raw URLs: https://..., http://..., instagram.com/...
+   * 3. Emails: mailto:... or email@domain.com
+   * 4. Bold: **text**
+   * 5. Italic: *text*
+   */
+  const renderInlineFormatted = (lineText: string): React.ReactNode => {
+    // Regex for markdown links [text](url)
+    const mdLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+    
+    // Split by markdown link first
+    const tokens: Array<{ type: 'text' | 'mdLink'; text: string; url?: string }> = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = mdLinkRegex.exec(lineText)) !== null) {
+      if (match.index > lastIndex) {
+        tokens.push({ type: 'text', text: lineText.substring(lastIndex, match.index) });
+      }
+      tokens.push({ type: 'mdLink', text: match[1], url: match[2] });
+      lastIndex = mdLinkRegex.lastIndex;
+    }
+    if (lastIndex < lineText.length) {
+      tokens.push({ type: 'text', text: lineText.substring(lastIndex) });
+    }
+
+    return tokens.map((token, tIdx) => {
+      if (token.type === 'mdLink' && token.url) {
+        let href = token.url.trim();
+        if (href.startsWith('@')) {
+          href = `https://instagram.com/${href.substring(1)}`;
+        } else if (!href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('mailto:') && !href.startsWith('tel:')) {
+          if (href.includes('@') && !href.includes('/')) {
+            href = `mailto:${href}`;
+          } else {
+            href = `https://${href}`;
+          }
+        }
         return (
-          <strong key={index} className="font-bold text-gray-950">
-            {part.slice(2, -2)}
-          </strong>
+          <a
+            key={`mdl-${tIdx}`}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 underline underline-offset-4 decoration-blue-300 hover:decoration-blue-600 font-medium transition-colors inline-flex items-center gap-1 cursor-pointer"
+          >
+            {token.text}
+            <span className="text-[0.75em] opacity-70">↗</span>
+          </a>
         );
       }
-      if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
+
+      // Inside normal text, parse bold (**text**), raw URLs, and emails
+      const rawText = token.text;
+      // Split by bold (**...**) or auto-detect raw url or email
+      // We will parse bold first, then within non-bold strings parse URLs/emails
+      const boldParts = rawText.split(/(\*\*[^*]+\*\*)/g);
+
+      return (
+        <React.Fragment key={`tok-${tIdx}`}>
+          {boldParts.map((bPart, bIdx) => {
+            if (bPart.startsWith('**') && bPart.endsWith('**') && bPart.length >= 4) {
+              const innerBold = bPart.slice(2, -2);
+              return (
+                <strong key={`b-${bIdx}`} className="font-bold text-gray-950">
+                  {renderTextWithUrlsAndEmails(innerBold)}
+                </strong>
+              );
+            }
+            return (
+              <React.Fragment key={`nb-${bIdx}`}>
+                {renderTextWithUrlsAndEmails(bPart)}
+              </React.Fragment>
+            );
+          })}
+        </React.Fragment>
+      );
+    });
+  };
+
+  /**
+   * Helper to detect raw URLs (http, https, www., instagram.com, @username) and emails in plain text.
+   */
+  const renderTextWithUrlsAndEmails = (str: string): React.ReactNode => {
+    if (!str) return null;
+
+    // Pattern to catch URLs, emails, instagram tags
+    const urlOrEmailPattern = /(https?:\/\/[^\s]+|www\.[^\s]+|(?:instagram\.com\/[a-zA-Z0-9_.]+|@[a-zA-Z0-9_.]+)|[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)/gi;
+
+    const parts = str.split(urlOrEmailPattern);
+    return parts.map((part, pIdx) => {
+      if (!part) return null;
+
+      // Email address
+      if (/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/.test(part)) {
         return (
-          <em key={index} className="italic">
-            {part.slice(1, -1)}
-          </em>
+          <a
+            key={`mail-${pIdx}`}
+            href={`mailto:${part}`}
+            className="text-blue-600 hover:text-blue-800 underline underline-offset-4 decoration-blue-300 hover:decoration-blue-600 font-medium transition-colors cursor-pointer"
+          >
+            {part}
+          </a>
         );
       }
+
+      // Instagram handle (@username)
+      if (/^@[a-zA-Z0-9_.]+$/.test(part)) {
+        const username = part.substring(1);
+        return (
+          <a
+            key={`ig-${pIdx}`}
+            href={`https://instagram.com/${username}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-pink-600 hover:text-pink-800 underline underline-offset-4 decoration-pink-300 hover:decoration-pink-600 font-medium transition-colors inline-flex items-center gap-0.5 cursor-pointer"
+          >
+            {part}
+            <span className="text-[0.75em] opacity-70">↗</span>
+          </a>
+        );
+      }
+
+      // Standard URLs
+      if (
+        part.startsWith('http://') ||
+        part.startsWith('https://') ||
+        part.startsWith('www.') ||
+        part.startsWith('instagram.com/')
+      ) {
+        let href = part;
+        if (href.startsWith('www.')) {
+          href = `https://${href}`;
+        } else if (href.startsWith('instagram.com/')) {
+          href = `https://${href}`;
+        }
+        return (
+          <a
+            key={`url-${pIdx}`}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 underline underline-offset-4 decoration-blue-300 hover:decoration-blue-600 font-medium transition-colors inline-flex items-center gap-1 cursor-pointer break-all"
+          >
+            {part}
+            <span className="text-[0.75em] opacity-70">↗</span>
+          </a>
+        );
+      }
+
       return part;
     });
   };
@@ -113,7 +248,7 @@ const FormattedProfileContent: React.FC<{
               key={`h2-${bIdx}`}
               className="text-xl sm:text-2xl font-bold text-gray-900 mt-6 mb-3 pt-2 first:mt-0 tracking-tight"
             >
-              {trimmed.replace(/^##\s+/, '')}
+              {renderInlineFormatted(trimmed.replace(/^##\s+/, ''))}
             </h2>
           );
         }
@@ -125,7 +260,7 @@ const FormattedProfileContent: React.FC<{
               key={`h3-${bIdx}`}
               className="text-lg sm:text-xl font-semibold text-gray-900 mt-5 mb-2 tracking-tight"
             >
-              {trimmed.replace(/^###\s+/, '')}
+              {renderInlineFormatted(trimmed.replace(/^###\s+/, ''))}
             </h3>
           );
         }
@@ -136,7 +271,7 @@ const FormattedProfileContent: React.FC<{
           return (
             <blockquote
               key={`quote-${bIdx}`}
-              className="pl-4 py-1.5 my-4 border-l-3 border-gray-400/70 text-gray-700 italic bg-gray-50/60 rounded-r-lg"
+              className="pl-4 py-2 my-4 border-l-4 border-blue-400/80 text-gray-700 bg-gray-50/80 rounded-r-lg"
             >
               {quoteLines.map((ql, qIdx) => (
                 <div key={qIdx} className="leading-relaxed">
@@ -207,8 +342,15 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({ isAdminMode }) =>
   const [isSaving, setIsSaving] = useState(false);
   const [activeImageModal, setActiveImageModal] = useState<string | null>(null);
 
+  // Link dialog modal state for quick insertion
+  const [linkModalOpen, setLinkModalOpen] = useState(false);
+  const [linkModalTitle, setLinkModalTitle] = useState('');
+  const [linkModalUrl, setLinkModalUrl] = useState('');
+  const [linkModalType, setLinkModalType] = useState<'url' | 'instagram' | 'email'>('url');
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const selectionRangeRef = useRef<{ start: number; end: number }>({ start: 0, end: 0 });
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -289,8 +431,18 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({ isAdminMode }) =>
       newImagePreviewUrls.forEach(URL.revokeObjectURL);
       setNewImagePreviewUrls([]);
       setShowLivePreview(false);
+      setLinkModalOpen(false);
     }
   }, [isAdminMode, profileImageUrls, profileInfo, profileStyle]);
+
+  const saveSelection = () => {
+    if (textareaRef.current) {
+      selectionRangeRef.current = {
+        start: textareaRef.current.selectionStart,
+        end: textareaRef.current.selectionEnd,
+      };
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -314,26 +466,106 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({ isAdminMode }) =>
     setNewImagePreviewUrls((prev) => prev.filter((_, index) => index !== indexToRemove));
   };
 
+  /**
+   * Directly formats selected text in the textarea with prefix and suffix.
+   * If text is selected: "selected" -> "**selected**"
+   * If no text selected: inserts "**텍스트**" and selects the placeholder text.
+   */
   const handleInsertFormatting = (prefix: string, suffix: string = '') => {
     const textarea = textareaRef.current;
     if (!textarea) return;
 
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
+    const start = selectionRangeRef.current.start !== undefined ? selectionRangeRef.current.start : textarea.selectionStart;
+    const end = selectionRangeRef.current.end !== undefined ? selectionRangeRef.current.end : textarea.selectionEnd;
+    
     const currentText = editProfileInfo;
     const selectedText = currentText.substring(start, end);
+
+    // If bolding and already bolded (**text**), remove bolding (toggle)
+    if (prefix === '**' && suffix === '**' && selectedText.startsWith('**') && selectedText.endsWith('**') && selectedText.length >= 4) {
+      const unbolded = selectedText.slice(2, -2);
+      const updated = currentText.substring(0, start) + unbolded + currentText.substring(end);
+      setEditProfileInfo(updated);
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start, start + unbolded.length);
+        selectionRangeRef.current = { start, end: start + unbolded.length };
+      }, 30);
+      return;
+    }
 
     const replacement = `${prefix}${selectedText || '텍스트'}${suffix}`;
     const updated = currentText.substring(0, start) + replacement + currentText.substring(end);
 
     setEditProfileInfo(updated);
 
+    const newStart = start + prefix.length;
+    const newEnd = newStart + (selectedText.length || (replacement.length - prefix.length - suffix.length));
+
     setTimeout(() => {
       textarea.focus();
-      textarea.setSelectionRange(
-        start + prefix.length,
-        start + prefix.length + (selectedText.length || 3)
-      );
+      textarea.setSelectionRange(newStart, newEnd);
+      selectionRangeRef.current = { start: newStart, end: newEnd };
+    }, 30);
+  };
+
+  const openLinkModal = (type: 'url' | 'instagram' | 'email') => {
+    saveSelection();
+    const textarea = textareaRef.current;
+    const currentText = editProfileInfo;
+    let selected = '';
+    if (textarea) {
+      selected = currentText.substring(textarea.selectionStart, textarea.selectionEnd);
+    }
+
+    setLinkModalType(type);
+    if (type === 'instagram') {
+      setLinkModalTitle(selected || 'Instagram');
+      setLinkModalUrl('https://instagram.com/');
+    } else if (type === 'email') {
+      setLinkModalTitle(selected || '이메일 문의');
+      setLinkModalUrl(selected.includes('@') ? selected : '');
+    } else {
+      setLinkModalTitle(selected || '웹사이트 방문');
+      setLinkModalUrl('https://');
+    }
+    setLinkModalOpen(true);
+  };
+
+  const handleApplyLink = () => {
+    if (!linkModalUrl.trim()) {
+      alert('URL 또는 이메일 주소를 입력해주세요.');
+      return;
+    }
+
+    let finalUrl = linkModalUrl.trim();
+    if (linkModalType === 'email' && !finalUrl.startsWith('mailto:')) {
+      finalUrl = `mailto:${finalUrl}`;
+    } else if (linkModalType !== 'email' && !finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+      if (finalUrl.startsWith('@')) {
+        finalUrl = `https://instagram.com/${finalUrl.substring(1)}`;
+      } else {
+        finalUrl = `https://${finalUrl}`;
+      }
+    }
+
+    const title = linkModalTitle.trim() || (linkModalType === 'instagram' ? 'Instagram' : linkModalType === 'email' ? '이메일' : '링크');
+    const markdownLink = `[${title}](${finalUrl})`;
+
+    const start = selectionRangeRef.current.start;
+    const end = selectionRangeRef.current.end;
+    const currentText = editProfileInfo;
+
+    const updated = currentText.substring(0, start) + markdownLink + currentText.substring(end);
+    setEditProfileInfo(updated);
+    setLinkModalOpen(false);
+
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        const pos = start + markdownLink.length;
+        textareaRef.current.setSelectionRange(pos, pos);
+      }
     }, 50);
   };
 
@@ -392,7 +624,7 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({ isAdminMode }) =>
         <div>
           <h2 className="text-2xl font-bold text-gray-900 font-serif">About (작가 소개) 편집</h2>
           <p className="text-sm text-gray-500 mt-1">
-            사진은 압축 없이 <strong>원본 해상도 그대로</strong> 선명하게 업로드되며, 텍스트 글꼴/크기/진하기를 맞춤 편집할 수 있습니다.
+            사진은 압축 없이 <strong>원본 해상도 그대로</strong> 선명하게 업로드되며, 텍스트 글꼴/크기/진하기 및 <strong>인스타그램/웹링크/이메일 연결</strong>을 지원합니다.
           </p>
         </div>
       </div>
@@ -498,7 +730,7 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({ isAdminMode }) =>
             <span>텍스트 서식 및 스타일 설정</span>
           </h3>
           <p className="text-xs text-gray-500 mt-0.5">
-            글꼴, 글자 크기, 진하기(굵기), 줄 간격, 정렬을 설정할 수 있습니다. 브라우저 번역 시에도 줄바꿈이 흐트러지지 않도록 단락 구조가 보존됩니다.
+            글꼴, 글자 크기, 진하기(굵기), 줄 간격, 정렬을 조절하고 인스타그램/웹사이트/이메일 링크를 삽입할 수 있습니다.
           </p>
         </div>
 
@@ -599,49 +831,110 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({ isAdminMode }) =>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="text-xs font-semibold text-gray-500 mr-1">서식 도구:</span>
+              
+              {/* 텍스트 굵게 버튼 */}
               <button
                 type="button"
-                onClick={() => handleInsertFormatting('**', '**')}
-                className="px-2.5 py-1 text-xs font-bold bg-white border border-gray-300 hover:border-gray-400 rounded-md text-gray-800 shadow-2xs hover:bg-gray-50 transition-colors"
-                title="굵게 강조하기"
+                onMouseDown={(e) => {
+                  e.preventDefault(); // Prevents textarea from losing selection
+                  saveSelection();
+                  handleInsertFormatting('**', '**');
+                }}
+                className="px-2.5 py-1 text-xs font-extrabold bg-gray-900 text-white rounded-md hover:bg-black shadow-xs transition-colors cursor-pointer"
+                title="선택한 텍스트 굵게 강조하기 (**텍스트**)"
               >
                 B 굵게
               </button>
+
               <button
                 type="button"
-                onClick={() => handleInsertFormatting('## ')}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  saveSelection();
+                  handleInsertFormatting('## ');
+                }}
                 className="px-2.5 py-1 text-xs font-semibold bg-white border border-gray-300 hover:border-gray-400 rounded-md text-gray-800 shadow-2xs hover:bg-gray-50 transition-colors"
                 title="대제목 (섹션 타이틀)"
               >
                 H2 대제목
               </button>
+
               <button
                 type="button"
-                onClick={() => handleInsertFormatting('### ')}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  saveSelection();
+                  handleInsertFormatting('### ');
+                }}
                 className="px-2.5 py-1 text-xs font-medium bg-white border border-gray-300 hover:border-gray-400 rounded-md text-gray-800 shadow-2xs hover:bg-gray-50 transition-colors"
                 title="소제목 (학력, 전시회 등)"
               >
                 H3 소제목
               </button>
+
               <button
                 type="button"
-                onClick={() => handleInsertFormatting('• ')}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  saveSelection();
+                  handleInsertFormatting('• ');
+                }}
                 className="px-2.5 py-1 text-xs bg-white border border-gray-300 hover:border-gray-400 rounded-md text-gray-800 shadow-2xs hover:bg-gray-50 transition-colors"
                 title="글머리 기호 목록"
               >
                 • 목록 기호
               </button>
+
               <button
                 type="button"
-                onClick={() => handleInsertFormatting('> ')}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  saveSelection();
+                  handleInsertFormatting('> ');
+                }}
                 className="px-2.5 py-1 text-xs bg-white border border-gray-300 hover:border-gray-400 rounded-md text-gray-800 shadow-2xs hover:bg-gray-50 transition-colors"
                 title="작가 노트 / 인용구"
               >
                 &quot; 작가노트
               </button>
+
+              <div className="h-4 w-px bg-gray-300 mx-1" />
+
+              {/* 링크 도구들 */}
               <button
                 type="button"
-                onClick={() => handleInsertFormatting('\n---\n')}
+                onClick={() => openLinkModal('url')}
+                className="px-2.5 py-1 text-xs font-medium bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 rounded-md transition-colors flex items-center gap-1 shadow-2xs"
+                title="웹사이트 링크 삽입"
+              >
+                <span>🔗 웹링크</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => openLinkModal('instagram')}
+                className="px-2.5 py-1 text-xs font-medium bg-pink-50 border border-pink-200 text-pink-700 hover:bg-pink-100 rounded-md transition-colors flex items-center gap-1 shadow-2xs"
+                title="인스타그램 계정/링크 삽입"
+              >
+                <span>📸 인스타</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => openLinkModal('email')}
+                className="px-2.5 py-1 text-xs font-medium bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 rounded-md transition-colors flex items-center gap-1 shadow-2xs"
+                title="이메일 주소 삽입"
+              >
+                <span>✉️ 이메일</span>
+              </button>
+
+              <button
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  saveSelection();
+                  handleInsertFormatting('\n---\n');
+                }}
                 className="px-2.5 py-1 text-xs bg-white border border-gray-300 hover:border-gray-400 rounded-md text-gray-800 shadow-2xs hover:bg-gray-50 transition-colors"
                 title="구분선"
               >
@@ -667,7 +960,7 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({ isAdminMode }) =>
           {showLivePreview ? (
             <div className="p-6 bg-white rounded-xl border border-blue-200 shadow-sm min-h-[300px]">
               <p className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-4 pb-2 border-b border-gray-100">
-                [ 실시간 서식 및 줄바꿈 미리보기 ]
+                [ 실시간 서식, 링크 및 줄바꿈 미리보기 ]
               </p>
               <FormattedProfileContent text={editProfileInfo} style={editProfileStyle} />
             </div>
@@ -675,9 +968,15 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({ isAdminMode }) =>
             <textarea
               ref={textareaRef}
               value={editProfileInfo}
-              onChange={(e) => setEditProfileInfo(e.target.value)}
+              onChange={(e) => {
+                setEditProfileInfo(e.target.value);
+                saveSelection();
+              }}
+              onSelect={saveSelection}
+              onKeyUp={saveSelection}
+              onClick={saveSelection}
               rows={16}
-              placeholder={`[예시 입력]\n## 작가 소개\n김명진 (Kim Myeong-jin)\n\n> "빛과 공간, 자연의 조화를 캔버스에 담아내는 작업을 이어오고 있습니다."\n\n### 학력 및 약력\n• 홍익대학교 미술대학 회화과 졸업\n• 홍익대학교 대학원 미술학 석사\n\n### 주요 개인전\n• 2024 초대전, 갤러리\n• 2022 개인전, 서울`}
+              placeholder={`[예시 입력]\n## 작가 소개\n**김명진 (Kim Myeong-jin)**\n\n> "빛과 공간, 자연의 조화를 캔버스에 담아내는 작업을 이어오고 있습니다."\n\n### 학력 및 약력\n• 홍익대학교 미술대학 회화과 졸업\n• 홍익대학교 대학원 미술학 석사\n\n### 연락처 및 SNS\n• 인스타그램: [Instagram @artist_kim](https://instagram.com/artist_kim)\n• 이메일: [작가 문의 메일](mailto:artist@example.com)\n• 홈페이지: [공식 웹사이트](https://example.com)`}
               className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm text-gray-800 leading-relaxed bg-white shadow-inner resize-y"
               style={{
                 fontFamily: editProfileStyle.fontFamily,
@@ -685,8 +984,9 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({ isAdminMode }) =>
               }}
             />
           )}
-          <p className="text-[11px] text-gray-500">
-            * 엔터 키로 줄바꿈하거나 단락을 나누면, 번역기를 사용하더라도 줄바꿈이 흐트러지지 않고 유지됩니다.
+          <p className="text-[11px] text-gray-500 flex flex-wrap gap-x-3 gap-y-1">
+            <span>* <strong>굵게:</strong> 원하는 글자를 드래그한 뒤 [B 굵게] 버튼을 누르거나 <code className="bg-gray-100 px-1 py-0.5 rounded">**글자**</code>로 감싸면 됩니다.</span>
+            <span>* <strong>웹/인스타/이메일:</strong> 상단 링크 버튼을 이용하거나 <code className="bg-gray-100 px-1 py-0.5 rounded">[표시제목](링크주소)</code> 또는 <code className="bg-gray-100 px-1 py-0.5 rounded">@계정아이디</code>를 바로 적으셔도 클릭할 수 있는 링크로 자동 변환됩니다.</span>
           </p>
         </div>
       </div>
@@ -711,6 +1011,88 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({ isAdminMode }) =>
           )}
         </button>
       </div>
+
+      {/* 4. 링크 삽입 모달 */}
+      {linkModalOpen && (
+        <div className="fixed inset-0 bg-black/60 z-[1000] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-fade-in border border-gray-100">
+            <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+              <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                {linkModalType === 'instagram' && '📸 인스타그램 링크 추가'}
+                {linkModalType === 'email' && '✉️ 이메일 링크 추가'}
+                {linkModalType === 'url' && '🔗 웹링크 추가'}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setLinkModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  화면에 표시할 텍스트
+                </label>
+                <input
+                  type="text"
+                  value={linkModalTitle}
+                  onChange={(e) => setLinkModalTitle(e.target.value)}
+                  placeholder={
+                    linkModalType === 'instagram'
+                      ? '예: Instagram @my_account'
+                      : linkModalType === 'email'
+                      ? '예: 작가 이메일 문의'
+                      : '예: 공식 웹사이트'
+                  }
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  {linkModalType === 'instagram' && '인스타그램 계정 또는 프로필 URL'}
+                  {linkModalType === 'email' && '이메일 주소'}
+                  {linkModalType === 'url' && '웹사이트 URL 주소'}
+                </label>
+                <input
+                  type="text"
+                  value={linkModalUrl}
+                  onChange={(e) => setLinkModalUrl(e.target.value)}
+                  placeholder={
+                    linkModalType === 'instagram'
+                      ? 'https://instagram.com/아이디 또는 @아이디'
+                      : linkModalType === 'email'
+                      ? 'artist@example.com'
+                      : 'https://example.com'
+                  }
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-gray-100">
+              <button
+                type="button"
+                onClick={() => setLinkModalOpen(false)}
+                className="px-4 py-2 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={handleApplyLink}
+                className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors"
+              >
+                본문에 삽입하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -779,7 +1161,7 @@ const ArtistProfilePage: React.FC<ArtistProfilePageProps> = ({ isAdminMode }) =>
             </div>
           )}
 
-          {/* 텍스트 영역 (번역 시 줄바꿈 유지 구조) */}
+          {/* 텍스트 영역 (번역 시 줄바꿈 유지 구조 & 클릭 가능한 링크 지원) */}
           {hasText && (
             <div className={`${hasImages ? 'lg:col-span-7' : 'max-w-3xl mx-auto w-full'} space-y-6`}>
               <FormattedProfileContent text={profileInfo} style={profileStyle} />
