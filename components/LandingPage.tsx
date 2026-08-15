@@ -90,20 +90,20 @@ const LandingPage: React.FC<LandingPageProps> = ({
     <div className="relative min-h-screen w-full font-sans bg-white overflow-x-hidden">
       {/* Hero Section */}
       <section className="relative h-screen w-full flex items-center justify-center p-4">
-        {/* Background Image (Original Brightness & Crisp Colors) */}
-        <div className="absolute inset-0 z-0 bg-white overflow-hidden">
-          {/* Blurred ambient background for wide screens */}
+        {/* Background Image (Original Brightness & Full Aspect Ratio) */}
+        <div className="absolute inset-0 z-0 bg-white overflow-hidden flex items-center justify-center">
+          {/* Blurred ambient background filling the entire screen */}
           <img
             src={currentBackgroundImage}
             alt=""
-            className="absolute inset-0 w-full h-full object-cover blur-3xl scale-110 opacity-60 hidden md:block"
+            className="absolute inset-0 w-full h-full object-cover blur-2xl md:blur-3xl scale-110 opacity-50 md:opacity-60"
             referrerPolicy="no-referrer"
           />
-          {/* Main background image - bright and vivid without darkening overlays */}
+          {/* Main background image - full ratio object-contain so no side is cropped */}
           <img
             src={currentBackgroundImage}
             alt="Art gallery background"
-            className="relative w-full h-full object-cover md:object-contain z-10 brightness-100"
+            className="relative w-full h-full object-contain z-10 brightness-100"
             referrerPolicy="no-referrer"
           />
         </div>
