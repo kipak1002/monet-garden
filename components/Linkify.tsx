@@ -30,17 +30,51 @@ const Linkify: React.FC<LinkifyProps> = ({ text }) => {
   }
 
   const renderInlineFormatted = (str: string, keyPrefix: string): React.ReactNode => {
-    // Check for bold text **bold**
-    const boldParts = str.split(/(\*\*[^*]+\*\*)/g);
+    // Check for bold text **bold** or __bold__ or <strong>bold</strong> or <b>bold</b>
+    const boldPattern = /(\*\*.+?\*\*|__.+?__|<strong>.+?<\/strong>|<b>.+?<\/b>)/g;
+    const boldParts = str.split(boldPattern);
     return boldParts.map((bPart, bIdx) => {
       const subKey = `${keyPrefix}-b${bIdx}`;
+      if (!bPart) return null;
+
+      // **bold**
       if (bPart.startsWith('**') && bPart.endsWith('**') && bPart.length >= 4) {
         return (
-          <strong key={subKey} className="font-bold text-gray-900">
+          <strong key={subKey} className="font-bold text-gray-900" style={{ fontWeight: 700 }}>
             {renderUrlsAndEmails(bPart.slice(2, -2), `${subKey}-in`)}
           </strong>
         );
       }
+
+      // __bold__
+      if (bPart.startsWith('__') && bPart.endsWith('__') && bPart.length >= 4) {
+        return (
+          <strong key={subKey} className="font-bold text-gray-900" style={{ fontWeight: 700 }}>
+            {renderUrlsAndEmails(bPart.slice(2, -2), `${subKey}-in`)}
+          </strong>
+        );
+      }
+
+      // <strong>...</strong>
+      if (bPart.startsWith('<strong>') && bPart.endsWith('</strong>')) {
+        const inner = bPart.replace(/^<strong>/, '').replace(/<\/strong>$/, '');
+        return (
+          <strong key={subKey} className="font-bold text-gray-900" style={{ fontWeight: 700 }}>
+            {renderUrlsAndEmails(inner, `${subKey}-in`)}
+          </strong>
+        );
+      }
+
+      // <b>...</b>
+      if (bPart.startsWith('<b>') && bPart.endsWith('</b>')) {
+        const inner = bPart.replace(/^<b>/, '').replace(/<\/b>$/, '');
+        return (
+          <strong key={subKey} className="font-bold text-gray-900" style={{ fontWeight: 700 }}>
+            {renderUrlsAndEmails(inner, `${subKey}-in`)}
+          </strong>
+        );
+      }
+
       return <React.Fragment key={subKey}>{renderUrlsAndEmails(bPart, `${subKey}-out`)}</React.Fragment>;
     });
   };

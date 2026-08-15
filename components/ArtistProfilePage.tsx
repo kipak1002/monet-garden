@@ -119,23 +119,56 @@ const FormattedProfileContent: React.FC<{
         );
       }
 
-      // Inside normal text, parse bold (**text**), raw URLs, and emails
+      // Inside normal text, parse bold (**text**, __text__, <strong>text</strong>, <b>text</b>), raw URLs, and emails
       const rawText = token.text;
-      // Split by bold (**...**) or auto-detect raw url or email
-      // We will parse bold first, then within non-bold strings parse URLs/emails
-      const boldParts = rawText.split(/(\*\*[^*]+\*\*)/g);
+      const boldPattern = /(\*\*.+?\*\*|__.+?__|<strong>.+?<\/strong>|<b>.+?<\/b>)/g;
+      const boldParts = rawText.split(boldPattern);
 
       return (
         <React.Fragment key={`tok-${tIdx}`}>
           {boldParts.map((bPart, bIdx) => {
+            if (!bPart) return null;
+
+            // **bold**
             if (bPart.startsWith('**') && bPart.endsWith('**') && bPart.length >= 4) {
               const innerBold = bPart.slice(2, -2);
               return (
-                <strong key={`b-${bIdx}`} className="font-bold text-gray-950">
+                <strong key={`b-${bIdx}`} className="font-bold text-gray-950" style={{ fontWeight: 700 }}>
                   {renderTextWithUrlsAndEmails(innerBold)}
                 </strong>
               );
             }
+
+            // __bold__
+            if (bPart.startsWith('__') && bPart.endsWith('__') && bPart.length >= 4) {
+              const innerBold = bPart.slice(2, -2);
+              return (
+                <strong key={`ub-${bIdx}`} className="font-bold text-gray-950" style={{ fontWeight: 700 }}>
+                  {renderTextWithUrlsAndEmails(innerBold)}
+                </strong>
+              );
+            }
+
+            // <strong>...</strong>
+            if (bPart.startsWith('<strong>') && bPart.endsWith('</strong>')) {
+              const innerBold = bPart.replace(/^<strong>/, '').replace(/<\/strong>$/, '');
+              return (
+                <strong key={`st-${bIdx}`} className="font-bold text-gray-950" style={{ fontWeight: 700 }}>
+                  {renderTextWithUrlsAndEmails(innerBold)}
+                </strong>
+              );
+            }
+
+            // <b>...</b>
+            if (bPart.startsWith('<b>') && bPart.endsWith('</b>')) {
+              const innerBold = bPart.replace(/^<b>/, '').replace(/<\/b>$/, '');
+              return (
+                <strong key={`bt-${bIdx}`} className="font-bold text-gray-950" style={{ fontWeight: 700 }}>
+                  {renderTextWithUrlsAndEmails(innerBold)}
+                </strong>
+              );
+            }
+
             return (
               <React.Fragment key={`nb-${bIdx}`}>
                 {renderTextWithUrlsAndEmails(bPart)}
@@ -282,20 +315,29 @@ const FormattedProfileContent: React.FC<{
           );
         }
 
-        // List block (lines starting with • or - or *)
+        // List block (lines starting with • or markdown bullet "* " or "- " or "+ " or "1. ")
         const lines = block.split('\n');
-        const isAllList = lines.every((l) => {
+        const isListItem = (l: string): boolean => {
           const t = l.trim();
-          return !t || t.startsWith('•') || t.startsWith('-') || t.startsWith('*');
-        });
+          if (!t) return false;
+          if (t.startsWith('**') || t.startsWith('__')) return false; // Bold text is never a list bullet
+          return t.startsWith('•') || /^[-*+]\s+/.test(t) || /^\d+\.\s+/.test(t);
+        };
 
-        if (isAllList && lines.some((l) => l.trim().length > 0)) {
+        const isAllList = lines.length > 0 && lines.every((l) => {
+          const t = l.trim();
+          return !t || isListItem(t);
+        }) && lines.some((l) => isListItem(l));
+
+        if (isAllList) {
           return (
             <ul key={`ul-${bIdx}`} className="my-3 space-y-1.5 list-none pl-0">
               {lines.map((l, lIdx) => {
                 const t = l.trim();
                 if (!t) return null;
-                const cleanItem = t.replace(/^[•\-\*]\s*/, '');
+                const cleanItem = t.startsWith('•')
+                  ? t.replace(/^•\s*/, '')
+                  : t.replace(/^(?:[-*+]\s+|\d+\.\s+)/, '');
                 return (
                   <li key={lIdx} className="flex items-start gap-2.5">
                     <span className="text-gray-400 select-none font-bold mt-0.5">•</span>
