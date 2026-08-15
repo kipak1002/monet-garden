@@ -81,12 +81,12 @@ const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
-      <header className={`fixed top-0 left-0 w-full z-[50] transition-all duration-300 ${currentPage === 'landing' ? 'bg-transparent' : 'bg-white/90 backdrop-blur-md shadow-sm'}`}>
+      <header className={`fixed top-0 left-0 w-full z-[50] transition-all duration-300 ${currentPage === 'landing' ? 'bg-gradient-to-b from-black/40 via-black/15 to-transparent' : 'bg-white/90 backdrop-blur-md shadow-sm'}`}>
         <div className="max-w-[1920px] mx-auto px-6 md:px-12 py-6 md:py-8 flex justify-between items-center">
           {/* Left: Artist Name */}
           <div className="flex items-center gap-4">
             <h1 
-              className={`cursor-pointer transition-colors ${currentPage === 'landing' ? 'text-white drop-shadow-md' : 'text-gray-900'}`}
+              className={`cursor-pointer transition-colors ${currentPage === 'landing' ? 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]' : 'text-gray-900'}`}
               style={{ 
                 fontFamily: galleryTitleFont, 
                 fontSize: `${Math.min(Number(galleryTitleSize), 32)}px`,

@@ -87,42 +87,41 @@ const LandingPage: React.FC<LandingPageProps> = ({
   const currentBackgroundImage = newBg?.previewUrl || backgroundImageUrl || DEFAULT_BACKGROUND_IMAGE;
 
   return (
-    <div className="relative min-h-screen w-full font-sans bg-black overflow-x-hidden">
+    <div className="relative min-h-screen w-full font-sans bg-white overflow-x-hidden">
       {/* Hero Section */}
       <section className="relative h-screen w-full flex items-center justify-center p-4">
-        {/* Background Image & Scrim */}
-        <div className="absolute inset-0 z-0 bg-black overflow-hidden">
-          {/* Blurred background for PC to fill gaps without extreme zoom */}
+        {/* Background Image (Original Brightness & Crisp Colors) */}
+        <div className="absolute inset-0 z-0 bg-white overflow-hidden">
+          {/* Blurred ambient background for wide screens */}
           <img
             src={currentBackgroundImage}
             alt=""
-            className="absolute inset-0 w-full h-full object-cover blur-3xl scale-110 opacity-50 hidden md:block"
+            className="absolute inset-0 w-full h-full object-cover blur-3xl scale-110 opacity-60 hidden md:block"
             referrerPolicy="no-referrer"
           />
-          {/* Main background image - object-cover on mobile, object-contain on PC for full view */}
+          {/* Main background image - bright and vivid without darkening overlays */}
           <img
             src={currentBackgroundImage}
             alt="Art gallery background"
-            className="relative w-full h-full object-cover md:object-contain z-10"
+            className="relative w-full h-full object-cover md:object-contain z-10 brightness-100"
             referrerPolicy="no-referrer"
           />
-          <div className="absolute inset-0 bg-black/30 z-20"></div>
         </div>
 
         {/* Mobile View Works Button - Positioned at 2/3 height */}
         <div className="absolute top-[66%] left-1/2 -translate-x-1/2 z-30 md:hidden">
           <button
             onClick={() => onNavigate('gallery')}
-            className="px-6 py-2 border border-white/40 rounded-full text-white text-[10px] font-bold tracking-[0.2em] uppercase transition-all active:scale-95 whitespace-nowrap"
+            className="px-6 py-2.5 bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/40 rounded-full text-white text-[11px] font-bold tracking-[0.2em] uppercase transition-all shadow-xl active:scale-95 whitespace-nowrap"
           >
             [ View Works ]
           </button>
         </div>
 
-        {/* Content - Hidden on mobile as it's in the header, subtle on PC if needed */}
+        {/* Content - Subtle on PC if needed */}
         <div className="relative z-30 text-center transform transition-all duration-500 animate-slide-up-fade-in hidden md:block">
           {subtitle && (
-            <p className="mt-4 text-lg text-gray-200 max-w-2xl mx-auto drop-shadow-sm whitespace-pre-wrap">
+            <p className="mt-4 text-lg text-gray-900 bg-white/70 backdrop-blur-md px-6 py-2 rounded-full max-w-2xl mx-auto shadow-sm whitespace-pre-wrap font-medium">
               {subtitle}
             </p>
           )}
@@ -130,10 +129,10 @@ const LandingPage: React.FC<LandingPageProps> = ({
 
         {/* Scroll Indicator */}
         <div 
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2 cursor-pointer animate-bounce"
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2 cursor-pointer animate-bounce bg-black/30 hover:bg-black/50 p-2.5 rounded-full backdrop-blur-sm transition-all"
           onClick={scrollToStatement}
         >
-          <Icon type="chevron-down" className="w-5 h-5 text-white/60" />
+          <Icon type="chevron-down" className="w-5 h-5 text-white" />
         </div>
 
         {/* Admin Background Controls */}
