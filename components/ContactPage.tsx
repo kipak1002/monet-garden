@@ -30,7 +30,7 @@ const ContactPage: React.FC<ContactPageProps> = ({ isAdminMode }) => {
         const { data, error } = await supabase
           .from('settings')
           .select('value')
-          .eq('key', 'artistProfileInfo')
+          .eq('key', 'contactInfo')
           .single();
         
         if (error && error.code !== 'PGRST116') throw error;
@@ -87,12 +87,12 @@ const ContactPage: React.FC<ContactPageProps> = ({ isAdminMode }) => {
     try {
       const { error } = await supabase
         .from('settings')
-        .upsert({ key: 'artistProfileInfo', value: editContactInfo }, { onConflict: 'key' });
+        .upsert({ key: 'contactInfo', value: editContactInfo }, { onConflict: 'key' });
 
       if (error) throw error;
       
       setContactInfo(editContactInfo);
-      alert('연락처 정보가 저장되었습니다. (Contact info saved.)');
+      alert('연락처 정보가 성공적으로 저장되었습니다. (Contact info saved.)');
     } catch (error) {
       console.error('Error saving contact info:', error);
       alert('저장 중 오류가 발생했습니다.');
@@ -224,31 +224,61 @@ const ContactPage: React.FC<ContactPageProps> = ({ isAdminMode }) => {
           </div>
         </form>
 
-        {/* Contact Info Section moved from About page */}
+        {/* Contact Info Section */}
         <div className="mt-12 pt-12 border-t border-gray-200">
           {isAdminMode ? (
-            <div className="space-y-4">
-              <h3 className="text-xl font-serif font-bold text-gray-900">연락처 정보 관리 (Contact Info Management)</h3>
+            <div className="space-y-4 bg-gray-50/80 p-6 md:p-8 rounded-2xl border border-gray-200 shadow-xs">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-lg font-serif font-bold text-gray-900">연락처 & SNS 정보 관리 (Contact Info)</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    * 이 항목은 <strong>작가 소개(About)와 독립된 별도의 연락처 영역</strong>입니다.
+                  </p>
+                </div>
+              </div>
+
               <textarea
                 value={editContactInfo}
                 onChange={(e) => setEditContactInfo(e.target.value)}
                 rows={5}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all bg-white"
-                placeholder="인스타그램 링크, 이메일, 연락처 등 추가 정보를 입력하세요."
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white text-sm leading-relaxed shadow-inner"
+                placeholder={`[예시 입력]\nInstagram: @artist_name\nEmail: contact@example.com\nTel: 010-1234-5678\nWebsite: https://example.com`}
               />
-              <button
-                onClick={handleSaveContactInfo}
-                disabled={isSavingInfo}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all disabled:bg-blue-300 flex items-center gap-2"
-              >
-                {isSavingInfo ? <Spinner size="h-4 w-4" /> : '정보 저장 (Save Info)'}
-              </button>
+
+              {editContactInfo.trim() && (
+                <div className="p-4 bg-white rounded-xl border border-gray-200 text-sm">
+                  <span className="text-[11px] font-bold text-gray-400 block mb-2 uppercase tracking-wider">미리보기 (Preview)</span>
+                  <div className="text-gray-800 whitespace-pre-wrap leading-relaxed font-serif">
+                    <Linkify text={editContactInfo} />
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end pt-1">
+                <button
+                  onClick={handleSaveContactInfo}
+                  disabled={isSavingInfo}
+                  className="px-6 py-2.5 bg-blue-600 text-white font-medium text-sm rounded-xl hover:bg-blue-700 transition-all disabled:bg-blue-300 flex items-center gap-2 shadow-sm"
+                >
+                  {isSavingInfo ? (
+                    <>
+                      <Spinner size="h-4 w-4" />
+                      <span>저장 중...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Icon type="check" className="w-4 h-4" />
+                      <span>연락처 정보 저장</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           ) : (
             !isLoadingInfo && contactInfo && (
-              <div className="animate-fade-in">
-                <h3 className="text-2xl font-serif font-bold text-gray-900 mb-6">Follow</h3>
-                <div className="text-gray-700 whitespace-pre-wrap leading-relaxed font-serif text-lg">
+              <div className="animate-fade-in text-center sm:text-left">
+                <h3 className="text-2xl font-serif font-bold text-gray-900 mb-4 tracking-tight">Contact & Follow</h3>
+                <div className="text-gray-700 whitespace-pre-wrap leading-relaxed font-serif text-base sm:text-lg">
                   <Linkify text={contactInfo} />
                 </div>
               </div>
