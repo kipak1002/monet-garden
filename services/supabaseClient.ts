@@ -75,6 +75,53 @@ async function resizeAndConvertToWebP(file: File | Blob, maxDim: number = 1280, 
 }
 
 /**
+ * Uploads an image file in its original format and resolution without compression or downscaling.
+ * Perfect for high-resolution profile/artist images.
+ */
+export async function uploadOriginalImage(file: File | string): Promise<string> {
+    let fileToProcess: File | Blob;
+    let contentType = 'image/jpeg';
+    let fileExtension = 'jpg';
+    
+    if (typeof file === 'string') {
+        const res = await fetch(file);
+        fileToProcess = await res.blob();
+        contentType = fileToProcess.type || 'image/jpeg';
+        if (contentType.includes('png')) fileExtension = 'png';
+        else if (contentType.includes('webp')) fileExtension = 'webp';
+        else if (contentType.includes('gif')) fileExtension = 'gif';
+    } else {
+        fileToProcess = file;
+        contentType = file.type || 'image/jpeg';
+        const ext = file.name.split('.').pop();
+        if (ext) fileExtension = ext.toLowerCase();
+    }
+    
+    const randomString = Math.random().toString(36).substring(2, 8);
+    const timestamp = Date.now();
+    const fileName = `orig_${timestamp}_${randomString}.${fileExtension}`;
+    
+    const { error: uploadError } = await supabase.storage
+        .from('artworks')
+        .upload(fileName, fileToProcess, {
+            contentType: contentType,
+            cacheControl: '3600',
+            upsert: false
+        });
+
+    if (uploadError) {
+        console.error("Original image upload error:", uploadError);
+        throw uploadError;
+    }
+
+    const { data } = supabase.storage
+        .from('artworks')
+        .getPublicUrl(fileName);
+    
+    return data.publicUrl;
+}
+
+/**
  * Uploads an image file or a data URL to Supabase Storage.
  * @param file - The image file (as a File object or a data URL string).
  * @returns The public URL of the uploaded image.
