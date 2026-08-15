@@ -139,7 +139,7 @@ const Header: React.FC<HeaderProps> = ({
                     {isSearchOpen && (
                       <input
                         type="text"
-                        placeholder="Search..."
+                        placeholder="작품명 검색"
                         value={searchTerm}
                         onChange={(e) => onSearchChange(e.target.value)}
                         autoFocus
@@ -231,7 +231,7 @@ const Header: React.FC<HeaderProps> = ({
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search artworks..."
+                placeholder="작품명 검색"
                 value={searchTerm}
                 onChange={(e) => onSearchChange(e.target.value)}
                 autoFocus

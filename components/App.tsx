@@ -226,11 +226,14 @@ const App: React.FC = () => {
   }, [fetchInitialData]);
 
   useEffect(() => {
+    const trimmed = searchTerm.trim().toLowerCase();
+    if (!trimmed) {
+      setFilteredArtworks(artworks);
+      return;
+    }
     const results = artworks.filter(artwork =>
-      artwork.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (artwork.title_en && artwork.title_en.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      artwork.artist.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      artwork.year.toString().includes(searchTerm)
+      artwork.title.toLowerCase().includes(trimmed) ||
+      (artwork.title_en && artwork.title_en.toLowerCase().includes(trimmed))
     );
     setFilteredArtworks(results);
   }, [searchTerm, artworks]);
