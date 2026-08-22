@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import type { Artwork } from '../types';
 import Icon from './Icon';
+import { getArtworkAltText } from '../services/seoUtils';
 
 interface ArtworkCardProps {
   artwork: Artwork;
@@ -156,7 +157,7 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({
         {isIntersecting && imgSrc ? (
           <img
             src={imgSrc}
-            alt={artwork.title}
+            alt={getArtworkAltText(artwork)}
             loading={index < 3 ? "eager" : "lazy"}
             onError={handleImageError}
             className="max-w-full max-h-full w-auto h-auto object-contain brightness-[0.99] group-hover:brightness-100 transition-all duration-500 ease-out animate-fade-in select-none"

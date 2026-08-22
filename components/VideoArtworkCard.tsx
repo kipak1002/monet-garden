@@ -3,6 +3,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import type { ImaginationArtwork } from '../types';
 import Icon from './Icon';
+import { getArtworkAltText } from '../services/seoUtils';
 
 interface VideoArtworkCardProps {
   item: ImaginationArtwork;
@@ -122,7 +123,7 @@ const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({
           <div className="w-16 h-16 flex-shrink-0 bg-gray-50 rounded-lg overflow-hidden border border-gray-100">
             <img 
               src={imgSrc} 
-              alt="원화 이미지" 
+              alt={getArtworkAltText({ title: item.title, year: item.year, size: item.size, memo: '원화 미디어아트/상상갤러리' })} 
               onError={handleImageError}
               className="w-full h-full object-cover cursor-pointer brightness-90 hover:brightness-100 hover:scale-[1.03] transition-all duration-500 ease-out"
               onClick={() => window.open(originalUrl, '_blank')}

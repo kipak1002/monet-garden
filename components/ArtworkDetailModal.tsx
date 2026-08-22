@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import type { Artwork } from '../types';
 import Icon from './Icon';
 import Linkify from './Linkify';
+import { getArtworkAltText } from '../services/seoUtils';
 
 interface ArtworkDetailModalProps {
   artwork: Artwork | null;
@@ -72,7 +73,7 @@ const ArtworkDetailModal: React.FC<ArtworkDetailModalProps> = ({
             {images.length > 0 ? (
                 <img 
                   src={images[currentIndex]} 
-                  alt={`${artwork.title} - Image ${currentIndex + 1}`} 
+                  alt={getArtworkAltText(artwork, currentIndex)} 
                   className="max-w-full max-h-full w-auto h-auto object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.2)] select-none" 
                   referrerPolicy="no-referrer"
                 />
