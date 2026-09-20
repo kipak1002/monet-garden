@@ -27,13 +27,15 @@ const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({
   isLast
 }) => {
   const [imgSrc, setImgSrc] = React.useState<string>('');
+  const [videoError, setVideoError] = React.useState<boolean>(false);
 
   const originalUrl = item.original_image_url;
 
   React.useEffect(() => {
     // 모바일 해상도를 위해 1280px 원본 이미지를 사용합니다.
     setImgSrc(originalUrl);
-  }, [originalUrl]);
+    setVideoError(false);
+  }, [originalUrl, item.video_url]);
 
   const handleImageError = () => {
     if (imgSrc !== originalUrl) {
@@ -98,16 +100,33 @@ const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({
       )}
       
       {/* Video Section - Top */}
-      <div className="w-full h-[220px] md:h-[280px] bg-black flex items-center justify-center flex-shrink-0 relative">
-        <video 
-          src={item.video_url} 
-          controls 
-          loop
-          muted
-          playsInline
-          className="w-full h-full object-contain brightness-90 group-hover:brightness-100 transition-all duration-500 ease-out"
-          poster={imgSrc}
-        />
+      <div className="w-full h-[220px] md:h-[280px] bg-black flex items-center justify-center flex-shrink-0 relative overflow-hidden">
+        {videoError ? (
+          <div className="flex flex-col items-center justify-center p-4 text-center text-gray-400 gap-2">
+            <Icon type="video" className="w-8 h-8 text-gray-500" />
+            <span className="text-xs">동영상을 재생할 수 없습니다</span>
+            <a 
+              href={item.video_url} 
+              target="_blank" 
+              rel="noreferrer" 
+              className="text-[11px] text-blue-400 underline hover:text-blue-300"
+            >
+              새 창에서 열기
+            </a>
+          </div>
+        ) : (
+          <video 
+            src={item.video_url} 
+            controls 
+            loop
+            muted
+            playsInline
+            preload="metadata"
+            onError={() => setVideoError(true)}
+            className="w-full h-full object-contain brightness-90 group-hover:brightness-100 transition-all duration-500 ease-out"
+            poster={imgSrc}
+          />
+        )}
       </div>
 
       {/* Info Section - Bottom */}

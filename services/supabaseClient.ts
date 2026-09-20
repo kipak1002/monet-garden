@@ -139,10 +139,26 @@ export async function uploadImage(file: File | string): Promise<string> {
     
     // 비디오 파일 등 이미지가 아닌 경우 예외 처리
     if (!fileToProcess.type.startsWith('image/')) {
-        // 이미지가 아니면 압축 없이 진행 (예: 비디오)
+        // 이미지가 아니면 압축 없이 진행 (예: 비디오 파일 등)
+        let ext = 'bin';
+        if (file instanceof File) {
+            const rawExt = file.name.split('.').pop()?.toLowerCase();
+            if (rawExt) ext = rawExt;
+        } else if (fileToProcess.type) {
+            if (fileToProcess.type.includes('mp4')) ext = 'mp4';
+            else if (fileToProcess.type.includes('webm')) ext = 'webm';
+            else if (fileToProcess.type.includes('quicktime')) ext = 'mov';
+        }
         const randomString = Math.random().toString(36).substring(2, 8);
-        const fileName = `${Date.now()}_${randomString}_original`;
-        const { error: uploadError } = await supabase.storage.from('artworks').upload(fileName, fileToProcess);
+        const fileName = `${Date.now()}_${randomString}.${ext}`;
+        const contentType = fileToProcess.type || (ext === 'mov' ? 'video/quicktime' : ext === 'webm' ? 'video/webm' : 'video/mp4');
+        const { error: uploadError } = await supabase.storage
+            .from('artworks')
+            .upload(fileName, fileToProcess, {
+                contentType,
+                cacheControl: '3600',
+                upsert: false
+            });
         if (uploadError) throw uploadError;
         return supabase.storage.from('artworks').getPublicUrl(fileName).data.publicUrl;
     }
@@ -273,4 +289,108 @@ export async function getVisitorCount(): Promise<number> {
         console.warn("Failed to fetch visitor count:", e);
         return 0;
     }
+}
+
+/**
+ * 비디오 파일을 올바른 확장자와 MIME 타입을 지정하여 Supabase Storage에 업로드합니다.
+ */
+export async function uploadVideo(file: File): Promise<string> {
+    const rawExt = file.name.split('.').pop()?.toLowerCase() || '';
+    const fileExtension = rawExt && ['mp4', 'mov', 'webm', 'm4v', 'avi', 'mkv'].includes(rawExt) ? rawExt : 'mp4';
+    
+    let contentType = file.type;
+    if (!contentType || contentType === 'application/octet-stream') {
+        if (fileExtension === 'mov') contentType = 'video/quicktime';
+        else if (fileExtension === 'webm') contentType = 'video/webm';
+        else if (fileExtension === 'avi') contentType = 'video/x-msvideo';
+        else contentType = 'video/mp4';
+    }
+
+    const randomString = Math.random().toString(36).substring(2, 8);
+    const timestamp = Date.now();
+    const fileName = `video_${timestamp}_${randomString}.${fileExtension}`;
+    
+    const { error: uploadError } = await supabase.storage
+        .from('artworks')
+        .upload(fileName, file, {
+            contentType: contentType,
+            cacheControl: '3600',
+            upsert: false
+        });
+
+    if (uploadError) {
+        console.error("Video upload error:", uploadError);
+        throw uploadError;
+    }
+
+    const { data } = supabase.storage
+        .from('artworks')
+        .getPublicUrl(fileName);
+    
+    return data.publicUrl;
+}
+
+/**
+ * 동영상 파일로부터 첫 대표 프레임(포스터/썸네일)을 캡처하여 WebP 이미지 File 객체로 반환합니다.
+ * 사용자가 원화 이미지를 따로 등록하지 않은 경우 자동으로 생성해줍니다.
+ */
+export async function captureVideoFrame(videoFile: File): Promise<File> {
+    return new Promise((resolve, reject) => {
+        const video = document.createElement('video');
+        video.preload = 'metadata';
+        video.muted = true;
+        video.playsInline = true;
+        const url = URL.createObjectURL(videoFile);
+        video.src = url;
+
+        const cleanup = () => {
+            URL.revokeObjectURL(url);
+            video.remove();
+        };
+
+        const timeoutId = setTimeout(() => {
+            cleanup();
+            reject(new Error("동영상 썸네일 추출 시간 초과"));
+        }, 12000);
+
+        video.onloadeddata = () => {
+            // 0.5초 지점 또는 동영상 시작 지점으로 이동
+            video.currentTime = Math.min(0.5, Math.max(0, (video.duration || 1) / 4));
+        };
+
+        video.onseeked = () => {
+            clearTimeout(timeoutId);
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth || 1280;
+                canvas.height = video.videoHeight || 720;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) {
+                    cleanup();
+                    reject(new Error("Canvas 2D context를 생성할 수 없습니다."));
+                    return;
+                }
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                canvas.toBlob((blob) => {
+                    cleanup();
+                    if (blob) {
+                        const originalName = videoFile.name.replace(/\.[^/.]+$/, "");
+                        const posterFile = new File([blob], `${originalName}_poster.webp`, { type: 'image/webp' });
+                        resolve(posterFile);
+                    } else {
+                        reject(new Error("썸네일 Blob 생성 실패"));
+                    }
+                }, 'image/webp', 0.85);
+            } catch (err) {
+                cleanup();
+                reject(err);
+            }
+        };
+
+        video.onerror = () => {
+            clearTimeout(timeoutId);
+            cleanup();
+            reject(new Error("동영상 로드 실패"));
+        };
+    });
 }

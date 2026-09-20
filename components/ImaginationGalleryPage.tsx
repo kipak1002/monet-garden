@@ -10,7 +10,7 @@ import EditImaginationModal from './EditImaginationModal';
 interface ImaginationGalleryPageProps {
   isAdminMode: boolean;
   imaginationArtworks: ImaginationArtwork[];
-  onAddImagination: (title: string, size: string, year: number, videoFile: File, originalImage: File) => Promise<void>;
+  onAddImagination: (title: string, size: string, year: number, videoFile: File, originalImage?: File) => Promise<void>;
   onUpdateImagination: (id: number, title: string, size: string, year: number, videoFile?: File, originalImage?: File) => Promise<void>;
   onDeleteImagination: (item: ImaginationArtwork) => void;
   onReorder: (items: ImaginationArtwork[]) => void;

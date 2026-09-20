@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import type { Artwork, Exhibition, ImaginationArtwork } from '../types';
-import { supabase, uploadImage, recordVisit, getVisitorCount } from '../services/supabaseClient.ts';
+import { supabase, uploadImage, uploadVideo, captureVideoFrame, recordVisit, getVisitorCount } from '../services/supabaseClient.ts';
 import Header from './Header';
 import Gallery from './Gallery';
 import ArtworkDetailModal from './ArtworkDetailModal';
@@ -419,10 +419,38 @@ const App: React.FC = () => {
     setIsEditExhibitionModalOpen(false);
   };
 
-  const handleAddImagination = async (title: string, size: string, year: number, videoFile: File, originalImage: File) => {
+  const handleAddImagination = async (title: string, size: string, year: number, videoFile: File, originalImage?: File) => {
     const maxOrder = imaginationArtworks.length > 0 ? Math.max(...imaginationArtworks.map(i => i.display_order || 0)) : 0;
-    const [videoUrl, imageUrl] = await Promise.all([uploadImage(videoFile), uploadImage(originalImage)]);
-    const { data, error } = await supabase.from('imagination_gallery').insert([{ title, size, year, video_url: videoUrl, original_image_url: imageUrl, display_order: maxOrder + 1 }]).select().single();
+    
+    // 1. 비디오 업로드 (MIME 타입과 확장자 보장)
+    const videoUrl = await uploadVideo(videoFile);
+    
+    // 2. 원화 이미지 업로드 (선택되지 않은 경우 비디오 첫 프레임 자동 캡처)
+    let imageUrl = '';
+    let finalImageFile = originalImage;
+    if (!finalImageFile) {
+      try {
+        finalImageFile = await captureVideoFrame(videoFile);
+      } catch (err) {
+        console.warn("비디오 썸네일 자동 추출 실패, 비디오 URL을 대체용으로 사용합니다:", err);
+      }
+    }
+
+    if (finalImageFile) {
+      imageUrl = await uploadImage(finalImageFile);
+    } else {
+      imageUrl = videoUrl;
+    }
+
+    const { data, error } = await supabase.from('imagination_gallery').insert([{ 
+      title, 
+      size, 
+      year, 
+      video_url: videoUrl, 
+      original_image_url: imageUrl, 
+      display_order: maxOrder + 1 
+    }]).select().single();
+
     if (error) throw error;
     setImaginationArtworks(prev => [data, ...prev]);
   };
@@ -431,7 +459,7 @@ const App: React.FC = () => {
     const updates: any = { title, size, year };
     
     if (videoFile) {
-        updates.video_url = await uploadImage(videoFile);
+        updates.video_url = await uploadVideo(videoFile);
     }
     if (originalImage) {
         updates.original_image_url = await uploadImage(originalImage);
