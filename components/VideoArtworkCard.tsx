@@ -61,12 +61,12 @@ const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({
       className="bg-white overflow-hidden flex flex-col group relative transition-all hover:shadow-2xl flex-shrink-0 md:w-[380px] md:h-[560px] w-full"
     >
       {isAdminMode && (
-        <div className="absolute top-2 right-2 z-10 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute top-2 right-2 z-10 flex flex-col gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
           <div className="flex gap-2">
             {!isFirst && (
               <button 
                 onClick={(e) => { e.stopPropagation(); onMoveLeft(); }}
-                className="bg-white text-gray-700 p-2 rounded-full shadow-md hover:bg-blue-500 hover:text-white transition-all"
+                className="bg-white/90 backdrop-blur-sm text-gray-700 p-2 rounded-full shadow-md hover:bg-blue-500 hover:text-white active:scale-95 transition-all"
                 title="왼쪽으로 이동"
               >
                 <Icon type="chevron-left" className="w-5 h-5" />
@@ -75,7 +75,7 @@ const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({
             {!isLast && (
               <button 
                 onClick={(e) => { e.stopPropagation(); onMoveRight(); }}
-                className="bg-white text-gray-700 p-2 rounded-full shadow-md hover:bg-blue-500 hover:text-white transition-all"
+                className="bg-white/90 backdrop-blur-sm text-gray-700 p-2 rounded-full shadow-md hover:bg-blue-500 hover:text-white active:scale-95 transition-all"
                 title="오른쪽으로 이동"
               >
                 <Icon type="chevron-right" className="w-5 h-5" />
@@ -84,14 +84,14 @@ const VideoArtworkCard: React.FC<VideoArtworkCardProps> = ({
           </div>
           <button 
             onClick={(e) => { e.stopPropagation(); onEdit(); }}
-            className="bg-white text-gray-700 p-2 rounded-full shadow-md hover:bg-blue-500 hover:text-white transition-all"
+            className="bg-white/90 backdrop-blur-sm text-gray-700 p-2 rounded-full shadow-md hover:bg-blue-500 hover:text-white active:scale-95 transition-all self-end"
             title="수정"
           >
             <Icon type="edit" className="w-5 h-5" />
           </button>
           <button 
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            className="bg-white text-red-500 p-2 rounded-full shadow-md hover:bg-red-500 hover:text-white transition-all"
+            className="bg-white/90 backdrop-blur-sm text-red-500 p-2 rounded-full shadow-md hover:bg-red-500 hover:text-white active:scale-95 transition-all self-end"
             title="삭제"
           >
             <Icon type="trash" className="w-5 h-5" />

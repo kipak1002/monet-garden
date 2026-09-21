@@ -113,7 +113,7 @@ const AdminInquiryPage: React.FC = () => {
 
               <button
                 onClick={() => handleDelete(inquiry.id)}
-                className="absolute top-6 right-6 p-2 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                className="absolute top-6 right-6 p-2 text-gray-400 hover:text-red-500 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all"
                 title="삭제"
               >
                 <Icon type="trash" className="w-5 h-5" />

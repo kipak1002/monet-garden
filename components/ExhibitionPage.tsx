@@ -213,12 +213,12 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
                   className="bg-white rounded-lg shadow-md overflow-hidden group relative"
                 >
                    {isAdminMode && (
-                    <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
                         <div className="flex gap-2">
                             {index > 0 && (
                                 <button 
                                     onClick={() => handleMove(index, 'up')}
-                                    className="bg-white/80 backdrop-blur-sm p-2 rounded-full text-gray-700 hover:bg-blue-500 hover:text-white transition-all"
+                                    className="bg-white/90 backdrop-blur-sm p-2 rounded-full text-gray-700 shadow-md hover:bg-blue-500 hover:text-white active:scale-95 transition-all"
                                     aria-label="위로 이동"
                                     title="위로 이동"
                                 >
@@ -228,7 +228,7 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
                             {index < exhibitions.length - 1 && (
                                 <button 
                                     onClick={() => handleMove(index, 'down')}
-                                    className="bg-white/80 backdrop-blur-sm p-2 rounded-full text-gray-700 hover:bg-blue-500 hover:text-white transition-all"
+                                    className="bg-white/90 backdrop-blur-sm p-2 rounded-full text-gray-700 shadow-md hover:bg-blue-500 hover:text-white active:scale-95 transition-all"
                                     aria-label="아래로 이동"
                                     title="아래로 이동"
                                 >
@@ -238,7 +238,7 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
                         </div>
                         <button 
                             onClick={() => onEditExhibition(ex)}
-                            className="bg-white/80 backdrop-blur-sm p-2 rounded-full text-gray-700 hover:bg-blue-500 hover:text-white transition-all"
+                            className="bg-white/90 backdrop-blur-sm p-2 rounded-full text-gray-700 shadow-md hover:bg-blue-500 hover:text-white active:scale-95 transition-all self-end"
                             aria-label="전시회 편집"
                             title="전시회 편집"
                         >
@@ -246,7 +246,7 @@ const ExhibitionPage: React.FC<ExhibitionPageProps> = ({
                         </button>
                         <button 
                             onClick={() => onDeleteExhibition(ex)}
-                            className="bg-white/80 backdrop-blur-sm p-2 rounded-full text-gray-700 hover:bg-red-500 hover:text-white transition-all"
+                            className="bg-white/90 backdrop-blur-sm p-2 rounded-full text-red-500 shadow-md hover:bg-red-500 hover:text-white active:scale-95 transition-all self-end"
                             aria-label="전시회 삭제"
                             title="전시회 삭제"
                         >

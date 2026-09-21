@@ -112,12 +112,12 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({
       onClick={() => onSelect(artwork)}
     >
       {isAdminMode && (
-        <div className="absolute top-2 right-2 z-10 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="absolute top-2 right-2 z-10 flex flex-col gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
           <div className="flex gap-2">
             {!isFirst && (
               <button 
                 onClick={(e) => { e.stopPropagation(); onMoveLeft(); }}
-                className="bg-white/80 backdrop-blur-sm p-2 rounded-full text-gray-700 hover:bg-blue-500 hover:text-white transition-all"
+                className="bg-white/90 backdrop-blur-sm p-2 rounded-full text-gray-700 shadow-md hover:bg-blue-500 hover:text-white active:scale-95 transition-all"
                 aria-label="왼쪽으로 이동"
                 title="왼쪽으로 이동"
               >
@@ -127,7 +127,7 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({
             {!isLast && (
               <button 
                 onClick={(e) => { e.stopPropagation(); onMoveRight(); }}
-                className="bg-white/80 backdrop-blur-sm p-2 rounded-full text-gray-700 hover:bg-blue-500 hover:text-white transition-all"
+                className="bg-white/90 backdrop-blur-sm p-2 rounded-full text-gray-700 shadow-md hover:bg-blue-500 hover:text-white active:scale-95 transition-all"
                 aria-label="오른쪽으로 이동"
                 title="오른쪽으로 이동"
               >
@@ -137,7 +137,7 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({
           </div>
           <button 
             onClick={handleEditClick}
-            className="bg-white/80 backdrop-blur-sm p-2 rounded-full text-gray-700 hover:bg-blue-500 hover:text-white transition-all"
+            className="bg-white/90 backdrop-blur-sm p-2 rounded-full text-gray-700 shadow-md hover:bg-blue-500 hover:text-white active:scale-95 transition-all self-end"
             aria-label="작품 편집"
             title="작품 편집"
           >
@@ -145,7 +145,7 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({
           </button>
           <button 
             onClick={handleDeleteClick}
-            className="bg-white/80 backdrop-blur-sm p-2 rounded-full text-gray-700 hover:bg-red-500 hover:text-white transition-all"
+            className="bg-white/90 backdrop-blur-sm p-2 rounded-full text-red-500 shadow-md hover:bg-red-500 hover:text-white active:scale-95 transition-all self-end"
             aria-label="작품 삭제"
             title="작품 삭제"
           >
